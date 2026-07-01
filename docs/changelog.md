@@ -47,3 +47,4 @@
 - Added `npm run init:release-record` to create pre-filled non-sensitive release records.
 - Added `npm run check:release-record` to validate release record completeness and secret hygiene.
 - Hardened reveal infrastructure rendering so object payloads never appear as `[object Object]`.
+- Added `npm run verify:release-archive` to validate release zip checksums and contents.

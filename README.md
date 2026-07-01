@@ -37,6 +37,7 @@ npm test
 npm run init:release-record
 npm run check:release-record
 npm run build:release
+npm run verify:release-archive
 npm run evidence:release
 npm run smoke:llm
 npm run smoke:app

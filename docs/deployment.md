@@ -67,9 +67,10 @@ For hosts where Docker is not available, build a portable release archive:
 
 ```powershell
 npm run build:release
+npm run verify:release-archive
 ```
 
-The command writes `dist/ops-turtle-soup-<version>-<timestamp>.zip`, a sidecar `.sha256` checksum file, and a `RELEASE_MANIFEST.txt`. The archive excludes `.env`, `.git`, `node_modules`, logs, and previous `dist` output. Copy the archive to the intranet host, verify the checksum, extract it, create `.env` from `.env.example`, then start the service with Docker Compose, systemd, Windows Scheduled Task, or the approved local process manager.
+The build command writes `dist/ops-turtle-soup-<version>-<timestamp>.zip`, a sidecar `.sha256` checksum file, and a `RELEASE_MANIFEST.txt`. The verification command checks the latest archive, or `RELEASE_ARCHIVE_PATH` when set, by validating the SHA256 sidecar, extracting the zip, requiring expected release files, and rejecting forbidden paths such as `.env`, `.git`, `node_modules`, logs, and previous `dist` output. Copy the archive to the intranet host, verify the checksum, extract it, create `.env` from `.env.example`, then start the service with Docker Compose, systemd, Windows Scheduled Task, or the approved local process manager.
 
 To start a release record from the template:
 
@@ -172,7 +173,7 @@ For a one-command local rehearsal on the release host, run:
 npm run rehearse:release
 ```
 
-This builds the release archive, starts a temporary local service, runs offline and online deployment verification, runs the app smoke, captures release evidence, and runs the 100-session local capacity smoke. Set `REHEARSAL_RUN_LLM=1` to include the live LLM ask-path load smoke in that rehearsal.
+This builds and verifies the release archive, starts a temporary local service, runs offline and online deployment verification, runs the app smoke, captures release evidence, and runs the 100-session local capacity smoke. Set `REHEARSAL_RUN_LLM=1` to include the live LLM ask-path load smoke in that rehearsal.
 
 ## Health Check
 

@@ -480,6 +480,7 @@ async function testDeploymentConfiguration() {
   const loadLlm = await readText("tests/load-llm.js");
   const releaseRehearsal = await readText("tests/release-rehearsal.js");
   const buildRelease = await readText("tests/build-release.js");
+  const verifyReleaseArchive = await readText("tests/verify-release-archive.js");
   const initReleaseRecord = await readText("tests/init-release-record.js");
   const checkReleaseRecord = await readText("tests/check-release-record.js");
   const releaseEvidence = await readText("tests/release-evidence.js");
@@ -521,6 +522,7 @@ async function testDeploymentConfiguration() {
   assert(packageJson.includes('"load:llm": "node tests/load-llm.js"'), "package.json missing load:llm script");
   assert(packageJson.includes('"rehearse:release": "node tests/release-rehearsal.js"'), "package.json missing rehearse:release script");
   assert(packageJson.includes('"build:release": "node tests/build-release.js"'), "package.json missing build:release script");
+  assert(packageJson.includes('"verify:release-archive": "node tests/verify-release-archive.js"'), "package.json missing verify:release-archive script");
   assert(packageJson.includes('"init:release-record": "node tests/init-release-record.js"'), "package.json missing init:release-record script");
   assert(packageJson.includes('"check:release-record": "node tests/check-release-record.js"'), "package.json missing check:release-record script");
   assert(packageJson.includes('"evidence:release": "node tests/release-evidence.js"'), "package.json missing evidence:release script");
@@ -611,6 +613,7 @@ async function testDeploymentConfiguration() {
     "REHEARSAL_RUN_LLM",
     "tests/start-loadtest-server.js",
     "release archive build",
+    "release archive verification",
     "offline deployment preflight",
     "online deployment verification",
     "application smoke",
@@ -618,6 +621,7 @@ async function testDeploymentConfiguration() {
     "100-session local capacity smoke",
     "live LLM ask-path load smoke",
     "build:release",
+    "verify:release-archive",
     "evidence:release",
     "load:llm",
     "release rehearsal summary"
@@ -626,7 +630,23 @@ async function testDeploymentConfiguration() {
   }
 
   for (const token of [
+    "RELEASE_ARCHIVE_PATH",
+    "sha256",
+    "Expand-Archive",
+    "RELEASE_MANIFEST.txt",
+    "requiredEntries",
+    "forbiddenNames",
+    "\".env\"",
+    "\"node_modules\"",
+    "archive must contain one top-level release directory",
+    "archive contains forbidden paths"
+  ]) {
+    assert(verifyReleaseArchive.includes(token), `verify-release-archive script missing ${token}`);
+  }
+
+  for (const token of [
     "npm test",
+    "npm run verify:release-archive",
     "npm run verify:deploy:offline",
     "npm run verify:deploy",
     "npm run smoke:llm",
@@ -655,6 +675,7 @@ async function testDeploymentConfiguration() {
 
   for (const token of [
     "Git commit:",
+    "npm run verify:release-archive",
     "docker compose ps",
     "Get-ScheduledTask -TaskName OpsTurtleSoup",
     "npm run verify:deploy",

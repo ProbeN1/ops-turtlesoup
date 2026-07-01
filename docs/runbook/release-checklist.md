@@ -31,7 +31,8 @@ npm run init:release-record
 | Release record created | `npm run init:release-record` or existing filled record | Record exists for this release |
 | Release record checked | `npm run check:release-record` | No missing evidence or sensitive values |
 | Release archive | `npm run build:release` | Zip and `.sha256` created under `dist/` and excludes `.env` |
-| Local release rehearsal | `npm run rehearse:release` | Archive/evidence/offline/online/app/capacity smoke pass |
+| Release archive verification | `npm run verify:release-archive` | Checksum, manifest, expected files, and forbidden-path checks pass |
+| Local release rehearsal | `npm run rehearse:release` | Archive verification/evidence/offline/online/app/capacity smoke pass |
 | Offline deployment preflight | `npm run verify:deploy:offline` | No `FAIL` |
 | Long-running process configured | `docker compose ps`, `systemctl status ops-turtle-soup`, or `Get-ScheduledTask -TaskName OpsTurtleSoup` | Service is running with restart policy |
 | Online deployment verification | `npm run verify:deploy` | No `FAIL` |
@@ -93,6 +94,8 @@ Run from the release host:
 ```powershell
 npm test
 npm run init:release-record
+npm run build:release
+npm run verify:release-archive
 npm run rehearse:release
 npm run check:release-record
 npm run verify:deploy:offline

@@ -60,6 +60,27 @@ releaseName=
 .env excluded=yes | no
 ```
 
+```text
+npm run verify:release-archive
+```
+
+Result:
+
+```text
+
+```
+
+Archive verification summary:
+
+```text
+archivePath=
+sha256Path=
+sha256=
+expected files present=yes | no
+forbidden paths absent=yes | no
+manifest checked=yes | no
+```
+
 Docker Compose:
 
 ```text
@@ -124,6 +145,7 @@ Rehearsal summary:
 baseUrl=
 runLlm=
 release archive build=pass | fail
+release archive verification=pass | fail
 offline deployment preflight=pass | fail
 online deployment verification=pass | fail
 application smoke=pass | fail

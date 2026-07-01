@@ -99,6 +99,7 @@ async function main() {
 
   try {
     steps.push(await runCommand("release archive build", "npm", ["run", "build:release"], env));
+    steps.push(await runCommand("release archive verification", "npm", ["run", "verify:release-archive"], env));
     await waitForHealth(baseUrl, server);
     steps.push(await runCommand("offline deployment preflight", "npm", ["run", "verify:deploy:offline"], env));
     steps.push(await runCommand("online deployment verification", "npm", ["run", "verify:deploy"], env));
