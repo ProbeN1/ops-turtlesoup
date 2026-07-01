@@ -282,6 +282,7 @@ This command calls the configured OpenAI-compatible `/chat/completions` endpoint
 - answer value belongs to the allowed host answer set.
 
 It does not print the API key. Tune `LLM_SMOKE_TIMEOUT_MS` if the internal model is slow to wake up.
+Use `LLM_SMOKE_TCP_TIMEOUT_MS` to tune only the TCP preflight timeout. A TCP timeout means the app host cannot reach the LLM gateway port; an HTTP timeout means the port is reachable but the gateway or model did not complete the chat request in time.
 
 ## Application Smoke Test
 

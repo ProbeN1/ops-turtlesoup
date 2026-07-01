@@ -481,6 +481,7 @@ async function testDeploymentConfiguration() {
   const systemd = await readText("deploy/systemd/ops-turtle-soup.service.example");
   const windowsScheduledTask = await readText("deploy/windows/install-scheduled-task.ps1");
   const loadLocal = await readText("tests/load-local.js");
+  const llmSmoke = await readText("tests/llm-smoke.js");
   const loadLlm = await readText("tests/load-llm.js");
   const releaseRehearsal = await readText("tests/release-rehearsal.js");
   const buildRelease = await readText("tests/build-release.js");
@@ -621,6 +622,16 @@ async function testDeploymentConfiguration() {
     "revealComplete"
   ]) {
     assert(coworkerSmoke.includes(token), `coworker access smoke missing ${token}`);
+  }
+
+  for (const token of [
+    "tcpProbe",
+    "LLM_SMOKE_TCP_TIMEOUT_MS",
+    "TCP connect",
+    "describeFetchError",
+    "chat/completions"
+  ]) {
+    assert(llmSmoke.includes(token), `llm-smoke missing ${token}`);
   }
 
   for (const token of [

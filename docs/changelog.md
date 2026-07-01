@@ -52,3 +52,4 @@
 - Added negative regression tests for final release record gates.
 - Fixed absolute `RELEASE_RECORD_PATH` handling in release record scripts.
 - Added non-sensitive build identity to runtime health, readiness, metrics, release archives, Docker builds, and release evidence.
+- Added TCP preflight diagnostics to the live LLM smoke test.

@@ -108,6 +108,14 @@ Common causes:
 
 The smoke test intentionally prints only endpoint and model reachability, never the API key.
 
+The smoke test first probes TCP connectivity to the configured LLM host and port, then calls `/chat/completions`. Interpret failures as:
+
+- `TCP connect ... timed out`: route, firewall, security group, gateway listener, or VPN issue.
+- `TCP connect ... failed`: port closed, host unreachable, DNS failure, or refused connection.
+- `LLM HTTP request ... timed out`: TCP is reachable, but the HTTP gateway or model response is too slow; check gateway logs and `LLM_SMOKE_TIMEOUT_MS`.
+- `LLM returned HTTP ...`: gateway reached but rejected the request, model, key, or payload.
+- `LLM returned non-JSON` or invalid host JSON: endpoint is not OpenAI-compatible enough for gameplay.
+
 ## Application Smoke Test Fails
 
 Run:

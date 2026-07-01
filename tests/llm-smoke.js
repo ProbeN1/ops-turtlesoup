@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
+import { connect } from "node:net";
 import path from "node:path";
 
 const root = process.cwd();
@@ -31,6 +32,16 @@ function llmBaseUrl() {
   return requiredEnv("OPENAI_BASE_URL", "LLM_BASE_URL").replace(/\/$/, "");
 }
 
+function llmEndpoint() {
+  const url = new URL(llmBaseUrl());
+  return {
+    url,
+    host: url.hostname,
+    port: Number(url.port || (url.protocol === "https:" ? 443 : 80)),
+    protocol: url.protocol
+  };
+}
+
 function llmModel() {
   return requiredEnv("OPENAI_MODEL", "LLM_MODEL");
 }
@@ -48,14 +59,52 @@ function parseModelJson(content) {
   }
 }
 
+function tcpProbe({ host, port }, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const socket = connect({ host, port });
+    const startedAt = Date.now();
+    const timeout = setTimeout(() => {
+      socket.destroy();
+      reject(new Error(`TCP connect to ${host}:${port} timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+
+    socket.once("connect", () => {
+      clearTimeout(timeout);
+      socket.end();
+      resolve(Date.now() - startedAt);
+    });
+
+    socket.once("error", (error) => {
+      clearTimeout(timeout);
+      reject(new Error(`TCP connect to ${host}:${port} failed: ${error.code || error.message}`));
+    });
+  });
+}
+
+function describeFetchError(error, endpoint, timeoutMs) {
+  if (error?.name === "AbortError") {
+    return `LLM HTTP request to ${endpoint.host}:${endpoint.port} timed out after ${timeoutMs}ms`;
+  }
+
+  const cause = error?.cause;
+  if (cause?.code) {
+    return `LLM HTTP request to ${endpoint.host}:${endpoint.port} failed: ${cause.code}`;
+  }
+
+  return error?.message || "LLM HTTP request failed";
+}
+
 async function main() {
   const apiKey = requiredEnv("OPENAI_API_KEY", "LLM_API_KEY");
   const timeoutMs = Number(process.env.LLM_SMOKE_TIMEOUT_MS || Number(process.env.LLM_REQUEST_TIMEOUT_SECONDS || 30) * 1000);
+  const tcpTimeoutMs = Math.min(timeoutMs, Number(process.env.LLM_SMOKE_TCP_TIMEOUT_MS || 5000));
+  const endpoint = llmEndpoint();
+  const tcpLatencyMs = await tcpProbe(endpoint, tcpTimeoutMs);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const response = await fetch(`${llmBaseUrl()}/chat/completions`, {
+    const response = await fetch(`${endpoint.url.href.replace(/\/$/, "")}/chat/completions`, {
       method: "POST",
       signal: controller.signal,
       headers: {
@@ -113,7 +162,8 @@ async function main() {
     }
 
     console.log("PASS LLM endpoint returned valid host JSON");
-    console.log(`PASS model ${llmModel()} is reachable through ${llmBaseUrl()}`);
+    console.log(`PASS TCP connect ${endpoint.host}:${endpoint.port} in ${tcpLatencyMs}ms`);
+    console.log(`PASS model ${llmModel()} is reachable through ${endpoint.url.href.replace(/\/$/, "")}`);
   } finally {
     clearTimeout(timeout);
   }
@@ -122,6 +172,12 @@ async function main() {
 try {
   await main();
 } catch (error) {
-  console.error(`FAIL ${error.message}`);
+  try {
+    const endpoint = llmEndpoint();
+    const timeoutMs = Number(process.env.LLM_SMOKE_TIMEOUT_MS || Number(process.env.LLM_REQUEST_TIMEOUT_SECONDS || 30) * 1000);
+    console.error(`FAIL ${describeFetchError(error, endpoint, timeoutMs)}`);
+  } catch {
+    console.error(`FAIL ${error.message}`);
+  }
   process.exitCode = 1;
 }
