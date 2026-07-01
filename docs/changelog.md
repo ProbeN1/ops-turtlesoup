@@ -62,3 +62,4 @@
 - Deployed release `ops-turtle-soup-0.1.0-20260701T071142Z` to `10.10.214.4` and verified ready, LLM, app, coworker, process, and live LLM load smokes.
 - Added a `v0.1` version badge and feedback page with SMTP-backed delivery to `532015746@qq.com`.
 - Simplified host answers so all difficulties only return `是`, `否`, or `无关`.
+- Replaced email feedback delivery with a polished DingTalk contact page for `0027029145` 姜毅.

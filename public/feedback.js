@@ -1,53 +1,60 @@
-const form = document.querySelector("#feedbackForm");
-const contentInput = document.querySelector("#feedbackContent");
-const contactInput = document.querySelector("#feedbackContact");
-const submitBtn = document.querySelector("#feedbackSubmit");
-const statusText = document.querySelector("#feedbackStatus");
-const mailtoFallback = document.querySelector("#mailtoFallback");
+const copyStatus = document.querySelector("#copyStatus");
+const copyButtons = document.querySelectorAll("[data-copy-target]");
 
-form.addEventListener("submit", submitFeedback);
+for (const button of copyButtons) {
+  button.addEventListener("click", () => copyTargetText(button));
+}
 
-async function submitFeedback(event) {
-  event.preventDefault();
-  const content = contentInput.value.trim();
-  const contact = contactInput.value.trim();
-  if (!content) return;
+async function copyTargetText(button) {
+  const target = document.querySelector(`#${button.dataset.copyTarget}`);
+  const text = target?.textContent?.trim() || "";
+  if (!text) return;
 
-  submitBtn.disabled = true;
-  statusText.textContent = "发送中...";
-  mailtoFallback.hidden = true;
-
+  showStatus("正在复制...");
   try {
-    const response = await fetch("/api/feedback", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        content,
-        contact,
-        page: window.location.href
-      })
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "发送失败");
-
-    form.reset();
-    statusText.textContent = "已发送，谢谢反馈。";
-  } catch (error) {
-    statusText.textContent = error.message;
-    mailtoFallback.href = mailtoLink(content, contact);
-    mailtoFallback.hidden = false;
-  } finally {
-    submitBtn.disabled = false;
+    await copyText(text);
+    showStatus("已复制，可以发钉钉了。");
+  } catch {
+    selectTargetText(target);
+    showStatus("已选中，请按 Ctrl+C 复制。");
   }
 }
 
-function mailtoLink(content, contact) {
-  const subject = encodeURIComponent("运维海龟汤用户反馈");
-  const body = encodeURIComponent([
-    content,
-    "",
-    `联系方式：${contact || "未填写"}`,
-    `页面：${window.location.href}`
-  ].join("\n"));
-  return `mailto:532015746@qq.com?subject=${subject}&body=${body}`;
+async function copyText(text) {
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.left = "-9999px";
+  document.body.appendChild(textarea);
+  textarea.select();
+  const copied = document.execCommand("copy");
+  textarea.remove();
+  if (copied) return;
+
+  if (navigator.clipboard?.writeText) {
+    await Promise.race([
+      navigator.clipboard.writeText(text),
+      new Promise((_, reject) => window.setTimeout(() => reject(new Error("copy timeout")), 1000))
+    ]);
+    return;
+  }
+
+  throw new Error("copy failed");
+}
+
+function selectTargetText(target) {
+  const selection = window.getSelection();
+  const range = document.createRange();
+  range.selectNodeContents(target);
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+
+function showStatus(message) {
+  copyStatus.textContent = message;
+  window.clearTimeout(showStatus.timer);
+  showStatus.timer = window.setTimeout(() => {
+    copyStatus.textContent = "";
+  }, 2200);
 }

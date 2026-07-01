@@ -7,30 +7,70 @@
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <main class="feedback-shell">
-      <section class="feedback-panel">
-        <div class="topbar">
+    <main class="feedback-shell feedback-luxe-shell">
+      <section class="feedback-panel feedback-luxe-panel">
+        <div class="topbar feedback-luxe-topbar">
           <div>
-            <p class="eyebrow">FEEDBACK</p>
-            <h1>反馈</h1>
+            <p class="eyebrow">FEEDBACK DESK</p>
+            <h1>反馈与题库共建</h1>
           </div>
           <a class="back-link" href="/">返回游戏</a>
         </div>
 
-        <form class="feedback-form" id="feedbackForm">
-          <label for="feedbackContent">内容</label>
-          <textarea id="feedbackContent" name="content" rows="9" maxlength="4000" placeholder="写下题目、主持人回答、页面体验或其他建议。" required></textarea>
-
-          <label for="feedbackContact">联系方式</label>
-          <input id="feedbackContact" name="contact" maxlength="200" placeholder="可选，便于追问" />
-
-          <div class="feedback-actions">
-            <button id="feedbackSubmit" type="submit">发送反馈</button>
-            <span id="feedbackStatus" role="status" aria-live="polite"></span>
+        <section class="feedback-hero" aria-labelledby="feedbackContactTitle">
+          <div>
+            <p class="feedback-kicker">内网反馈通道</p>
+            <h2 id="feedbackContactTitle">钉钉联系姜毅</h2>
+            <p class="feedback-copy">题目不准、主持人误判、页面体验、真实故障想入库，都可以直接发给我。</p>
           </div>
-        </form>
+          <div class="dingtalk-contact">
+            <span class="contact-label">钉钉</span>
+            <strong id="dingtalkId">0027029145</strong>
+            <span>姜毅</span>
+            <button class="icon-copy" type="button" data-copy-target="dingtalkId" aria-label="复制钉钉号" title="复制钉钉号">⧉</button>
+          </div>
+        </section>
 
-        <a id="mailtoFallback" class="mailto-fallback" href="mailto:532015746@qq.com" hidden>打开邮件客户端发送</a>
+        <section class="feedback-guide" aria-label="反馈建议">
+          <div class="guide-row">
+            <span class="guide-index">01</span>
+            <div>
+              <h2>反馈题目</h2>
+              <p>带上难度、题目标题、你问了什么、主持人怎么答、你觉得哪里不合理。</p>
+            </div>
+          </div>
+          <div class="guide-row">
+            <span class="guide-index">02</span>
+            <div>
+              <h2>提交故障</h2>
+              <p>最好包含时间线、告警值、基础设施背景、临时处置、最终根因和复盘经验。</p>
+            </div>
+          </div>
+          <div class="guide-row">
+            <span class="guide-index">03</span>
+            <div>
+              <h2>页面建议</h2>
+              <p>截图加一句现象就够；如果能说明浏览器、分辨率或操作路径，会更好定位。</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="feedback-template" aria-labelledby="templateTitle">
+          <div class="template-head">
+            <div>
+              <p class="feedback-kicker">QUICK TEMPLATE</p>
+              <h2 id="templateTitle">复制后发钉钉</h2>
+            </div>
+            <button class="copy-template" type="button" data-copy-target="feedbackTemplate">复制模板</button>
+          </div>
+          <pre id="feedbackTemplate">反馈类型：
+题目难度/标题：
+问题现象：
+复现步骤或对话片段：
+期望效果：
+补充信息：</pre>
+          <p id="copyStatus" class="copy-status" role="status" aria-live="polite"></p>
+        </section>
       </section>
     </main>
 
@@ -39,6 +79,6 @@
       <span>v0.1</span>
     </div>
 
-    <script src="/feedback.js?v=20260701-feedback-v1" type="module"></script>
+    <script src="/feedback.js?v=20260701-dingtalk-v1" type="module"></script>
   </body>
 </html>

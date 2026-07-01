@@ -105,10 +105,12 @@ async function testFrontendBindings() {
   assert(html.includes('/app.js?v=20260701-feedback-v1'), "frontend must version app.js after feedback changes");
   assert(html.includes("v0.1"), "frontend must show current version badge");
   assert(html.includes('href="/feedback"'), "frontend must link to feedback page");
-  assert(feedbackHtml.includes("532015746@qq.com"), "feedback page must expose feedback recipient fallback");
-  assert(feedbackHtml.includes("/feedback.js?v=20260701-feedback-v1"), "feedback page must version feedback.js");
+  assert(feedbackHtml.includes("0027029145"), "feedback page must expose DingTalk contact id");
+  assert(feedbackHtml.includes("姜毅"), "feedback page must expose DingTalk contact name");
+  assert(feedbackHtml.includes("/feedback.js?v=20260701-dingtalk-v1"), "feedback page must version feedback.js");
   assert(feedbackHtml.includes("v0.1"), "feedback page must show current version badge");
-  assert(feedbackJs.includes("/api/feedback"), "feedback script must submit to feedback API");
+  assert(feedbackJs.includes("navigator.clipboard"), "feedback script must support copying contact details");
+  assert(!feedbackJs.includes("/api/feedback"), "feedback script must not submit to removed feedback API");
   assert(app.includes("function formatRevealInfraBackground"), "frontend must normalize reveal infra fields before rendering");
   assert(app.includes("function formatInfraBackground"), "frontend must format infra background before rendering reveal");
   assert(app.includes("const answer = data.answer"), "frontend must not append host hints to answer messages");
@@ -287,16 +289,8 @@ async function testServerConfiguration() {
     assert(server.includes(token), `server.js missing ${token}`);
   }
 
-  for (const token of [
-    "POST\" && req.url === \"/api/feedback",
-    "FEEDBACK_EMAIL_TO",
-    "SMTP_HOST",
-    "sendSmtpMail",
-    "feedbackSentTotal",
-    "feedbackFailuresTotal",
-    "ops_turtle_soup_feedback_sent_total"
-  ]) {
-    assert(server.includes(token), `server.js missing feedback token ${token}`);
+  for (const token of ["POST\" && req.url === \"/api/feedback", "FEEDBACK_EMAIL_TO", "SMTP_HOST", "sendSmtpMail"]) {
+    assert(!server.includes(token), `server.js must not retain removed feedback email token ${token}`);
   }
 }
 
@@ -449,59 +443,6 @@ async function testRevealApiInfraPayload() {
   assert(!stderr.includes("Startup failed"), `server startup failed unexpectedly; stdout=${stdout}; stderr=${stderr}`);
 }
 
-async function testFeedbackEmailEndpoint() {
-  const messages = [];
-  const smtpServer = createFakeSmtpServer(messages);
-  await new Promise((resolve, reject) => {
-    smtpServer.once("error", reject);
-    smtpServer.listen(0, "127.0.0.1", resolve);
-  });
-  const smtpAddress = smtpServer.address();
-  const smtpPort = typeof smtpAddress === "object" && smtpAddress ? smtpAddress.port : 0;
-  const appPort = await reserveLocalPort();
-  const child = spawn(process.execPath, ["server.js"], {
-    cwd: root,
-    env: {
-      ...process.env,
-      HOST: "127.0.0.1",
-      PORT: String(appPort),
-      RATE_LIMIT_MAX_REQUESTS: "0",
-      SMTP_HOST: "127.0.0.1",
-      SMTP_PORT: String(smtpPort),
-      SMTP_FROM: "ops-turtle-soup@example.test",
-      FEEDBACK_EMAIL_TO: "532015746@qq.com"
-    },
-    stdio: ["ignore", "pipe", "pipe"]
-  });
-  let stdout = "";
-  let stderr = "";
-  child.stdout.on("data", (chunk) => { stdout += chunk; });
-  child.stderr.on("data", (chunk) => { stderr += chunk; });
-
-  try {
-    await waitForHttp(`http://127.0.0.1:${appPort}/api/health`, 5000);
-    const feedback = await postJson(`http://127.0.0.1:${appPort}/api/feedback`, {
-      content: "这个题目的主持人回答很稳定",
-      contact: "tester@example.test",
-      page: "http://127.0.0.1/feedback"
-    });
-    assert(feedback.ok === true, "feedback endpoint must return ok");
-    await waitForCondition(() => messages.length > 0, 3000, "SMTP server did not receive feedback");
-    assert(messages[0].includes("这个题目的主持人回答很稳定"), "feedback email must include submitted content");
-    assert(messages[0].includes("tester@example.test"), "feedback email must include contact");
-    assert(messages[0].includes("To: 532015746@qq.com"), "feedback email must target configured recipient");
-
-    const metrics = await (await fetch(`http://127.0.0.1:${appPort}/api/metrics`)).json();
-    assert(metrics.feedbackSentTotal >= 1, "feedback metrics must count sent email");
-  } finally {
-    child.kill("SIGKILL");
-    await new Promise((resolve) => child.once("close", resolve));
-    await new Promise((resolve) => smtpServer.close(resolve));
-  }
-
-  assert(!stderr.includes("Startup failed"), `server startup failed unexpectedly; stdout=${stdout}; stderr=${stderr}`);
-}
-
 async function testSessionCapacityReturns503() {
   const appPort = await reserveLocalPort();
   const child = spawn(process.execPath, ["server.js"], {
@@ -549,58 +490,6 @@ async function reserveLocalPort() {
   const port = typeof address === "object" && address ? address.port : 0;
   await new Promise((resolve) => holder.close(resolve));
   return port;
-}
-
-function createFakeSmtpServer(messages) {
-  return createTcpServer((socket) => {
-    let buffer = "";
-    let dataMode = false;
-    let message = "";
-    socket.write("220 localhost ESMTP\r\n");
-
-    socket.on("data", (chunk) => {
-      buffer += chunk.toString("utf8");
-      let index;
-      while ((index = buffer.indexOf("\n")) >= 0) {
-        const rawLine = buffer.slice(0, index + 1);
-        buffer = buffer.slice(index + 1);
-        const line = rawLine.replace(/\r?\n$/, "");
-
-        if (dataMode) {
-          if (line === ".") {
-            messages.push(message);
-            message = "";
-            dataMode = false;
-            socket.write("250 queued\r\n");
-          } else {
-            message += `${line}\n`;
-          }
-          continue;
-        }
-
-        if (/^EHLO/i.test(line)) socket.write("250-localhost\r\n250 AUTH PLAIN\r\n");
-        else if (/^AUTH/i.test(line)) socket.write("235 authenticated\r\n");
-        else if (/^MAIL FROM:/i.test(line)) socket.write("250 sender ok\r\n");
-        else if (/^RCPT TO:/i.test(line)) socket.write("250 recipient ok\r\n");
-        else if (/^DATA/i.test(line)) {
-          dataMode = true;
-          socket.write("354 end with dot\r\n");
-        } else if (/^QUIT/i.test(line)) {
-          socket.write("221 bye\r\n");
-          socket.end();
-        } else socket.write("250 ok\r\n");
-      }
-    });
-  });
-}
-
-async function waitForCondition(condition, timeoutMs, message) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    if (condition()) return;
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  }
-  throw new Error(message);
 }
 
 async function waitForHttp(url, timeoutMs) {
@@ -1215,7 +1104,6 @@ await testStartupPortConflict();
 await testLlmQueueFullReturns503();
 await testSessionCapacityReturns503();
 await testRevealApiInfraPayload();
-await testFeedbackEmailEndpoint();
 await testDeploymentConfiguration();
 await testReleaseRecordGateFailures();
 

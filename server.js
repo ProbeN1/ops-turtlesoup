@@ -1,8 +1,6 @@
 import { createServer } from "node:http";
 import { readFile, readdir } from "node:fs/promises";
 import { existsSync, readFileSync } from "node:fs";
-import net from "node:net";
-import tls from "node:tls";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import crypto from "node:crypto";
@@ -26,7 +24,6 @@ const LLM_REQUEST_TIMEOUT_SECONDS = readNumberEnv("LLM_REQUEST_TIMEOUT_SECONDS",
 const RATE_LIMIT_WINDOW_SECONDS = readNumberEnv("RATE_LIMIT_WINDOW_SECONDS", 60, { integer: true, min: 1 });
 const RATE_LIMIT_WINDOW_MS = RATE_LIMIT_WINDOW_SECONDS * 1000;
 const RATE_LIMIT_MAX_REQUESTS = readNumberEnv("RATE_LIMIT_MAX_REQUESTS", 120, { integer: true, min: 0 });
-const FEEDBACK_EMAIL_TO = process.env.FEEDBACK_EMAIL_TO || "532015746@qq.com";
 const SCENARIO_DIR = path.join(__dirname, "data", "scenarios");
 const PUBLIC_DIR = path.join(__dirname, "public");
 const BUILD_INFO = buildInfo();
@@ -240,8 +237,6 @@ function createMetrics() {
     gameQuestionsTotal: 0,
     gameRevealsTotal: 0,
     gamesSolvedTotal: 0,
-    feedbackSentTotal: 0,
-    feedbackFailuresTotal: 0,
     llm: {
       requestsTotal: 0,
       failuresTotal: 0,
@@ -296,8 +291,6 @@ function publicMetrics() {
     gameQuestionsTotal: metrics.gameQuestionsTotal,
     gameRevealsTotal: metrics.gameRevealsTotal,
     gamesSolvedTotal: metrics.gamesSolvedTotal,
-    feedbackSentTotal: metrics.feedbackSentTotal,
-    feedbackFailuresTotal: metrics.feedbackFailuresTotal,
     llm: {
       ...llmLimiter.stats(),
       requestsTotal: metrics.llm.requestsTotal,
@@ -429,12 +422,6 @@ function prometheusMetrics() {
   metric("ops_turtle_soup_games_solved_total", "counter", "Total solved games.", [
     `ops_turtle_soup_games_solved_total ${snapshot.gamesSolvedTotal}`
   ]);
-  metric("ops_turtle_soup_feedback_sent_total", "counter", "Total feedback emails sent.", [
-    `ops_turtle_soup_feedback_sent_total ${snapshot.feedbackSentTotal}`
-  ]);
-  metric("ops_turtle_soup_feedback_failures_total", "counter", "Total failed feedback email attempts.", [
-    `ops_turtle_soup_feedback_failures_total ${snapshot.feedbackFailuresTotal}`
-  ]);
   metric("ops_turtle_soup_llm_requests_total", "counter", "Total LLM requests.", [
     `ops_turtle_soup_llm_requests_total ${snapshot.llm.requestsTotal}`
   ]);
@@ -563,160 +550,6 @@ async function readJson(req) {
 
   if (!body) return {};
   return JSON.parse(body);
-}
-
-function readStringField(body, field, maxLength) {
-  const value = String(body[field] || "").trim();
-  return value.slice(0, maxLength);
-}
-
-function feedbackConfig() {
-  return {
-    host: process.env.SMTP_HOST || "",
-    port: readNumberEnv("SMTP_PORT", process.env.SMTP_SECURE === "true" ? 465 : 25, { integer: true, min: 1, max: 65535 }),
-    secure: String(process.env.SMTP_SECURE || "").toLowerCase() === "true",
-    user: process.env.SMTP_USER || "",
-    pass: process.env.SMTP_PASS || "",
-    from: process.env.SMTP_FROM || "",
-    to: FEEDBACK_EMAIL_TO
-  };
-}
-
-function feedbackMessage(body, req) {
-  const content = readStringField(body, "content", 4000);
-  if (content.length < 2) {
-    throw new Error("反馈内容太短");
-  }
-
-  return {
-    content,
-    contact: readStringField(body, "contact", 200),
-    page: readStringField(body, "page", 300),
-    userAgent: String(req.headers["user-agent"] || "").slice(0, 300),
-    ip: clientIp(req),
-    submittedAt: new Date().toISOString(),
-    build: BUILD_INFO
-  };
-}
-
-function feedbackEmailText(feedback) {
-  return [
-    "运维海龟汤用户反馈",
-    "",
-    `提交时间: ${feedback.submittedAt}`,
-    `来源 IP: ${feedback.ip}`,
-    `联系方式: ${feedback.contact || "未填写"}`,
-    `页面: ${feedback.page || "未提供"}`,
-    `User-Agent: ${feedback.userAgent || "未提供"}`,
-    `版本: ${feedback.build.version} / ${feedback.build.gitCommit} / ${feedback.build.releaseName || "未命名发布"}`,
-    "",
-    "反馈内容:",
-    feedback.content,
-    ""
-  ].join("\n");
-}
-
-function sanitizeHeader(value) {
-  return String(value || "").replace(/[\r\n]/g, " ").trim();
-}
-
-function encodeHeader(value) {
-  return `=?UTF-8?B?${Buffer.from(String(value), "utf8").toString("base64")}?=`;
-}
-
-function smtpReadResponse(socket) {
-  return new Promise((resolve, reject) => {
-    let buffer = "";
-    const onData = (chunk) => {
-      buffer += chunk.toString("utf8");
-      const lines = buffer.split(/\r?\n/).filter(Boolean);
-      const last = lines.at(-1) || "";
-      if (/^\d{3} /.test(last)) {
-        cleanup();
-        resolve({ code: Number(last.slice(0, 3)), text: buffer });
-      }
-    };
-    const onError = (error) => {
-      cleanup();
-      reject(error);
-    };
-    const cleanup = () => {
-      socket.off("data", onData);
-      socket.off("error", onError);
-    };
-    socket.on("data", onData);
-    socket.on("error", onError);
-  });
-}
-
-async function smtpCommand(socket, command, expectedCodes) {
-  socket.write(`${command}\r\n`);
-  const response = await smtpReadResponse(socket);
-  if (!expectedCodes.includes(response.code)) {
-    throw new Error(`SMTP command failed: ${response.code}`);
-  }
-  return response;
-}
-
-function smtpConnect(config) {
-  const options = { host: config.host, port: config.port };
-  return config.secure
-    ? tls.connect({ ...options, servername: config.host })
-    : net.createConnection(options);
-}
-
-async function sendSmtpMail(config, { subject, text }) {
-  if (!config.host || !config.from || !config.to) {
-    const error = new Error("反馈邮件服务未配置");
-    error.code = "FEEDBACK_EMAIL_NOT_CONFIGURED";
-    throw error;
-  }
-
-  const socket = smtpConnect(config);
-  socket.setTimeout(15000);
-
-  try {
-    await smtpReadResponse(socket);
-    await smtpCommand(socket, "EHLO ops-turtle-soup", [250]);
-    if (config.user || config.pass) {
-      const auth = Buffer.from(`\0${config.user}\0${config.pass}`, "utf8").toString("base64");
-      await smtpCommand(socket, `AUTH PLAIN ${auth}`, [235, 503]);
-    }
-    await smtpCommand(socket, `MAIL FROM:<${sanitizeHeader(config.from)}>`, [250]);
-    await smtpCommand(socket, `RCPT TO:<${sanitizeHeader(config.to)}>`, [250, 251]);
-    await smtpCommand(socket, "DATA", [354]);
-
-    const safeText = text.replace(/\r?\n\./g, "\n..");
-    const message = [
-      `From: ${sanitizeHeader(config.from)}`,
-      `To: ${sanitizeHeader(config.to)}`,
-      `Subject: ${encodeHeader(subject)}`,
-      "MIME-Version: 1.0",
-      "Content-Type: text/plain; charset=utf-8",
-      "Content-Transfer-Encoding: 8bit",
-      "",
-      safeText,
-      "."
-    ].join("\r\n");
-    socket.write(`${message}\r\n`);
-
-    const response = await smtpReadResponse(socket);
-    if (response.code !== 250) {
-      throw new Error(`SMTP DATA failed: ${response.code}`);
-    }
-    await smtpCommand(socket, "QUIT", [221]);
-  } finally {
-    socket.end();
-  }
-}
-
-async function sendFeedback(body, req) {
-  const feedback = feedbackMessage(body, req);
-  await sendSmtpMail(feedbackConfig(), {
-    subject: "运维海龟汤用户反馈",
-    text: feedbackEmailText(feedback)
-  });
-  return feedback;
 }
 
 function publicScenario(scenario) {
@@ -1085,22 +918,6 @@ async function handleApi(req, res) {
     return jsonResponse(res, 200, {
       difficulties: Object.entries(difficulties).map(([id, info]) => ({ id, label: info.label }))
     });
-  }
-
-  if (req.method === "POST" && req.url === "/api/feedback") {
-    const body = await readJson(req);
-    try {
-      await sendFeedback(body, req);
-      metrics.feedbackSentTotal += 1;
-      return jsonResponse(res, 200, { ok: true });
-    } catch (error) {
-      metrics.feedbackFailuresTotal += 1;
-      const status = error.code === "FEEDBACK_EMAIL_NOT_CONFIGURED" ? 503 : 400;
-      return jsonResponse(res, status, {
-        error: error.message || "反馈发送失败",
-        code: error.code || "FEEDBACK_SEND_FAILED"
-      });
-    }
   }
 
   if (req.method === "POST" && req.url === "/api/game/start") {

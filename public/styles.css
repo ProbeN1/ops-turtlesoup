@@ -335,15 +335,14 @@ input:disabled {
 }
 
 .version-badge a,
-.back-link,
-.mailto-fallback {
+.back-link {
   color: var(--button);
   font-weight: 800;
   text-decoration: none;
 }
 
 .feedback-shell {
-  width: min(760px, calc(100vw - 32px));
+  width: min(1040px, calc(100vw - 32px));
   min-height: calc(100vh - 32px);
   margin: 16px auto;
   display: grid;
@@ -361,30 +360,166 @@ input:disabled {
   box-shadow: 0 20px 60px var(--shadow);
 }
 
-.feedback-form {
-  display: grid;
-  gap: 10px;
+.feedback-luxe-panel {
+  gap: 24px;
+  padding: 26px;
+  background:
+    linear-gradient(135deg, rgba(23, 33, 30, 0.96), rgba(20, 27, 33, 0.95)),
+    var(--panel);
 }
 
-.feedback-form label {
+.feedback-luxe-topbar h1 {
+  font-size: clamp(2rem, 4vw, 4.1rem);
+}
+
+.feedback-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.48fr);
+  gap: 18px;
+  align-items: stretch;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(49, 196, 141, 0.13), rgba(255, 176, 32, 0.08)),
+    #111a18;
+}
+
+.feedback-kicker {
+  margin: 0 0 8px;
+  color: var(--button);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.feedback-hero h2,
+.feedback-guide h2,
+.feedback-template h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.2;
+}
+
+.feedback-hero h2 {
+  font-family: Georgia, "Microsoft YaHei", serif;
+  font-size: clamp(2.1rem, 5vw, 4.8rem);
+}
+
+.feedback-copy,
+.guide-row p,
+.copy-status {
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.dingtalk-contact {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-content: center;
+  gap: 8px 12px;
+  min-height: 180px;
+  padding: 18px;
+  border-left: 3px solid var(--button);
+  background: rgba(238, 244, 237, 0.04);
+}
+
+.contact-label {
+  grid-column: 1 / -1;
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.dingtalk-contact strong {
+  font-size: clamp(1.8rem, 4vw, 3.2rem);
+  line-height: 1;
+}
+
+.dingtalk-contact span:last-of-type {
+  grid-column: 1 / -1;
   color: var(--muted);
   font-weight: 800;
 }
 
-.feedback-actions {
+.icon-copy,
+.copy-template {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--button);
+  color: #162018;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.icon-copy {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  font-size: 1.25rem;
+}
+
+.feedback-guide {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.guide-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  min-height: 150px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid rgba(52, 69, 63, 0.55);
+}
+
+.guide-index {
+  color: var(--warn);
+  font-family: Georgia, "Microsoft YaHei", serif;
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.feedback-template {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #101816;
+}
+
+.template-head {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  gap: 14px;
   flex-wrap: wrap;
-  margin-top: 4px;
 }
 
-#feedbackStatus {
-  color: var(--muted);
+.copy-template {
+  min-height: 42px;
+  padding: 0 16px;
 }
 
-.mailto-fallback {
-  width: fit-content;
+.feedback-template pre {
+  min-height: 150px;
+  margin: 0;
+  overflow: auto;
+  padding: 16px;
+  border: 1px solid rgba(52, 69, 63, 0.72);
+  border-radius: 8px;
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.18);
+  font: 0.96rem/1.8 "Microsoft YaHei", Consolas, monospace;
+  white-space: pre-wrap;
+}
+
+.copy-status {
+  min-height: 1.7em;
 }
 
 .celebration {
@@ -458,5 +593,32 @@ input:disabled {
 
   .message {
     width: 100%;
+  }
+
+  .feedback-shell {
+    width: min(100vw - 20px, 680px);
+    margin: 10px auto 72px;
+    align-items: start;
+  }
+
+  .feedback-luxe-panel,
+  .feedback-hero,
+  .feedback-template {
+    padding: 16px;
+  }
+
+  .feedback-hero,
+  .feedback-guide {
+    grid-template-columns: 1fr;
+  }
+
+  .dingtalk-contact {
+    min-height: 140px;
+    border-left: 0;
+    border-top: 3px solid var(--button);
+  }
+
+  .guide-row {
+    min-height: 0;
   }
 }

@@ -85,12 +85,10 @@ The server includes simple in-process protection for intranet use:
 - `LLM_REQUEST_TIMEOUT_SECONDS`: maximum duration for one runtime LLM request.
 - `RATE_LIMIT_WINDOW_SECONDS`: request limit window.
 - `RATE_LIMIT_MAX_REQUESTS`: max API requests per client IP per window.
-- `FEEDBACK_EMAIL_TO`: mailbox that receives feedback. Defaults to `532015746@qq.com`.
-- `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`: SMTP settings for sending feedback email.
 
 Set `RATE_LIMIT_MAX_REQUESTS=0` to disable API rate limiting for a trusted test environment.
 
-Feedback submission requires SMTP settings. Without SMTP, the feedback page still shows a mail client fallback link, and the API returns a clear configuration error.
+Feedback is handled through the static `/feedback` page. Players contact `0027029145` 姜毅 on DingTalk and can copy the provided feedback template.
 
 Invalid numeric runtime configuration fails fast during startup.
 

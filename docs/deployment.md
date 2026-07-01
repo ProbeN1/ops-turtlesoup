@@ -37,18 +37,11 @@ APP_SMOKE_QUESTION=这个问题和业务流量暴涨有关吗？
 APP_SMOKE_TIMEOUT_MS=30000
 RATE_LIMIT_WINDOW_SECONDS=60
 RATE_LIMIT_MAX_REQUESTS=120
-FEEDBACK_EMAIL_TO=532015746@qq.com
-SMTP_HOST=<smtp-host>
-SMTP_PORT=25
-SMTP_SECURE=false
-SMTP_USER=<smtp-user-if-required>
-SMTP_PASS=<smtp-password-or-token-if-required>
-SMTP_FROM=<sender-address>
 ```
 
 Numeric runtime settings are validated at startup. Invalid values, such as an out-of-range `PORT` or `LLM_QUEUE_LIMIT` lower than `LLM_MAX_CONCURRENCY`, cause the service to exit before listening.
 
-The feedback page sends user feedback to `FEEDBACK_EMAIL_TO` through SMTP. `FEEDBACK_EMAIL_TO` is the recipient, not the sender credential. Configure `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_FROM`, and, if required by the mail server, `SMTP_USER` and `SMTP_PASS`. Do not commit real SMTP credentials.
+The feedback page is a static intranet contact page. Players send feedback through DingTalk to `0027029145` 姜毅, using the copyable template on `/feedback`.
 
 If startup fails while binding the port, stderr prints a `Startup failed:` message. Common causes are an existing process already using `HOST:PORT` or an account without permission to bind the configured port.
 
@@ -227,7 +220,7 @@ The metrics endpoint returns in-memory counters for:
 - game starts, questions, reveals, and solved games;
 - active sessions and cached scenario sets;
 - LLM active/queued calls, failures, and average latency.
-- feedback email sent and failure counters.
+- game flow, runtime health, LLM, and rate-limit counters.
 
 For Prometheus-compatible monitoring, scrape:
 
