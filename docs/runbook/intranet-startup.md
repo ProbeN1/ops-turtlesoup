@@ -17,8 +17,22 @@ npm start
 Invoke-RestMethod http://127.0.0.1:5725/api/health
 ```
 
-6. Share:
+6. Run deployment verification:
+
+```powershell
+npm run verify:deploy
+```
+
+7. Share:
 
 ```text
 http://<server-intranet-ip>:5725/
+```
+
+## Offline Preflight
+
+Before starting the service, validate local runtime configuration and scenario files:
+
+```powershell
+npm run verify:deploy:offline
 ```

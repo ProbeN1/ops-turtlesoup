@@ -66,6 +66,30 @@ GET /api/health
 
 The endpoint returns process uptime, active session count, and configured difficulty names.
 
+## Deployment Verification
+
+After configuring `.env` and starting the service, run:
+
+```powershell
+npm run verify:deploy
+```
+
+The deployment verifier checks:
+
+- Node.js version.
+- Intranet binding and core runtime settings.
+- LLM key, base URL, and model presence.
+- Scenario schema and required operational fields.
+- `/api/health` readiness and exposed limiter status.
+
+For offline preflight before starting the service, run:
+
+```powershell
+npm run verify:deploy:offline
+```
+
+The offline mode skips only the health endpoint probe.
+
 ## Capacity Notes
 
 For around 100 intranet users:

@@ -15,6 +15,27 @@ Get-Content .\server.out.log
 Get-Content .\server.err.log
 ```
 
+## Deployment Verification Fails
+
+Run:
+
+```powershell
+npm run verify:deploy
+```
+
+Interpretation:
+
+- `FAIL` means the deployment should not be considered ready.
+- `WARN` means the service may run, but the setting should be reviewed before sharing with coworkers.
+- The verifier never prints API keys; it only checks whether required LLM settings are present.
+
+If the health check fails, confirm the service is already running and that `DEPLOY_VERIFY_BASE_URL` points to the correct address:
+
+```powershell
+$env:DEPLOY_VERIFY_BASE_URL="http://127.0.0.1:5725"
+npm run verify:deploy
+```
+
 ## LLM Returns HTML Or Invalid JSON
 
 Verify `OPENAI_BASE_URL` ends with the OpenAI-compatible API prefix, usually `/v1`.

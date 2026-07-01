@@ -7,9 +7,11 @@
     "start": "node server.js",
     "dev": "node server.js",
     "start:loadtest": "node tests/start-loadtest-server.js",
-    "check": "node --check server.js && node --check public/app.js",
+    "check": "node --check server.js && node --check public/app.js && node --check tests/verify-deploy.js",
     "test": "npm run check && node tests/run-tests.js",
-    "load:local": "node tests/load-local.js"
+    "load:local": "node tests/load-local.js",
+    "verify:deploy": "node tests/verify-deploy.js",
+    "verify:deploy:offline": "node tests/verify-deploy.js --offline"
   },
   "engines": {
     "node": ">=18"

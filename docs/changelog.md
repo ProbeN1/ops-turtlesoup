@@ -17,3 +17,4 @@
 - Added load-test server mode for local capacity smoke tests.
 - Fixed reveal rendering for structured infrastructure background.
 - Added scenario authoring guidance for precise turtle soup openings.
+- Added deployment verification commands for intranet readiness checks.
