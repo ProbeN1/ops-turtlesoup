@@ -105,7 +105,7 @@ function handleSolved(reveal) {
 function renderReveal(data, title = "揭晓") {
   setChatCollapsed(false);
   const points = Array.isArray(data.solvePoints) ? data.solvePoints.join("；") : "";
-  const infraBackground = formatInfraBackground(data.infraBackground);
+  const infraBackground = data.infraBackgroundText || formatInfraBackground(data.infraBackground);
   addMessage(
     "host reveal",
     title,

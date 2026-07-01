@@ -84,6 +84,7 @@ async function testFrontendBindings() {
   }
 
   assert(html.includes('value="easy"'), "frontend must use standard easy difficulty value");
+  assert(html.includes('/app.js?v=20260701-infra-format'), "frontend must version app.js after reveal formatting fixes");
   assert(app.includes("function formatInfraBackground"), "frontend must format infra background before rendering reveal");
   assert(!app.includes("基础设施：${data.infraBackground}"), "frontend must not render infra object directly");
 }
@@ -139,6 +140,7 @@ async function testRevealInfraFormatting() {
 
   vm.runInNewContext(app, context);
   context.renderReveal({
+    infraBackgroundText: "",
     infraBackground: {
       platform: "Proxmox",
       nodes: { workers: 2 },
@@ -154,6 +156,18 @@ async function testRevealInfraFormatting() {
   assert(!lastMessageBody.includes("[object Object]"), "reveal must not show [object Object]");
   assert(lastMessageBody.includes("platform: Proxmox"), "reveal must include formatted infra key/value");
   assert(lastMessageBody.includes("nodes: workers=2"), "reveal must include nested infra values");
+
+  context.renderReveal({
+    infraBackgroundText: "platform: Bare metal K8S; storage: local SSD",
+    infraBackground: { platform: { shouldNotRender: true } },
+    hiddenTruth: "truth",
+    solvePoints: ["point"],
+    lesson: "lesson"
+  });
+
+  const serverTextMessageBody = chatLog.children.at(-1).lastAppend[1].textContent;
+  assert(serverTextMessageBody.includes("platform: Bare metal K8S; storage: local SSD"), "reveal must prefer server formatted infra text");
+  assert(!serverTextMessageBody.includes("shouldNotRender"), "reveal must not reformat infra object when server text is present");
 }
 
 async function testServerConfiguration() {
@@ -180,7 +194,10 @@ async function testServerConfiguration() {
     "EADDRINUSE",
     "EACCES",
     "isLlmQueueFullError",
+    '"cache-control": "no-store"',
     "jsonResponse(res, 503",
+    "infraBackgroundText",
+    "formatInfraBackground",
     "主持繁忙，请稍后再试",
     "readinessPayload",
     "GET\" && req.url === \"/api/ready",

@@ -37,3 +37,5 @@
 - Added `/api/ready` for non-sensitive deployment readiness checks.
 - Added `MAX_ACTIVE_SESSIONS` to cap active game sessions for intranet capacity protection.
 - Added `npm run build:release` for portable non-Docker release archive generation.
+- Disabled static asset caching and versioned `app.js` so reveal formatting fixes reach browsers reliably.
+- Added server-formatted `infraBackgroundText` to reveal responses and made the frontend prefer it.

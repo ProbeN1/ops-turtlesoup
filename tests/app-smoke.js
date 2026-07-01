@@ -105,6 +105,7 @@ async function main() {
   const reveal = await postJson("/api/game/reveal", { gameId: start.gameId });
   assert(typeof reveal.hiddenTruth === "string" && reveal.hiddenTruth.length > 20, "reveal response missing hiddenTruth");
   assert(reveal.infraBackground && typeof reveal.infraBackground === "object", "reveal response missing infraBackground object");
+  assert(typeof reveal.infraBackgroundText === "string" && reveal.infraBackgroundText.length > 0, "reveal response missing infraBackgroundText");
   assert(Array.isArray(reveal.solvePoints) && reveal.solvePoints.length > 0, "reveal response missing solvePoints");
   assert(typeof reveal.lesson === "string" && reveal.lesson.length > 0, "reveal response missing lesson");
 

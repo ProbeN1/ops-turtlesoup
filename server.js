@@ -507,6 +507,7 @@ function publicScenario(scenario) {
 function revealPayload(scenario) {
   return {
     infraBackground: scenario.infra_background,
+    infraBackgroundText: formatInfraBackground(scenario.infra_background),
     hiddenTruth: scenario.answer,
     solvePoints: scenario.must_discover,
     rootCause: scenario.root_cause,
@@ -515,6 +516,25 @@ function revealPayload(scenario) {
     knowledgePoints: scenario.knowledge_points,
     lesson: scenario.permanent_fix
   };
+}
+
+function formatInfraBackground(value) {
+  if (value === null || value === undefined || value === "") return "none";
+  if (typeof value !== "object") return String(value);
+  if (Array.isArray(value)) return value.map(formatInfraValue).join(", ");
+
+  const entries = Object.entries(value);
+  if (!entries.length) return "none";
+  return entries.map(([key, item]) => `${key}: ${formatInfraValue(item)}`).join("; ");
+}
+
+function formatInfraValue(value) {
+  if (value === null || value === undefined || value === "") return "none";
+  if (Array.isArray(value)) return value.map(formatInfraValue).join(", ");
+  if (typeof value === "object") {
+    return Object.entries(value).map(([key, item]) => `${key}=${formatInfraValue(item)}`).join(", ");
+  }
+  return String(value);
 }
 
 function getAllowedAnswers(difficulty) {
@@ -946,7 +966,8 @@ async function serveStatic(req, res) {
   const content = await readFile(filePath);
   recordResponseStatus(200);
   res.writeHead(200, {
-    "content-type": contentTypes[ext] || "application/octet-stream"
+    "content-type": contentTypes[ext] || "application/octet-stream",
+    "cache-control": "no-store"
   });
   res.end(content);
 }
