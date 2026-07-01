@@ -71,3 +71,19 @@ For around 100 intranet users:
 - Keep the LLM endpoint on the same intranet or low-latency network.
 - Monitor `server.err.log` or process stderr.
 - Use one Node process unless session persistence is externalized.
+
+## Local Capacity Smoke Test
+
+After starting the service, run:
+
+```powershell
+npm run load:local
+```
+
+Defaults:
+
+- `LOAD_TEST_USERS=100`
+- `LOAD_TEST_CONCURRENCY=20`
+- `LOAD_TEST_BASE_URL=http://127.0.0.1:5725`
+
+This test creates game sessions and reveals answers without calling the LLM-heavy ask path.

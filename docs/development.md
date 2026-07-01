@@ -11,6 +11,7 @@
 npm start
 npm run dev
 npm test
+npm run load:local
 ```
 
 ## Scenario Schema
@@ -76,3 +77,7 @@ Tests validate:
 - Server syntax.
 - Frontend script syntax.
 - Core local solve behavior.
+
+## Capacity Smoke Test
+
+`npm run load:local` simulates 100 local game sessions by default. It validates the lightweight session and scenario-read path without spending LLM calls.

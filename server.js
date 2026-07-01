@@ -16,6 +16,7 @@ const SESSION_TTL_MS = Number(process.env.SESSION_TTL_MINUTES || 120) * 60 * 100
 const SCENARIO_DIR = path.join(__dirname, "data", "scenarios");
 const PUBLIC_DIR = path.join(__dirname, "public");
 const sessions = new Map();
+const scenarioCache = new Map();
 
 const difficulties = {
   easy: { label: "简单", file: "easy.json" },
@@ -75,6 +76,10 @@ function normalizeDifficulty(difficulty) {
 
 async function loadScenarios(difficultyInput) {
   const difficulty = normalizeDifficulty(difficultyInput);
+  if (scenarioCache.has(difficulty)) {
+    return scenarioCache.get(difficulty);
+  }
+
   const info = difficulties[difficulty];
   if (!info) throw new Error("Unknown difficulty");
 
@@ -87,6 +92,7 @@ async function loadScenarios(difficultyInput) {
     validateScenario(scenario, difficulty);
   }
 
+  scenarioCache.set(difficulty, scenarios);
   return scenarios;
 }
 
@@ -419,6 +425,7 @@ async function handleApi(req, res) {
       ok: true,
       uptimeSeconds: Math.round(process.uptime()),
       activeSessions: sessions.size,
+      cachedScenarioSets: scenarioCache.size,
       difficulties: Object.keys(difficulties)
     });
   }

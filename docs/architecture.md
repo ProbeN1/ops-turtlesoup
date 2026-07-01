@@ -23,6 +23,7 @@ Node server.js
 - Frontend: vanilla HTML, CSS, and JavaScript.
 - Backend: Node.js native `node:http`.
 - Scenario data: JSON files under `data/scenarios`.
+- Scenario cache: JSON scenario files are validated and cached in memory after first load.
 - Session state: in-memory `Map`, with periodic cleanup.
 - LLM provider: OpenAI-compatible `/chat/completions` endpoint.
 
@@ -56,6 +57,7 @@ Current approach:
 - Stateless frontend.
 - Lightweight in-memory sessions.
 - Session TTL cleanup to avoid unbounded memory growth.
+- Scenario data is cached after first use to avoid repeated disk reads.
 
 Known limits:
 

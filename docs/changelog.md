@@ -10,3 +10,5 @@
 - Added schema and frontend binding tests.
 - Added Docker and docker compose deployment files.
 - Added intranet deployment target for around 100 users.
+- Added in-memory scenario cache.
+- Added `npm run load:local` for 100-session local capacity smoke testing.

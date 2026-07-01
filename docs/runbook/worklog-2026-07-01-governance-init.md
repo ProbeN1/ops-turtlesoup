@@ -12,6 +12,8 @@ Date: 2026-07-01
 - Added request body size limit.
 - Added test script for syntax, scenario schema, and frontend bindings.
 - Added Dockerfile and docker-compose.yml.
+- Added scenario cache.
+- Added local capacity smoke test.
 - Verified service startup, health endpoint, static page, difficulties API, game start, ask, and reveal APIs.
 
 ## Files Changed
@@ -34,6 +36,11 @@ Date: 2026-07-01
 ```text
 npm test
 All tests passed
+```
+
+```text
+npm run load:local
+100 local sessions completed
 ```
 
 Manual API checks:
