@@ -2,6 +2,8 @@
 
 ## Steps
 
+0. Complete [Intranet Release Checklist](release-checklist.md) before sharing the game URL.
+
 1. Configure `.env`.
 2. Ensure `HOST=0.0.0.0` for coworker access.
 3. Ensure `PORT` is allowed by firewall.

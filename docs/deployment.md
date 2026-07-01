@@ -105,6 +105,10 @@ sudo systemctl status ops-turtle-soup
 
 Run deployment verification after the service is active.
 
+## Release Checklist
+
+Before sharing the intranet URL, complete [Intranet Release Checklist](runbook/release-checklist.md). It defines the required gates for configuration, process management, LLM compatibility, application smoke, and 100-session local smoke testing.
+
 ## Health Check
 
 ```text

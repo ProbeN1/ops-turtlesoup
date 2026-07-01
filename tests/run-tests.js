@@ -171,12 +171,26 @@ async function testDeploymentConfiguration() {
   const dockerfile = await readText("Dockerfile");
   const compose = await readText("docker-compose.yml");
   const systemd = await readText("deploy/systemd/ops-turtle-soup.service.example");
+  const releaseChecklist = await readText("docs/runbook/release-checklist.md");
 
   assert(dockerfile.includes("HEALTHCHECK"), "Dockerfile must define a container healthcheck");
   assert(dockerfile.includes("/api/health"), "Docker healthcheck must probe /api/health");
   assert(compose.includes("restart: unless-stopped"), "docker-compose.yml must restart the service");
   assert(systemd.includes("Restart=always"), "systemd unit example must restart on failure");
   assert(systemd.includes("EnvironmentFile="), "systemd unit example must load .env");
+
+  for (const token of [
+    "npm test",
+    "npm run verify:deploy:offline",
+    "npm run verify:deploy",
+    "npm run smoke:llm",
+    "npm run smoke:app",
+    "npm run load:local",
+    "docker compose ps",
+    "systemctl status ops-turtle-soup"
+  ]) {
+    assert(releaseChecklist.includes(token), `release checklist missing ${token}`);
+  }
 }
 
 await testScenarioSchema();
