@@ -17,6 +17,8 @@ Target release profile:
 
 Do not share the game URL until every required gate below is complete.
 
+Create a release record from [Release Record Template](release-record-template.md) and paste command summaries there as evidence.
+
 | Gate | Command or Evidence | Required Result |
 | --- | --- | --- |
 | Code and scenario checks | `npm test` | Pass |

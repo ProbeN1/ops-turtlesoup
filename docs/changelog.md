@@ -26,3 +26,4 @@
 - Added fail-fast validation for numeric runtime configuration.
 - Added browser UI smoke runbook and recorded manual UI verification.
 - Added HTTP request timeouts and graceful shutdown handling.
+- Added release record template for target-host deployment evidence.

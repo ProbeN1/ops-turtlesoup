@@ -61,3 +61,4 @@ docker compose up -d
 - [Process Management](docs/runbook/process-management.md)
 - [Release Checklist](docs/runbook/release-checklist.md)
 - [UI Smoke](docs/runbook/ui-smoke.md)
+- [Release Record Template](docs/runbook/release-record-template.md)
