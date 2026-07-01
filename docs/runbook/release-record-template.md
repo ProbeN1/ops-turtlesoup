@@ -54,6 +54,8 @@ Paste summary:
 
 ```text
 archivePath=
+sha256Path=
+sha256=
 releaseName=
 .env excluded=yes | no
 ```

@@ -2,6 +2,8 @@ import { mkdir, rm, cp, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
+import crypto from "node:crypto";
+import { createReadStream } from "node:fs";
 
 const root = process.cwd();
 const distDir = path.join(root, "dist");
@@ -10,6 +12,7 @@ const timestamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\..+/, 
 const releaseName = `ops-turtle-soup-${packageJson.version}-${timestamp}`;
 const stagingDir = path.join(distDir, releaseName);
 const archivePath = path.join(distDir, `${releaseName}.zip`);
+const sha256Path = `${archivePath}.sha256`;
 
 const includePaths = [
   ".env.example",
@@ -81,6 +84,7 @@ function releaseManifest() {
 
 async function createZip() {
   await rm(archivePath, { force: true });
+  await rm(sha256Path, { force: true });
   if (process.platform === "win32") {
     const command = `Compress-Archive -LiteralPath '${escapePowerShell(stagingDir)}' -DestinationPath '${escapePowerShell(archivePath)}' -Force`;
     await run("powershell", [
@@ -92,6 +96,16 @@ async function createZip() {
   }
 
   await run("zip", ["-r", archivePath, releaseName], { cwd: distDir });
+}
+
+function sha256File(filePath) {
+  return new Promise((resolve, reject) => {
+    const hash = crypto.createHash("sha256");
+    const stream = createReadStream(filePath);
+    stream.on("error", reject);
+    stream.on("data", (chunk) => hash.update(chunk));
+    stream.on("end", () => resolve(hash.digest("hex")));
+  });
 }
 
 function escapePowerShell(value) {
@@ -114,11 +128,15 @@ function run(command, args, options = {}) {
 
 await copyIncludedFiles();
 await createZip();
+const sha256 = await sha256File(archivePath);
+await writeFile(sha256Path, `${sha256}  ${path.basename(archivePath)}\n`, "utf8");
 
 console.log(JSON.stringify({
   ok: true,
   releaseName,
   archivePath,
+  sha256Path,
+  sha256,
   stagingDir,
   included: includePaths,
   excluded: forbiddenPaths

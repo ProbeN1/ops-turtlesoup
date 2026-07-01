@@ -69,7 +69,7 @@ For hosts where Docker is not available, build a portable release archive:
 npm run build:release
 ```
 
-The command writes `dist/ops-turtle-soup-<version>-<timestamp>.zip` and a `RELEASE_MANIFEST.txt`. The archive excludes `.env`, `.git`, `node_modules`, logs, and previous `dist` output. Copy the archive to the intranet host, extract it, create `.env` from `.env.example`, then start the service with systemd or the approved local process manager.
+The command writes `dist/ops-turtle-soup-<version>-<timestamp>.zip`, a sidecar `.sha256` checksum file, and a `RELEASE_MANIFEST.txt`. The archive excludes `.env`, `.git`, `node_modules`, logs, and previous `dist` output. Copy the archive to the intranet host, verify the checksum, extract it, create `.env` from `.env.example`, then start the service with Docker Compose, systemd, Windows Scheduled Task, or the approved local process manager.
 
 ## Docker
 

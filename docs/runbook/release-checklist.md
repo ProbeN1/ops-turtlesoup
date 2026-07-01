@@ -22,7 +22,7 @@ Create a release record from [Release Record Template](release-record-template.m
 | Gate | Command or Evidence | Required Result |
 | --- | --- | --- |
 | Code and scenario checks | `npm test` | Pass |
-| Release archive | `npm run build:release` | Zip created under `dist/` and excludes `.env` |
+| Release archive | `npm run build:release` | Zip and `.sha256` created under `dist/` and excludes `.env` |
 | Local release rehearsal | `npm run rehearse:release` | Archive/evidence/offline/online/app/capacity smoke pass |
 | Offline deployment preflight | `npm run verify:deploy:offline` | No `FAIL` |
 | Long-running process configured | `docker compose ps`, `systemctl status ops-turtle-soup`, or `Get-ScheduledTask -TaskName OpsTurtleSoup` | Service is running with restart policy |

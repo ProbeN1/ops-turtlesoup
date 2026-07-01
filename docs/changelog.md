@@ -43,3 +43,4 @@
 - Included release archive build and release evidence capture in `npm run rehearse:release`.
 - Added `npm run smoke:coworker` for same-intranet access verification from another machine.
 - Added a Windows Scheduled Task deployment script for non-Docker intranet hosts.
+- Added SHA256 checksum generation for release archives.

@@ -495,6 +495,8 @@ async function testDeploymentConfiguration() {
   for (const token of [
     "Compress-Archive",
     "RELEASE_MANIFEST.txt",
+    "sha256Path",
+    "sha256File",
     "\".env\"",
     "\"node_modules\"",
     "\"server.out.log\"",
