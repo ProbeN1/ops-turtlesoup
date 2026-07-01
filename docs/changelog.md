@@ -23,3 +23,4 @@
 - Added Docker healthcheck, systemd example, and process management runbook for long-running intranet hosting.
 - Added intranet release checklist for pre-share deployment gates.
 - Added `/api/metrics` runtime counters for request volume, game flow, rate limiting, and LLM latency.
+- Added fail-fast validation for numeric runtime configuration.

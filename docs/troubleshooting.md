@@ -15,6 +15,22 @@ Get-Content .\server.out.log
 Get-Content .\server.err.log
 ```
 
+## Service Exits Immediately
+
+Check stderr or the process manager journal for configuration validation errors.
+
+Examples:
+
+- `PORT must be <= 65535`
+- `LLM_QUEUE_LIMIT must be >= 8`
+- `REQUEST_LIMIT_BYTES must be >= 4096`
+
+Fix `.env`, then restart the service and run:
+
+```powershell
+npm run verify:deploy:offline
+```
+
 Check runtime counters:
 
 ```powershell

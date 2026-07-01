@@ -66,19 +66,35 @@ function loadEnvFile() {
   }
 }
 
-function numberEnv(name, fallback) {
+function numberEnv(name, fallback, options = {}) {
   const value = Number(process.env[name] || fallback);
   if (!Number.isFinite(value)) {
     fail(`${name} must be a number`);
     return fallback;
   }
+
+  if (options.integer && !Number.isInteger(value)) {
+    fail(`${name} must be an integer`);
+    return fallback;
+  }
+
+  if (options.min !== undefined && value < options.min) {
+    fail(`${name} must be >= ${options.min}`);
+    return fallback;
+  }
+
+  if (options.max !== undefined && value > options.max) {
+    fail(`${name} must be <= ${options.max}`);
+    return fallback;
+  }
+
   return value;
 }
 
 function localBaseUrl() {
   const host = process.env.HOST || "127.0.0.1";
   const probeHost = host === "0.0.0.0" ? "127.0.0.1" : host;
-  const port = numberEnv("PORT", 5725);
+  const port = numberEnv("PORT", 5725, { integer: true, min: 1, max: 65535 });
   return process.env.DEPLOY_VERIFY_BASE_URL || `http://${probeHost}:${port}`;
 }
 
@@ -93,11 +109,13 @@ function checkNodeVersion() {
 
 function checkConfig() {
   const host = process.env.HOST || "127.0.0.1";
-  const port = numberEnv("PORT", 5725);
-  const maxConcurrency = numberEnv("LLM_MAX_CONCURRENCY", 8);
-  const queueLimit = numberEnv("LLM_QUEUE_LIMIT", 100);
-  const rateLimitMax = numberEnv("RATE_LIMIT_MAX_REQUESTS", 120);
-  const requestLimitBytes = numberEnv("REQUEST_LIMIT_BYTES", 64 * 1024);
+  const port = numberEnv("PORT", 5725, { integer: true, min: 1, max: 65535 });
+  const sessionTtlMinutes = numberEnv("SESSION_TTL_MINUTES", 120, { integer: true, min: 1 });
+  const maxConcurrency = numberEnv("LLM_MAX_CONCURRENCY", 8, { integer: true, min: 1 });
+  const queueLimit = numberEnv("LLM_QUEUE_LIMIT", 100, { integer: true, min: maxConcurrency });
+  const rateLimitWindowSeconds = numberEnv("RATE_LIMIT_WINDOW_SECONDS", 60, { integer: true, min: 1 });
+  const rateLimitMax = numberEnv("RATE_LIMIT_MAX_REQUESTS", 120, { integer: true, min: 0 });
+  const requestLimitBytes = numberEnv("REQUEST_LIMIT_BYTES", 64 * 1024, { integer: true, min: 4096 });
 
   if (port > 0 && port < 65536) pass("PORT is valid");
   else fail("PORT must be between 1 and 65535");
@@ -114,17 +132,12 @@ function checkConfig() {
   if (process.env.OPENAI_MODEL || process.env.LLM_MODEL) pass("LLM model is configured");
   else warn("LLM model is not configured; fallback model will be used");
 
-  if (maxConcurrency > 0) pass("LLM_MAX_CONCURRENCY is positive");
-  else fail("LLM_MAX_CONCURRENCY must be positive");
-
+  if (sessionTtlMinutes >= 1) pass("SESSION_TTL_MINUTES is valid");
+  if (maxConcurrency >= 1) pass("LLM_MAX_CONCURRENCY is valid");
   if (queueLimit >= maxConcurrency) pass("LLM_QUEUE_LIMIT can absorb current concurrency");
-  else warn("LLM_QUEUE_LIMIT is lower than LLM_MAX_CONCURRENCY");
-
+  if (rateLimitWindowSeconds >= 1) pass("RATE_LIMIT_WINDOW_SECONDS is valid");
   if (rateLimitMax >= 0) pass("RATE_LIMIT_MAX_REQUESTS is valid");
-  else fail("RATE_LIMIT_MAX_REQUESTS must be zero or positive");
-
   if (requestLimitBytes >= 4096) pass("REQUEST_LIMIT_BYTES is large enough for game requests");
-  else fail("REQUEST_LIMIT_BYTES is too small for normal game requests");
 }
 
 async function checkScenarios() {

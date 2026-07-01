@@ -10,13 +10,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 loadEnvFile();
 
 const HOST = process.env.HOST || "127.0.0.1";
-const PORT = Number(process.env.PORT || 5725);
-const REQUEST_LIMIT_BYTES = Number(process.env.REQUEST_LIMIT_BYTES || 64 * 1024);
-const SESSION_TTL_MS = Number(process.env.SESSION_TTL_MINUTES || 120) * 60 * 1000;
-const LLM_MAX_CONCURRENCY = Number(process.env.LLM_MAX_CONCURRENCY || 8);
-const LLM_QUEUE_LIMIT = Number(process.env.LLM_QUEUE_LIMIT || 100);
-const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_SECONDS || 60) * 1000;
-const RATE_LIMIT_MAX_REQUESTS = Number(process.env.RATE_LIMIT_MAX_REQUESTS || 120);
+const PORT = readNumberEnv("PORT", 5725, { integer: true, min: 1, max: 65535 });
+const REQUEST_LIMIT_BYTES = readNumberEnv("REQUEST_LIMIT_BYTES", 64 * 1024, { integer: true, min: 4096 });
+const SESSION_TTL_MINUTES = readNumberEnv("SESSION_TTL_MINUTES", 120, { integer: true, min: 1 });
+const SESSION_TTL_MS = SESSION_TTL_MINUTES * 60 * 1000;
+const LLM_MAX_CONCURRENCY = readNumberEnv("LLM_MAX_CONCURRENCY", 8, { integer: true, min: 1 });
+const LLM_QUEUE_LIMIT = readNumberEnv("LLM_QUEUE_LIMIT", 100, { integer: true, min: LLM_MAX_CONCURRENCY });
+const RATE_LIMIT_WINDOW_SECONDS = readNumberEnv("RATE_LIMIT_WINDOW_SECONDS", 60, { integer: true, min: 1 });
+const RATE_LIMIT_WINDOW_MS = RATE_LIMIT_WINDOW_SECONDS * 1000;
+const RATE_LIMIT_MAX_REQUESTS = readNumberEnv("RATE_LIMIT_MAX_REQUESTS", 120, { integer: true, min: 0 });
 const SCENARIO_DIR = path.join(__dirname, "data", "scenarios");
 const PUBLIC_DIR = path.join(__dirname, "public");
 const sessions = new Map();
@@ -74,6 +76,29 @@ function loadEnvFile() {
     const value = match[2].replace(/^["']|["']$/g, "");
     process.env[match[1]] = value;
   }
+}
+
+function readNumberEnv(name, defaultValue, options = {}) {
+  const raw = process.env[name] ?? String(defaultValue);
+  const value = Number(raw);
+
+  if (!Number.isFinite(value)) {
+    throw new Error(`${name} must be a number; got ${JSON.stringify(raw)}`);
+  }
+
+  if (options.integer && !Number.isInteger(value)) {
+    throw new Error(`${name} must be an integer; got ${JSON.stringify(raw)}`);
+  }
+
+  if (options.min !== undefined && value < options.min) {
+    throw new Error(`${name} must be >= ${options.min}; got ${value}`);
+  }
+
+  if (options.max !== undefined && value > options.max) {
+    throw new Error(`${name} must be <= ${options.max}; got ${value}`);
+  }
+
+  return value;
 }
 
 function normalizeDifficulty(difficulty) {

@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import vm from "node:vm";
+import { spawn } from "node:child_process";
 
 const root = process.cwd();
 const scenarioFiles = [
@@ -170,6 +171,34 @@ async function testServerConfiguration() {
   }
 }
 
+async function testInvalidRuntimeConfiguration() {
+  const result = await runNodeWithEnv({ PORT: "70000" });
+  assert(result.code !== 0, "server must fail fast for invalid PORT");
+  assert(result.stderr.includes("PORT must be <= 65535"), "invalid PORT error must explain valid range");
+}
+
+function runNodeWithEnv(env) {
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, ["server.js"], {
+      cwd: root,
+      env: { ...process.env, ...env },
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk;
+    });
+    child.on("close", (code) => {
+      resolve({ code, stdout, stderr });
+    });
+  });
+}
+
 async function testDeploymentConfiguration() {
   const dockerfile = await readText("Dockerfile");
   const compose = await readText("docker-compose.yml");
@@ -201,6 +230,7 @@ await testScenarioSchema();
 await testFrontendBindings();
 await testRevealInfraFormatting();
 await testServerConfiguration();
+await testInvalidRuntimeConfiguration();
 await testDeploymentConfiguration();
 
 console.log("All tests passed");
