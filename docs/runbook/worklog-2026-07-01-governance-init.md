@@ -14,6 +14,8 @@ Date: 2026-07-01
 - Added Dockerfile and docker-compose.yml.
 - Added scenario cache.
 - Added local capacity smoke test.
+- Added LLM concurrency limiter and API request rate limiting.
+- Added load-test server startup mode.
 - Verified service startup, health endpoint, static page, difficulties API, game start, ask, and reveal APIs.
 
 ## Files Changed
@@ -43,6 +45,8 @@ npm run load:local
 100 local sessions completed
 ```
 
+Docker build verification was attempted but Docker CLI was not available on this machine.
+
 Manual API checks:
 
 - `GET /api/health`: passed.
@@ -57,6 +61,8 @@ Manual API checks:
 - Sessions are still in memory and are lost on process restart.
 - Multiple Node instances need shared session storage.
 - LLM latency/rate limits may affect 100-player experience.
+- Rate limiting may need tuning if many users share one source IP.
+- Docker deployment still needs verification on a host with Docker installed.
 - Docker image build was not run in this pass.
 
 ## Next Steps

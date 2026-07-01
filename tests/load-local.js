@@ -44,6 +44,11 @@ async function runVirtualUser(index) {
 }
 
 async function runPool() {
+  const initialHealth = await getJson("/api/health");
+  if (initialHealth.rateLimit?.maxRequests > 0 && initialHealth.rateLimit.maxRequests < totalUsers * 2) {
+    console.warn("Tip: local load tests may hit API rate limits. Start the server with npm run start:loadtest for this smoke test.");
+  }
+
   const startedAt = Date.now();
   let next = 0;
   let completed = 0;

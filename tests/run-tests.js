@@ -83,7 +83,21 @@ async function testFrontendBindings() {
   assert(html.includes('value="easy"'), "frontend must use standard easy difficulty value");
 }
 
+async function testServerConfiguration() {
+  const server = await readText("server.js");
+  for (const token of [
+    "LLM_MAX_CONCURRENCY",
+    "LLM_QUEUE_LIMIT",
+    "RATE_LIMIT_WINDOW_SECONDS",
+    "RATE_LIMIT_MAX_REQUESTS",
+    "GET\" && req.url === \"/api/health"
+  ]) {
+    assert(server.includes(token), `server.js missing ${token}`);
+  }
+}
+
 await testScenarioSchema();
 await testFrontendBindings();
+await testServerConfiguration();
 
 console.log("All tests passed");

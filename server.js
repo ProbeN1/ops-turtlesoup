@@ -13,10 +13,16 @@ const HOST = process.env.HOST || "127.0.0.1";
 const PORT = Number(process.env.PORT || 5725);
 const REQUEST_LIMIT_BYTES = Number(process.env.REQUEST_LIMIT_BYTES || 64 * 1024);
 const SESSION_TTL_MS = Number(process.env.SESSION_TTL_MINUTES || 120) * 60 * 1000;
+const LLM_MAX_CONCURRENCY = Number(process.env.LLM_MAX_CONCURRENCY || 8);
+const LLM_QUEUE_LIMIT = Number(process.env.LLM_QUEUE_LIMIT || 100);
+const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_SECONDS || 60) * 1000;
+const RATE_LIMIT_MAX_REQUESTS = Number(process.env.RATE_LIMIT_MAX_REQUESTS || 120);
 const SCENARIO_DIR = path.join(__dirname, "data", "scenarios");
 const PUBLIC_DIR = path.join(__dirname, "public");
 const sessions = new Map();
 const scenarioCache = new Map();
+const rateLimitBuckets = new Map();
+const llmLimiter = createLimiter(LLM_MAX_CONCURRENCY, LLM_QUEUE_LIMIT);
 
 const difficulties = {
   easy: { label: "简单", file: "easy.json" },
@@ -122,6 +128,88 @@ function jsonResponse(res, status, payload) {
     "cache-control": "no-store"
   });
   res.end(body);
+}
+
+function clientIp(req) {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string" && forwarded.trim()) {
+    return forwarded.split(",")[0].trim();
+  }
+  return req.socket.remoteAddress || "unknown";
+}
+
+function checkRateLimit(req) {
+  if (RATE_LIMIT_MAX_REQUESTS <= 0) return { allowed: true, remaining: Infinity };
+
+  const now = Date.now();
+  const key = clientIp(req);
+  let bucket = rateLimitBuckets.get(key);
+
+  if (!bucket || now >= bucket.resetAt) {
+    bucket = { count: 0, resetAt: now + RATE_LIMIT_WINDOW_MS };
+    rateLimitBuckets.set(key, bucket);
+  }
+
+  bucket.count += 1;
+  return {
+    allowed: bucket.count <= RATE_LIMIT_MAX_REQUESTS,
+    remaining: Math.max(0, RATE_LIMIT_MAX_REQUESTS - bucket.count),
+    resetAt: bucket.resetAt
+  };
+}
+
+function cleanupRateLimitBuckets() {
+  const now = Date.now();
+  for (const [key, bucket] of rateLimitBuckets) {
+    if (now >= bucket.resetAt) {
+      rateLimitBuckets.delete(key);
+    }
+  }
+}
+
+function createLimiter(maxConcurrency, queueLimit) {
+  let active = 0;
+  const queue = [];
+
+  function runNext() {
+    if (active >= maxConcurrency || queue.length === 0) return;
+
+    const item = queue.shift();
+    active += 1;
+    Promise.resolve()
+      .then(item.task)
+      .then(item.resolve, item.reject)
+      .finally(() => {
+        active -= 1;
+        runNext();
+      });
+  }
+
+  return {
+    run(task) {
+      if (active < maxConcurrency) {
+        active += 1;
+        return Promise.resolve()
+          .then(task)
+          .finally(() => {
+            active -= 1;
+            runNext();
+          });
+      }
+
+      if (queue.length >= queueLimit) {
+        return Promise.reject(new Error("LLM queue is full"));
+      }
+
+      return new Promise((resolve, reject) => {
+        queue.push({ task, resolve, reject });
+        runNext();
+      });
+    },
+    stats() {
+      return { active, queued: queue.length, maxConcurrency, queueLimit };
+    }
+  };
 }
 
 async function readJson(req) {
@@ -258,7 +346,7 @@ async function askLlm(session, question) {
     };
   }
 
-  const response = await fetch(`${llmBaseUrl()}/chat/completions`, {
+  const response = await limitedLlmFetch({
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -309,7 +397,7 @@ async function assessSolvedWithLlm(session, question) {
     .map((message) => `${message.role === "user" ? "玩家" : "主持"}: ${message.content}`)
     .join("\n");
 
-  const response = await fetch(`${llmBaseUrl()}/chat/completions`, {
+  const response = await limitedLlmFetch({
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -410,6 +498,10 @@ function llmModel() {
   return process.env.OPENAI_MODEL || process.env.LLM_MODEL || "gpt-4o-mini";
 }
 
+function limitedLlmFetch(options) {
+  return llmLimiter.run(() => fetch(`${llmBaseUrl()}/chat/completions`, options));
+}
+
 function cleanupSessions() {
   const now = Date.now();
   for (const [gameId, session] of sessions) {
@@ -426,6 +518,12 @@ async function handleApi(req, res) {
       uptimeSeconds: Math.round(process.uptime()),
       activeSessions: sessions.size,
       cachedScenarioSets: scenarioCache.size,
+      llm: llmLimiter.stats(),
+      rateLimit: {
+        windowSeconds: Math.round(RATE_LIMIT_WINDOW_MS / 1000),
+        maxRequests: RATE_LIMIT_MAX_REQUESTS,
+        trackedClients: rateLimitBuckets.size
+      },
       difficulties: Object.keys(difficulties)
     });
   }
@@ -524,9 +622,17 @@ async function serveStatic(req, res) {
 const cleanupTimer = setInterval(cleanupSessions, Math.min(SESSION_TTL_MS, 10 * 60 * 1000));
 cleanupTimer.unref?.();
 
+const rateLimitCleanupTimer = setInterval(cleanupRateLimitBuckets, Math.min(RATE_LIMIT_WINDOW_MS, 60 * 1000));
+rateLimitCleanupTimer.unref?.();
+
 const server = createServer(async (req, res) => {
   try {
     if (req.url?.startsWith("/api/")) {
+      const rateLimit = checkRateLimit(req);
+      if (!rateLimit.allowed) {
+        return jsonResponse(res, 429, { error: "请求过于频繁，请稍后再试", resetAt: rateLimit.resetAt });
+      }
+
       await handleApi(req, res);
       return;
     }

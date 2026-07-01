@@ -12,3 +12,6 @@
 - Added intranet deployment target for around 100 users.
 - Added in-memory scenario cache.
 - Added `npm run load:local` for 100-session local capacity smoke testing.
+- Added LLM concurrency limiter and bounded queue.
+- Added basic per-client API rate limiting.
+- Added load-test server mode for local capacity smoke tests.

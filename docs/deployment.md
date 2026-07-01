@@ -22,6 +22,10 @@ PORT=5725
 OPENAI_API_KEY=your_api_key_here
 OPENAI_BASE_URL=http://10.10.214.22:30002/v1
 OPENAI_MODEL=b-glm-5.2
+LLM_MAX_CONCURRENCY=8
+LLM_QUEUE_LIMIT=100
+RATE_LIMIT_WINDOW_SECONDS=60
+RATE_LIMIT_MAX_REQUESTS=120
 ```
 
 Start service:
@@ -71,6 +75,8 @@ For around 100 intranet users:
 - Keep the LLM endpoint on the same intranet or low-latency network.
 - Monitor `server.err.log` or process stderr.
 - Use one Node process unless session persistence is externalized.
+- Tune `LLM_MAX_CONCURRENCY` to match the internal LLM service capacity.
+- Tune `RATE_LIMIT_MAX_REQUESTS` if many players share one proxy IP.
 
 ## Local Capacity Smoke Test
 
@@ -78,6 +84,12 @@ After starting the service, run:
 
 ```powershell
 npm run load:local
+```
+
+For local smoke tests from a single machine, start the service with request limiting disabled:
+
+```powershell
+npm run start:loadtest
 ```
 
 Defaults:

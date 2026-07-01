@@ -9,6 +9,7 @@
 
 ```powershell
 npm start
+npm run start:loadtest
 npm run dev
 npm test
 npm run load:local
@@ -63,6 +64,17 @@ Allowed answers are difficulty-specific:
 - medium: `是`, `否`, `无关`, `请换一种问法`
 - hard: `是`, `否`, `无关`
 
+## Runtime Protection
+
+The server includes simple in-process protection for intranet use:
+
+- `LLM_MAX_CONCURRENCY`: maximum concurrent LLM requests.
+- `LLM_QUEUE_LIMIT`: maximum queued LLM requests.
+- `RATE_LIMIT_WINDOW_SECONDS`: request limit window.
+- `RATE_LIMIT_MAX_REQUESTS`: max API requests per client IP per window.
+
+Set `RATE_LIMIT_MAX_REQUESTS=0` to disable API rate limiting for a trusted test environment.
+
 ## Testing
 
 Run:
@@ -81,3 +93,5 @@ Tests validate:
 ## Capacity Smoke Test
 
 `npm run load:local` simulates 100 local game sessions by default. It validates the lightweight session and scenario-read path without spending LLM calls.
+
+Use `npm run start:loadtest` before running the load smoke test from one machine; it disables API rate limiting for the local test process.

@@ -38,3 +38,27 @@ Then ensure Windows Firewall or the server security group allows inbound traffic
 ## Sessions Disappear
 
 Sessions are currently in memory. Restarting the Node process clears active games.
+
+## Players See 429 Errors
+
+The API rate limiter is rejecting too many requests from the same client IP.
+
+If users are behind a shared proxy, raise:
+
+```env
+RATE_LIMIT_MAX_REQUESTS=300
+```
+
+For trusted load testing only, disable:
+
+```env
+RATE_LIMIT_MAX_REQUESTS=0
+```
+
+## LLM Queue Is Full
+
+The internal LLM service cannot keep up with current gameplay traffic. Options:
+
+- Increase `LLM_MAX_CONCURRENCY` if the LLM service can handle it.
+- Increase `LLM_QUEUE_LIMIT` for short traffic bursts.
+- Add a reverse proxy or shared queue before scaling to multiple Node processes.
