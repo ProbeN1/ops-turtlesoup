@@ -118,6 +118,14 @@ Run deployment verification after the service is active.
 
 Before sharing the intranet URL, complete [Intranet Release Checklist](runbook/release-checklist.md). It defines the required gates for configuration, process management, LLM compatibility, application smoke, and 100-session local smoke testing.
 
+For a one-command local rehearsal on the release host, run:
+
+```powershell
+npm run rehearse:release
+```
+
+Set `REHEARSAL_RUN_LLM=1` to include the live LLM ask-path load smoke in that rehearsal.
+
 ## Health Check
 
 ```text

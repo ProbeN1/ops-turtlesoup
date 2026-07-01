@@ -14,6 +14,7 @@ npm run dev
 npm test
 npm run load:local
 npm run load:llm
+npm run rehearse:release
 ```
 
 ## Scenario Schema
@@ -121,3 +122,9 @@ Defaults:
 Optional gate:
 
 - `LLM_LOAD_MAX_P95_MS`: fail if measured ask-path p95 exceeds this value.
+
+## Release Rehearsal
+
+`npm run rehearse:release` starts a temporary local service with load-test rate limiting, then runs offline deployment preflight, online deployment verification, application smoke, and the 100-session local capacity smoke. It chooses a temporary port by default and prints a JSON summary.
+
+Set `REHEARSAL_RUN_LLM=1` to include `npm run load:llm` in the rehearsal.

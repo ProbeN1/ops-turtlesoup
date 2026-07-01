@@ -22,6 +22,7 @@ Create a release record from [Release Record Template](release-record-template.m
 | Gate | Command or Evidence | Required Result |
 | --- | --- | --- |
 | Code and scenario checks | `npm test` | Pass |
+| Local release rehearsal | `npm run rehearse:release` | Offline/online/app/capacity smoke pass |
 | Offline deployment preflight | `npm run verify:deploy:offline` | No `FAIL` |
 | Long-running process configured | `docker compose ps` or `systemctl status ops-turtle-soup` | Service is running with restart policy |
 | Online deployment verification | `npm run verify:deploy` | No `FAIL` |
@@ -77,6 +78,7 @@ Run from the release host:
 
 ```powershell
 npm test
+npm run rehearse:release
 npm run verify:deploy:offline
 npm run verify:deploy
 npm run smoke:llm
@@ -102,6 +104,12 @@ Restore production rate limiting after the load smoke test.
 The load smoke output must show `completed` equal to `LOAD_TEST_USERS`, `metricsDelta.gameStartsTotal` and `metricsDelta.gameRevealsTotal` at least equal to `LOAD_TEST_USERS`, and `prometheusMetrics.gameCountersPresent=true`.
 
 For the LLM ask-path load smoke, start with the default `LLM_LOAD_USERS=10` and `LLM_LOAD_CONCURRENCY=2`. Before the event, run a release rehearsal with values agreed with the internal LLM owner, and confirm `metricsDelta.llmFailuresTotal=0`, `metricsDelta.llmRequestsTotal >= LLM_LOAD_USERS`, and acceptable `askLatency.p95Ms`.
+
+To include live LLM load in the one-command rehearsal, run:
+
+```powershell
+REHEARSAL_RUN_LLM=1 npm run rehearse:release
+```
 
 ## Monitoring During Play
 

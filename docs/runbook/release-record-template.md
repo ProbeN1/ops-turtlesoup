@@ -80,6 +80,28 @@ Result:
 ```
 
 ```text
+npm run rehearse:release
+```
+
+Result:
+
+```text
+
+```
+
+Rehearsal summary:
+
+```text
+baseUrl=
+runLlm=
+offline deployment preflight=pass | fail
+online deployment verification=pass | fail
+application smoke=pass | fail
+100-session local capacity smoke=pass | fail
+live LLM ask-path load smoke=pass | skipped | fail
+```
+
+```text
 npm run verify:deploy:offline
 ```
 

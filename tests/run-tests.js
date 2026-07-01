@@ -279,6 +279,7 @@ async function testDeploymentConfiguration() {
   const systemd = await readText("deploy/systemd/ops-turtle-soup.service.example");
   const loadLocal = await readText("tests/load-local.js");
   const loadLlm = await readText("tests/load-llm.js");
+  const releaseRehearsal = await readText("tests/release-rehearsal.js");
   const packageJson = await readText("package.json");
   const releaseChecklist = await readText("docs/runbook/release-checklist.md");
   const releaseRecordTemplate = await readText("docs/runbook/release-record-template.md");
@@ -302,6 +303,7 @@ async function testDeploymentConfiguration() {
   }
 
   assert(packageJson.includes('"load:llm": "node tests/load-llm.js"'), "package.json missing load:llm script");
+  assert(packageJson.includes('"rehearse:release": "node tests/release-rehearsal.js"'), "package.json missing rehearse:release script");
 
   for (const token of [
     "LLM_LOAD_USERS",
@@ -316,12 +318,27 @@ async function testDeploymentConfiguration() {
   }
 
   for (const token of [
+    "REHEARSAL_RUN_LLM",
+    "tests/start-loadtest-server.js",
+    "offline deployment preflight",
+    "online deployment verification",
+    "application smoke",
+    "100-session local capacity smoke",
+    "live LLM ask-path load smoke",
+    "load:llm",
+    "release rehearsal summary"
+  ]) {
+    assert(releaseRehearsal.includes(token), `release rehearsal missing ${token}`);
+  }
+
+  for (const token of [
     "npm test",
     "npm run verify:deploy:offline",
     "npm run verify:deploy",
     "npm run smoke:llm",
     "npm run smoke:app",
     "npm run load:llm",
+    "npm run rehearse:release",
     "UI Smoke Runbook",
     "Release Record Template",
     "npm run load:local",
@@ -342,6 +359,7 @@ async function testDeploymentConfiguration() {
     "npm run smoke:llm",
     "npm run smoke:app",
     "npm run load:llm",
+    "npm run rehearse:release",
     "npm run load:local",
     "Coworker Access Check",
     "GET /api/metrics",
