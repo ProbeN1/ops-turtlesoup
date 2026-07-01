@@ -68,3 +68,4 @@
 - Renamed scenario JSON files to the readable `难度-编号-题目.json` format and updated validation rules.
 - Deployed release `ops-turtle-soup-0.1.0-20260701T083806Z` commit `39702ed` to `10.10.214.4` and verified readable scenario filenames on the intranet host.
 - Added `jiang.yi12@iwhalecloud.com` to the feedback page and switched scenario selection to `crypto.randomInt`.
+- Deployed release `ops-turtle-soup-0.1.0-20260701T085244Z` commit `f7bf65f` to `10.10.214.4`; deployment checks passed, while the live ask-path smoke was blocked by the internal LLM quota.
