@@ -277,6 +277,7 @@ async function testDeploymentConfiguration() {
   const dockerfile = await readText("Dockerfile");
   const compose = await readText("docker-compose.yml");
   const systemd = await readText("deploy/systemd/ops-turtle-soup.service.example");
+  const loadLocal = await readText("tests/load-local.js");
   const releaseChecklist = await readText("docs/runbook/release-checklist.md");
   const releaseRecordTemplate = await readText("docs/runbook/release-record-template.md");
   const uiSmoke = await readText("docs/runbook/ui-smoke.md");
@@ -286,6 +287,17 @@ async function testDeploymentConfiguration() {
   assert(compose.includes("restart: unless-stopped"), "docker-compose.yml must restart the service");
   assert(systemd.includes("Restart=always"), "systemd unit example must restart on failure");
   assert(systemd.includes("EnvironmentFile="), "systemd unit example must load .env");
+
+  for (const token of [
+    "const initialMetrics = await getJson(\"/api/metrics\")",
+    "const finalMetrics = await getJson(\"/api/metrics\")",
+    "await getText(\"/metrics\")",
+    "gameStartsTotal increased",
+    "gameRevealsTotal increased",
+    "prometheusMetrics"
+  ]) {
+    assert(loadLocal.includes(token), `load-local smoke missing ${token}`);
+  }
 
   for (const token of [
     "npm test",
@@ -298,6 +310,8 @@ async function testDeploymentConfiguration() {
     "npm run load:local",
     "GET /api/metrics",
     "GET /metrics",
+    "game counter deltas >= 100",
+    "prometheusMetrics.gameCountersPresent=true",
     "docker compose ps",
     "systemctl status ops-turtle-soup"
   ]) {
@@ -314,6 +328,9 @@ async function testDeploymentConfiguration() {
     "Coworker Access Check",
     "GET /api/metrics",
     "GET /metrics",
+    "metricsDelta.gameStartsTotal=",
+    "metricsDelta.gameRevealsTotal=",
+    "prometheusMetrics.gameCountersPresent=",
     "prometheus.ops_turtle_soup_http_requests_total",
     "Release approved"
   ]) {

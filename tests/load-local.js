@@ -32,6 +32,15 @@ async function getJson(path) {
   return data;
 }
 
+async function getText(path) {
+  const response = await fetch(`${baseUrl}${path}`);
+  const text = await response.text();
+  if (!response.ok) {
+    throw new Error(`${path} failed: ${response.status}`);
+  }
+  return text;
+}
+
 async function runVirtualUser(index) {
   const difficulty = difficulties[index % difficulties.length];
   const start = await postJson("/api/game/start", { difficulty });
@@ -48,6 +57,7 @@ async function runPool() {
   if (initialHealth.rateLimit?.maxRequests > 0 && initialHealth.rateLimit.maxRequests < totalUsers * 2) {
     console.warn("Tip: local load tests may hit API rate limits. Start the server with npm run start:loadtest for this smoke test.");
   }
+  const initialMetrics = await getJson("/api/metrics");
 
   const startedAt = Date.now();
   let next = 0;
@@ -65,6 +75,17 @@ async function runPool() {
   await Promise.all(Array.from({ length: Math.min(concurrency, totalUsers) }, worker));
   const elapsedMs = Date.now() - startedAt;
   const health = await getJson("/api/health");
+  const finalMetrics = await getJson("/api/metrics");
+  const prometheusMetrics = await getText("/metrics");
+  const startsDelta = finalMetrics.gameStartsTotal - initialMetrics.gameStartsTotal;
+  const revealsDelta = finalMetrics.gameRevealsTotal - initialMetrics.gameRevealsTotal;
+  const prometheusOk = prometheusMetrics.includes("ops_turtle_soup_game_starts_total") &&
+    prometheusMetrics.includes("ops_turtle_soup_game_reveals_total");
+
+  assert(completed === totalUsers, `completed ${completed} of ${totalUsers} users`);
+  assert(startsDelta >= totalUsers, `gameStartsTotal increased by ${startsDelta}, expected at least ${totalUsers}`);
+  assert(revealsDelta >= totalUsers, `gameRevealsTotal increased by ${revealsDelta}, expected at least ${totalUsers}`);
+  assert(prometheusOk, "Prometheus metrics missing game counters");
 
   console.log(JSON.stringify({
     ok: true,
@@ -73,7 +94,16 @@ async function runPool() {
     completed,
     elapsedMs,
     activeSessions: health.activeSessions,
-    cachedScenarioSets: health.cachedScenarioSets
+    cachedScenarioSets: health.cachedScenarioSets,
+    metricsDelta: {
+      gameStartsTotal: startsDelta,
+      gameRevealsTotal: revealsDelta,
+      httpRequestsTotal: finalMetrics.httpRequestsTotal - initialMetrics.httpRequestsTotal,
+      rateLimitedTotal: finalMetrics.rateLimitedTotal - initialMetrics.rateLimitedTotal
+    },
+    prometheusMetrics: {
+      gameCountersPresent: prometheusOk
+    }
   }, null, 2));
 }
 

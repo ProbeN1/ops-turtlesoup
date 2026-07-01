@@ -30,3 +30,4 @@
 - Added runtime LLM request timeout handling.
 - Added Prometheus-format `/metrics` endpoint for intranet monitoring integration.
 - Added clear startup errors for port conflicts and bind permission failures.
+- Strengthened `npm run load:local` to verify runtime metric deltas and Prometheus game counters.

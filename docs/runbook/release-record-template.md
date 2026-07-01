@@ -129,6 +129,16 @@ Result:
 
 ```
 
+Load evidence summary:
+
+```text
+completed=
+metricsDelta.gameStartsTotal=
+metricsDelta.gameRevealsTotal=
+metricsDelta.rateLimitedTotal=
+prometheusMetrics.gameCountersPresent=
+```
+
 ## Browser UI Smoke
 
 Run [UI Smoke Runbook](ui-smoke.md).

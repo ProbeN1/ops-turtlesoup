@@ -243,4 +243,4 @@ Defaults:
 - `LOAD_TEST_CONCURRENCY=20`
 - `LOAD_TEST_BASE_URL=http://127.0.0.1:5725`
 
-This test creates game sessions and reveals answers without calling the LLM-heavy ask path.
+This test creates game sessions and reveals answers without calling the LLM-heavy ask path. It fails if completion count is short, if `gameStartsTotal` or `gameRevealsTotal` do not increase by at least `LOAD_TEST_USERS`, or if Prometheus game counters are missing from `/metrics`.

@@ -29,7 +29,7 @@ Create a release record from [Release Record Template](release-record-template.m
 | LLM compatibility | `npm run smoke:llm` | Pass |
 | Game API flow | `npm run smoke:app` | Pass |
 | Browser UI flow | [UI Smoke Runbook](ui-smoke.md) | Manual browser flow passes |
-| Local 100-session smoke | `npm run load:local` | Completed 100 sessions |
+| Local 100-session smoke | `npm run load:local` | Completed 100 sessions and reported game counter deltas >= 100 |
 | Coworker access path | Browser from another intranet machine | Page loads and can start a game |
 
 `WARN` from deployment verification must be reviewed. A `HOST` warning is acceptable only for local testing, not for coworker access.
@@ -96,6 +96,8 @@ RATE_LIMIT_MAX_REQUESTS=0
 ```
 
 Restore production rate limiting after the load smoke test.
+
+The load smoke output must show `completed` equal to `LOAD_TEST_USERS`, `metricsDelta.gameStartsTotal` and `metricsDelta.gameRevealsTotal` at least equal to `LOAD_TEST_USERS`, and `prometheusMetrics.gameCountersPresent=true`.
 
 ## Monitoring During Play
 

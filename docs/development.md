@@ -102,6 +102,6 @@ Tests validate:
 
 ## Capacity Smoke Test
 
-`npm run load:local` simulates 100 local game sessions by default. It validates the lightweight session and scenario-read path without spending LLM calls.
+`npm run load:local` simulates 100 local game sessions by default. It validates the lightweight session and scenario-read path without spending LLM calls. The script also checks `/api/metrics` and `/metrics` after the run, then prints a JSON summary with completed users, elapsed time, game counter deltas, rate-limit deltas, and Prometheus game-counter presence.
 
 Use `npm run start:loadtest` before running the load smoke test from one machine; it disables API rate limiting for the local test process.
