@@ -200,6 +200,9 @@ async function checkHealth() {
   if (health.ok === true) pass("health endpoint reports ok");
   else fail("health endpoint did not report ok");
 
+  if (health.build?.version && health.build?.gitCommit) pass("health endpoint exposes build identity");
+  else fail("health endpoint missing build identity");
+
   for (const difficulty of ["easy", "medium", "hard"]) {
     if (!health.difficulties?.includes(difficulty)) {
       fail(`health endpoint missing ${difficulty} difficulty`);
@@ -218,6 +221,9 @@ async function checkHealth() {
   const readiness = await readyResponse.json();
   if (readiness.ok === true) pass("readiness endpoint reports ok");
   else fail("readiness endpoint did not report ok");
+
+  if (readiness.build?.version && readiness.build?.gitCommit) pass("readiness endpoint exposes build identity");
+  else fail("readiness endpoint missing build identity");
 
   if (readiness.llm?.apiKeyConfigured && readiness.llm?.baseUrlConfigured && readiness.llm?.modelConfigured) {
     pass("readiness endpoint confirms LLM configuration");
@@ -240,6 +246,9 @@ async function checkHealth() {
   }
 
   const metrics = await metricsResponse.json();
+  if (metrics.build?.version && metrics.build?.gitCommit) pass("metrics endpoint exposes build identity");
+  else fail("metrics endpoint missing build identity");
+
   if (typeof metrics.httpRequestsTotal === "number") pass("metrics endpoint exposes request counters");
   else fail("metrics endpoint missing request counters");
 

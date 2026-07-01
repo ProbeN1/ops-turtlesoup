@@ -68,6 +68,7 @@ function buildEvidence(health, readiness, metrics, prometheusText) {
   return {
     capturedAt: new Date().toISOString(),
     baseUrl,
+    build: health.build,
     health: {
       ok: health.ok === true,
       uptimeSeconds: health.uptimeSeconds,
@@ -133,6 +134,8 @@ async function main() {
   const evidence = buildEvidence(health, readiness, metrics, prometheusText);
 
   assert(evidence.health.ok, "health.ok must be true");
+  assert(evidence.build?.version, "build.version must be present");
+  assert(evidence.build?.gitCommit, "build.gitCommit must be present");
   assert(evidence.releaseProfile.maxActiveSessionsSufficient, "maxActiveSessions must be >= 100");
   assert(evidence.prometheus.httpRequestsTotal === "present", "Prometheus HTTP counter missing");
   assert(evidence.prometheus.llmRequestsTotal === "present", "Prometheus LLM counter missing");

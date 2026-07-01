@@ -38,7 +38,7 @@ npm run init:release-record
 | Online deployment verification | `npm run verify:deploy` | No `FAIL` |
 | Readiness endpoint | `GET /api/ready` | `ok=true`, LLM config present, all scenario sets loaded |
 | Runtime metrics | `GET /api/metrics` and `GET /metrics` | JSON counters and Prometheus text counters are present |
-| Release evidence snapshot | `npm run evidence:release` | Non-sensitive JSON summary captured |
+| Release evidence snapshot | `npm run evidence:release` | Non-sensitive JSON summary captured, including build version and git commit |
 | LLM compatibility | `npm run smoke:llm` | Pass |
 | Game API flow | `npm run smoke:app` | Pass |
 | Coworker access smoke | `COWORKER_SMOKE_BASE_URL=http://<server>:5725 npm run smoke:coworker` | Pass from another intranet machine |
@@ -62,6 +62,8 @@ MAX_ACTIVE_SESSIONS=300
 OPENAI_API_KEY=...
 OPENAI_BASE_URL=http://<internal-llm>/v1
 OPENAI_MODEL=...
+RELEASE_GIT_COMMIT=<git-short-sha>
+RELEASE_NAME=<release-name>
 LLM_MAX_CONCURRENCY=8
 LLM_QUEUE_LIMIT=100
 RATE_LIMIT_WINDOW_SECONDS=60
@@ -76,6 +78,8 @@ Preferred:
 
 ```bash
 npm run build:release
+export RELEASE_GIT_COMMIT="$(git rev-parse --short HEAD)"
+export RELEASE_NAME="ops-turtle-soup-$(date +%Y%m%d%H%M)"
 docker compose up -d --build
 docker compose ps
 ```
@@ -127,6 +131,7 @@ Restore production rate limiting after the load smoke test.
 The load smoke output must show `completed` equal to `LOAD_TEST_USERS`, `metricsDelta.gameStartsTotal` and `metricsDelta.gameRevealsTotal` at least equal to `LOAD_TEST_USERS`, and `prometheusMetrics.gameCountersPresent=true`.
 
 Paste `npm run evidence:release` output into the release record after app smoke and before sharing the coworker URL.
+Confirm `build.gitCommit` in the evidence matches the intended release commit.
 
 For the LLM ask-path load smoke, start with the default `LLM_LOAD_USERS=10` and `LLM_LOAD_CONCURRENCY=2`. Before the event, run a release rehearsal with values agreed with the internal LLM owner, and confirm `metricsDelta.llmFailuresTotal=0`, `metricsDelta.llmRequestsTotal >= LLM_LOAD_USERS`, and acceptable `askLatency.p95Ms`.
 

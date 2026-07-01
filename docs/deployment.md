@@ -23,6 +23,8 @@ MAX_ACTIVE_SESSIONS=300
 OPENAI_API_KEY=your_api_key_here
 OPENAI_BASE_URL=http://10.10.214.22:30002/v1
 OPENAI_MODEL=b-glm-5.2
+RELEASE_GIT_COMMIT=<git-short-sha>
+RELEASE_NAME=<release-name>
 LLM_MAX_CONCURRENCY=8
 LLM_QUEUE_LIMIT=100
 LLM_REQUEST_TIMEOUT_SECONDS=30
@@ -70,7 +72,7 @@ npm run build:release
 npm run verify:release-archive
 ```
 
-The build command writes `dist/ops-turtle-soup-<version>-<timestamp>.zip`, a sidecar `.sha256` checksum file, and a `RELEASE_MANIFEST.txt`. The verification command checks the latest archive, or `RELEASE_ARCHIVE_PATH` when set, by validating the SHA256 sidecar, extracting the zip, requiring expected release files, and rejecting forbidden paths such as `.env`, `.git`, `node_modules`, logs, and previous `dist` output. Copy the archive to the intranet host, verify the checksum, extract it, create `.env` from `.env.example`, then start the service with Docker Compose, systemd, Windows Scheduled Task, or the approved local process manager.
+The build command writes `dist/ops-turtle-soup-<version>-<timestamp>.zip`, a sidecar `.sha256` checksum file, `RELEASE_MANIFEST.txt`, and `RELEASE_INFO.json`. The verification command checks the latest archive, or `RELEASE_ARCHIVE_PATH` when set, by validating the SHA256 sidecar, extracting the zip, requiring expected release files, and rejecting forbidden paths such as `.env`, `.git`, `node_modules`, logs, and previous `dist` output. Copy the archive to the intranet host, verify the checksum, extract it, create `.env` from `.env.example`, then start the service with Docker Compose, systemd, Windows Scheduled Task, or the approved local process manager.
 
 To start a release record from the template:
 
@@ -95,7 +97,7 @@ Docker Compose is the preferred long-running deployment path for a small intrane
 Build:
 
 ```bash
-docker build -t ops-turtle-soup .
+docker build --build-arg RELEASE_GIT_COMMIT="$(git rev-parse --short HEAD)" --build-arg RELEASE_NAME="ops-turtle-soup-$(date +%Y%m%d%H%M)" -t ops-turtle-soup .
 ```
 
 Run:
@@ -107,6 +109,8 @@ docker run --env-file .env -p 5725:5725 ops-turtle-soup
 Run with Compose:
 
 ```bash
+export RELEASE_GIT_COMMIT="$(git rev-parse --short HEAD)"
+export RELEASE_NAME="ops-turtle-soup-$(date +%Y%m%d%H%M)"
 docker compose up -d
 ```
 
@@ -181,7 +185,7 @@ This builds and verifies the release archive, starts a temporary local service, 
 GET /api/health
 ```
 
-The endpoint returns process uptime, active session count, and configured difficulty names.
+The endpoint returns build identity, process uptime, active session count, and configured difficulty names.
 
 ## Readiness Check
 
@@ -189,7 +193,7 @@ The endpoint returns process uptime, active session count, and configured diffic
 GET /api/ready
 ```
 
-The readiness endpoint returns non-sensitive deployment readiness checks for:
+The readiness endpoint returns non-sensitive build identity and deployment readiness checks for:
 
 - LLM API key, base URL, and model presence;
 - scenario loading for every difficulty;
@@ -206,6 +210,7 @@ GET /api/metrics
 
 The metrics endpoint returns in-memory counters for:
 
+- build identity;
 - HTTP/API/static request volume;
 - response status counts;
 - rate-limited requests;
@@ -231,6 +236,7 @@ npm run evidence:release
 ```
 
 The command reads `GET /api/health`, `GET /api/ready`, `GET /api/metrics`, and `GET /metrics`, then prints JSON suitable for the release record. Use `RELEASE_EVIDENCE_BASE_URL` when testing through a reverse proxy or coworker-facing intranet hostname.
+The JSON includes non-sensitive build identity so the release record can prove which version and commit is running on the target host.
 
 ## Deployment Verification
 

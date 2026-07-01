@@ -1,7 +1,7 @@
 import { mkdir, rm, cp, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import crypto from "node:crypto";
 import { createReadStream } from "node:fs";
 
@@ -16,6 +16,7 @@ const sha256Path = `${archivePath}.sha256`;
 
 const includePaths = [
   ".env.example",
+  "RELEASE_INFO.json",
   "Dockerfile",
   "docker-compose.yml",
   "package.json",
@@ -45,8 +46,11 @@ async function readJson(relativePath) {
 async function copyIncludedFiles() {
   await rm(stagingDir, { recursive: true, force: true });
   await mkdir(stagingDir, { recursive: true });
+  await writeFile(path.join(stagingDir, "RELEASE_INFO.json"), `${JSON.stringify(releaseInfo(), null, 2)}\n`, "utf8");
 
   for (const relativePath of includePaths) {
+    if (relativePath === "RELEASE_INFO.json") continue;
+
     const source = path.join(root, relativePath);
     if (!existsSync(source)) {
       throw new Error(`release input missing: ${relativePath}`);
@@ -80,6 +84,25 @@ function releaseManifest() {
     ...forbiddenPaths.map((item) => `- ${item}`),
     ""
   ].join("\n");
+}
+
+function gitCommit() {
+  const result = spawnSync("git", ["rev-parse", "--short", "HEAD"], {
+    cwd: root,
+    encoding: "utf8",
+    windowsHide: true
+  });
+  return result.status === 0 ? result.stdout.trim() : "unknown";
+}
+
+function releaseInfo() {
+  return {
+    name: packageJson.name,
+    version: packageJson.version,
+    releaseName,
+    gitCommit: gitCommit(),
+    createdAt: new Date().toISOString()
+  };
 }
 
 async function createZip() {

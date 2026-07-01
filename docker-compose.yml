@@ -1,6 +1,10 @@
 services:
   ops-turtle-soup:
-    build: .
+    build:
+      context: .
+      args:
+        RELEASE_GIT_COMMIT: ${RELEASE_GIT_COMMIT:-unknown}
+        RELEASE_NAME: ${RELEASE_NAME:-docker-compose}
     env_file:
       - .env
     ports:

@@ -77,6 +77,13 @@ function assertAssignmentOneOf(text, key, allowed) {
   }
 }
 
+function assertAssignmentNotOneOf(text, key, forbidden) {
+  const value = lineValue(text, `${key}=`).toLowerCase();
+  if (forbidden.map((item) => item.toLowerCase()).includes(value)) {
+    fail(`${key}= must not be one of ${forbidden.join(", ")}`);
+  }
+}
+
 function assertLineOneOf(text, prefix, allowed) {
   const value = lineValue(text, prefix).toLowerCase();
   if (!allowed.map((item) => item.toLowerCase()).includes(value)) {
@@ -146,6 +153,9 @@ async function main() {
     "release evidence snapshot",
     "100-session local capacity smoke",
     "live LLM ask-path load smoke",
+    "build.version",
+    "build.gitCommit",
+    "build.releaseName",
     "ready.ok",
     "ready.llm.apiKeyConfigured",
     "ready.llm.baseUrlConfigured",
@@ -192,6 +202,8 @@ async function main() {
   assertAssignmentEquals(text, "release evidence snapshot", "pass");
   assertAssignmentEquals(text, "100-session local capacity smoke", "pass");
   assertAssignmentEquals(text, "live LLM ask-path load smoke", "pass");
+  assertAssignmentNotOneOf(text, "build.gitCommit", ["unknown"]);
+  assertAssignmentNotOneOf(text, "build.releaseName", ["unknown", "local-dev", "docker-compose", "docker-image"]);
   assertAssignmentEquals(text, "ready.ok", "true");
   assertAssignmentEquals(text, "ready.llm.apiKeyConfigured", "true");
   assertAssignmentEquals(text, "ready.llm.baseUrlConfigured", "true");

@@ -2,6 +2,9 @@ FROM node:22-alpine
 
 WORKDIR /app
 
+ARG RELEASE_GIT_COMMIT=unknown
+ARG RELEASE_NAME=docker-image
+
 COPY package.json ./
 COPY server.js ./
 COPY public ./public
@@ -9,6 +12,8 @@ COPY data ./data
 
 ENV HOST=0.0.0.0
 ENV PORT=5725
+ENV RELEASE_GIT_COMMIT=$RELEASE_GIT_COMMIT
+ENV RELEASE_NAME=$RELEASE_NAME
 
 EXPOSE 5725
 

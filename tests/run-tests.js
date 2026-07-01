@@ -236,7 +236,10 @@ async function testServerConfiguration() {
     "MAX_ACTIVE_SESSIONS",
     "maxActiveSessions",
     "房间已满，请稍后再试",
-    "GET\" && req.url === \"/api/health"
+    "GET\" && req.url === \"/api/health",
+    "BUILD_INFO",
+    "buildInfo",
+    "RELEASE_INFO.json"
   ]) {
     assert(server.includes(token), `server.js missing ${token}`);
   }
@@ -493,7 +496,10 @@ async function testDeploymentConfiguration() {
 
   assert(dockerfile.includes("HEALTHCHECK"), "Dockerfile must define a container healthcheck");
   assert(dockerfile.includes("/api/health"), "Docker healthcheck must probe /api/health");
+  assert(dockerfile.includes("ARG RELEASE_GIT_COMMIT"), "Dockerfile must accept release git commit build arg");
+  assert(dockerfile.includes("ENV RELEASE_GIT_COMMIT"), "Dockerfile must expose release git commit env");
   assert(compose.includes("restart: unless-stopped"), "docker-compose.yml must restart the service");
+  assert(compose.includes("RELEASE_GIT_COMMIT"), "docker-compose.yml must pass release git commit build arg");
   assert(systemd.includes("Restart=always"), "systemd unit example must restart on failure");
   assert(systemd.includes("EnvironmentFile="), "systemd unit example must load .env");
 
@@ -532,6 +538,9 @@ async function testDeploymentConfiguration() {
   for (const token of [
     "Compress-Archive",
     "RELEASE_MANIFEST.txt",
+    "RELEASE_INFO.json",
+    "releaseInfo",
+    "gitCommit",
     "sha256Path",
     "sha256File",
     "\".env\"",
@@ -567,6 +576,7 @@ async function testDeploymentConfiguration() {
     "Release approved",
     "assertLineEquals",
     "assertAssignmentEquals",
+    "assertAssignmentNotOneOf",
     "resolveFromRoot",
     "HOST",
     "0.0.0.0",
@@ -586,6 +596,8 @@ async function testDeploymentConfiguration() {
 
   for (const token of [
     "RELEASE_EVIDENCE_BASE_URL",
+    "build.version",
+    "build.gitCommit",
     "/api/health",
     "/api/ready",
     "/api/metrics",
@@ -648,6 +660,7 @@ async function testDeploymentConfiguration() {
     "sha256",
     "Expand-Archive",
     "RELEASE_MANIFEST.txt",
+    "RELEASE_INFO.json",
     "requiredEntries",
     "forbiddenNames",
     "\".env\"",
@@ -706,6 +719,9 @@ async function testDeploymentConfiguration() {
     "GET /api/metrics",
     "GET /api/ready",
     "GET /metrics",
+    "build.version=",
+    "build.gitCommit=",
+    "build.releaseName=",
     "metricsDelta.gameStartsTotal=",
     "metricsDelta.gameRevealsTotal=",
     "metricsDelta.llmRequestsTotal=",
@@ -781,6 +797,9 @@ function validReleaseRecord() {
     "npm run load:llm",
     "npm run load:local",
     "",
+    "build.version=0.1.0",
+    "build.gitCommit=81dd496",
+    "build.releaseName=ops-turtle-soup-0.1.0-20260701T053641Z",
     "ready.ok=true",
     "ready.llm.apiKeyConfigured=true",
     "ready.llm.baseUrlConfigured=true",
@@ -889,6 +908,11 @@ async function testReleaseRecordGateFailures() {
       name: "not approved",
       text: valid.replace("- Release approved: yes", "- Release approved: no"),
       expected: "- Release approved: must be yes"
+    },
+    {
+      name: "unknown build commit",
+      text: valid.replace("build.gitCommit=81dd496", "build.gitCommit=unknown"),
+      expected: "build.gitCommit= must not be one of unknown"
     }
   ];
 

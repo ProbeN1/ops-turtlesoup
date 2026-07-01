@@ -303,6 +303,9 @@ GET /api/ready
 Paste non-sensitive summary:
 
 ```text
+build.version=
+build.gitCommit=
+build.releaseName=
 ready.ok=
 ready.llm.apiKeyConfigured=
 ready.llm.baseUrlConfigured=

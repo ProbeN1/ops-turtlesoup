@@ -31,12 +31,13 @@ Node server.js
 - LLM protection: in-process concurrency limiter and bounded queue.
 - API protection: per-client sliding-window request limit.
 - Runtime metrics: in-memory counters exposed as JSON at `/api/metrics` and Prometheus text at `/metrics`.
+- Build identity: non-sensitive package version, git commit, release name, and release creation time exposed in health, readiness, metrics, and release evidence.
 
 ## API Surface
 
-- `GET /api/health`: process health and basic runtime status.
-- `GET /api/ready`: deployment readiness checks for LLM configuration, scenario loading, limiter settings, and rate-limit settings.
-- `GET /api/metrics`: JSON operational counters for intranet hosting.
+- `GET /api/health`: process health, build identity, and basic runtime status.
+- `GET /api/ready`: build identity and deployment readiness checks for LLM configuration, scenario loading, limiter settings, and rate-limit settings.
+- `GET /api/metrics`: build identity and JSON operational counters for intranet hosting.
 - `GET /metrics`: Prometheus-format runtime counters for monitoring scrape jobs.
 - `GET /api/difficulties`: available difficulty options.
 - `POST /api/game/start`: create a game session.

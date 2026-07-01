@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import crypto from "node:crypto";
+import { spawnSync } from "node:child_process";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -25,6 +26,7 @@ const RATE_LIMIT_WINDOW_MS = RATE_LIMIT_WINDOW_SECONDS * 1000;
 const RATE_LIMIT_MAX_REQUESTS = readNumberEnv("RATE_LIMIT_MAX_REQUESTS", 120, { integer: true, min: 0 });
 const SCENARIO_DIR = path.join(__dirname, "data", "scenarios");
 const PUBLIC_DIR = path.join(__dirname, "public");
+const BUILD_INFO = buildInfo();
 const sessions = new Map();
 const scenarioCache = new Map();
 const rateLimitBuckets = new Map();
@@ -80,6 +82,38 @@ function loadEnvFile() {
     const value = match[2].replace(/^["']|["']$/g, "");
     process.env[match[1]] = value;
   }
+}
+
+function readJsonFile(relativePath, fallback = {}) {
+  const filePath = path.join(__dirname, relativePath);
+  if (!existsSync(filePath)) return fallback;
+
+  try {
+    return JSON.parse(readFileSync(filePath, "utf8"));
+  } catch {
+    return fallback;
+  }
+}
+
+function gitCommit() {
+  const result = spawnSync("git", ["rev-parse", "--short", "HEAD"], {
+    cwd: __dirname,
+    encoding: "utf8",
+    windowsHide: true
+  });
+  return result.status === 0 ? result.stdout.trim() : "";
+}
+
+function buildInfo() {
+  const packageInfo = readJsonFile("package.json");
+  const releaseInfo = readJsonFile("RELEASE_INFO.json");
+  return {
+    name: packageInfo.name || "ops-turtle-soup-game",
+    version: packageInfo.version || "0.0.0",
+    gitCommit: process.env.RELEASE_GIT_COMMIT || releaseInfo.gitCommit || gitCommit() || "unknown",
+    releaseName: process.env.RELEASE_NAME || releaseInfo.releaseName || "",
+    createdAt: releaseInfo.createdAt || ""
+  };
 }
 
 function readNumberEnv(name, defaultValue, options = {}) {
@@ -221,6 +255,7 @@ function publicMetrics() {
     : 0;
 
   return {
+    build: BUILD_INFO,
     startedAt: metrics.startedAt,
     uptimeSeconds: Math.round(process.uptime()),
     httpRequestsTotal: metrics.httpRequestsTotal,
@@ -293,6 +328,7 @@ async function readinessPayload() {
   const ok = checks.every((check) => check.ok);
   return {
     ok,
+    build: BUILD_INFO,
     checks,
     llm: {
       apiKeyConfigured: llmApiKeyConfigured,
@@ -832,6 +868,7 @@ async function handleApi(req, res) {
   if (req.method === "GET" && req.url === "/api/health") {
     return jsonResponse(res, 200, {
       ok: true,
+      build: BUILD_INFO,
       uptimeSeconds: Math.round(process.uptime()),
       activeSessions: sessions.size,
       maxActiveSessions: MAX_ACTIVE_SESSIONS,

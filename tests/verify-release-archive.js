@@ -8,6 +8,7 @@ import path from "node:path";
 const root = process.cwd();
 const requiredEntries = [
   "RELEASE_MANIFEST.txt",
+  "RELEASE_INFO.json",
   ".env.example",
   "Dockerfile",
   "docker-compose.yml",
