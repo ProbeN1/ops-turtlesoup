@@ -61,6 +61,16 @@ http://<server-intranet-ip>:5725/
 
 Allow inbound TCP on the configured `PORT`.
 
+## Release Archive
+
+For hosts where Docker is not available, build a portable release archive:
+
+```powershell
+npm run build:release
+```
+
+The command writes `dist/ops-turtle-soup-<version>-<timestamp>.zip` and a `RELEASE_MANIFEST.txt`. The archive excludes `.env`, `.git`, `node_modules`, logs, and previous `dist` output. Copy the archive to the intranet host, extract it, create `.env` from `.env.example`, then start the service with systemd or the approved local process manager.
+
 ## Docker
 
 Docker Compose is the preferred long-running deployment path for a small intranet host.

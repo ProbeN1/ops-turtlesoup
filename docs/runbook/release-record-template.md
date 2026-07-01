@@ -44,6 +44,20 @@ RATE_LIMIT_MAX_REQUESTS=
 
 ## Process Evidence
 
+Release archive:
+
+```text
+npm run build:release
+```
+
+Paste summary:
+
+```text
+archivePath=
+releaseName=
+.env excluded=yes | no
+```
+
 Docker Compose:
 
 ```text

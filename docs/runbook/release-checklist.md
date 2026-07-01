@@ -22,6 +22,7 @@ Create a release record from [Release Record Template](release-record-template.m
 | Gate | Command or Evidence | Required Result |
 | --- | --- | --- |
 | Code and scenario checks | `npm test` | Pass |
+| Release archive | `npm run build:release` | Zip created under `dist/` and excludes `.env` |
 | Local release rehearsal | `npm run rehearse:release` | Offline/online/app/capacity smoke pass |
 | Offline deployment preflight | `npm run verify:deploy:offline` | No `FAIL` |
 | Long-running process configured | `docker compose ps` or `systemctl status ops-turtle-soup` | Service is running with restart policy |
@@ -61,6 +62,7 @@ Adjust `LLM_MAX_CONCURRENCY` only after confirming the internal LLM service capa
 Preferred:
 
 ```bash
+npm run build:release
 docker compose up -d --build
 docker compose ps
 ```

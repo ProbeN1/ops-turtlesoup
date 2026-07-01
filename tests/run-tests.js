@@ -431,6 +431,7 @@ async function testDeploymentConfiguration() {
   const loadLocal = await readText("tests/load-local.js");
   const loadLlm = await readText("tests/load-llm.js");
   const releaseRehearsal = await readText("tests/release-rehearsal.js");
+  const buildRelease = await readText("tests/build-release.js");
   const packageJson = await readText("package.json");
   const releaseChecklist = await readText("docs/runbook/release-checklist.md");
   const releaseRecordTemplate = await readText("docs/runbook/release-record-template.md");
@@ -455,6 +456,22 @@ async function testDeploymentConfiguration() {
 
   assert(packageJson.includes('"load:llm": "node tests/load-llm.js"'), "package.json missing load:llm script");
   assert(packageJson.includes('"rehearse:release": "node tests/release-rehearsal.js"'), "package.json missing rehearse:release script");
+  assert(packageJson.includes('"build:release": "node tests/build-release.js"'), "package.json missing build:release script");
+
+  for (const token of [
+    "Compress-Archive",
+    "RELEASE_MANIFEST.txt",
+    "\".env\"",
+    "\"node_modules\"",
+    "\"server.out.log\"",
+    "\"server.err.log\"",
+    "\"server.js\"",
+    "\"public\"",
+    "\"data\"",
+    "\"docs\""
+  ]) {
+    assert(buildRelease.includes(token), `build-release script missing ${token}`);
+  }
 
   for (const token of [
     "LLM_LOAD_USERS",
