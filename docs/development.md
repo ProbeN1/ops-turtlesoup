@@ -77,6 +77,7 @@ The server includes simple in-process protection for intranet use:
 - `SHUTDOWN_GRACE_SECONDS`: graceful shutdown timeout, positive integer.
 - `LLM_MAX_CONCURRENCY`: maximum concurrent LLM requests.
 - `LLM_QUEUE_LIMIT`: maximum queued LLM requests.
+- `LLM_REQUEST_TIMEOUT_SECONDS`: maximum duration for one runtime LLM request.
 - `RATE_LIMIT_WINDOW_SECONDS`: request limit window.
 - `RATE_LIMIT_MAX_REQUESTS`: max API requests per client IP per window.
 

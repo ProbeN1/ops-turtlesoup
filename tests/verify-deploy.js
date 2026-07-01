@@ -113,6 +113,7 @@ function checkConfig() {
   const sessionTtlMinutes = numberEnv("SESSION_TTL_MINUTES", 120, { integer: true, min: 1 });
   const maxConcurrency = numberEnv("LLM_MAX_CONCURRENCY", 8, { integer: true, min: 1 });
   const queueLimit = numberEnv("LLM_QUEUE_LIMIT", 100, { integer: true, min: maxConcurrency });
+  const llmRequestTimeoutSeconds = numberEnv("LLM_REQUEST_TIMEOUT_SECONDS", 30, { integer: true, min: 1 });
   const rateLimitWindowSeconds = numberEnv("RATE_LIMIT_WINDOW_SECONDS", 60, { integer: true, min: 1 });
   const rateLimitMax = numberEnv("RATE_LIMIT_MAX_REQUESTS", 120, { integer: true, min: 0 });
   const requestLimitBytes = numberEnv("REQUEST_LIMIT_BYTES", 64 * 1024, { integer: true, min: 4096 });
@@ -137,6 +138,7 @@ function checkConfig() {
   if (sessionTtlMinutes >= 1) pass("SESSION_TTL_MINUTES is valid");
   if (maxConcurrency >= 1) pass("LLM_MAX_CONCURRENCY is valid");
   if (queueLimit >= maxConcurrency) pass("LLM_QUEUE_LIMIT can absorb current concurrency");
+  if (llmRequestTimeoutSeconds >= 1) pass("LLM_REQUEST_TIMEOUT_SECONDS is valid");
   if (rateLimitWindowSeconds >= 1) pass("RATE_LIMIT_WINDOW_SECONDS is valid");
   if (rateLimitMax >= 0) pass("RATE_LIMIT_MAX_REQUESTS is valid");
   if (requestLimitBytes >= 4096) pass("REQUEST_LIMIT_BYTES is large enough for game requests");

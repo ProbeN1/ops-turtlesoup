@@ -160,6 +160,9 @@ async function testServerConfiguration() {
   for (const token of [
     "LLM_MAX_CONCURRENCY",
     "LLM_QUEUE_LIMIT",
+    "LLM_REQUEST_TIMEOUT_SECONDS",
+    "fetchWithTimeout",
+    "LLM request timed out",
     "RATE_LIMIT_WINDOW_SECONDS",
     "RATE_LIMIT_MAX_REQUESTS",
     "GET\" && req.url === \"/api/metrics",

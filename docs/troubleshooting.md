@@ -23,6 +23,7 @@ Examples:
 
 - `PORT must be <= 65535`
 - `LLM_QUEUE_LIMIT must be >= 8`
+- `LLM_REQUEST_TIMEOUT_SECONDS must be >= 1`
 - `REQUEST_LIMIT_BYTES must be >= 4096`
 - `HTTP_REQUEST_TIMEOUT_SECONDS must be >= 5`
 
@@ -166,3 +167,21 @@ Look at `llm.active`, `llm.queued`, `llm.failuresTotal`, and `llm.avgLatencyMs`.
 - Increase `LLM_MAX_CONCURRENCY` if the LLM service can handle it.
 - Increase `LLM_QUEUE_LIMIT` for short traffic bursts.
 - Add a reverse proxy or shared queue before scaling to multiple Node processes.
+
+## LLM Requests Time Out
+
+The app aborts one runtime LLM request after `LLM_REQUEST_TIMEOUT_SECONDS`.
+
+Check:
+
+```text
+GET /api/metrics
+```
+
+Look at `llm.failuresTotal` and `llm.avgLatencyMs`.
+
+Options:
+
+- Increase `LLM_REQUEST_TIMEOUT_SECONDS` if the model is slow but reliable.
+- Lower `LLM_MAX_CONCURRENCY` if the LLM service is overloaded.
+- Run `npm run smoke:llm` from the app host to isolate gateway connectivity and JSON compatibility.

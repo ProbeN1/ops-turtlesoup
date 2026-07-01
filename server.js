@@ -18,6 +18,7 @@ const HTTP_REQUEST_TIMEOUT_SECONDS = readNumberEnv("HTTP_REQUEST_TIMEOUT_SECONDS
 const SHUTDOWN_GRACE_SECONDS = readNumberEnv("SHUTDOWN_GRACE_SECONDS", 10, { integer: true, min: 1 });
 const LLM_MAX_CONCURRENCY = readNumberEnv("LLM_MAX_CONCURRENCY", 8, { integer: true, min: 1 });
 const LLM_QUEUE_LIMIT = readNumberEnv("LLM_QUEUE_LIMIT", 100, { integer: true, min: LLM_MAX_CONCURRENCY });
+const LLM_REQUEST_TIMEOUT_SECONDS = readNumberEnv("LLM_REQUEST_TIMEOUT_SECONDS", 30, { integer: true, min: 1 });
 const RATE_LIMIT_WINDOW_SECONDS = readNumberEnv("RATE_LIMIT_WINDOW_SECONDS", 60, { integer: true, min: 1 });
 const RATE_LIMIT_WINDOW_MS = RATE_LIMIT_WINDOW_SECONDS * 1000;
 const RATE_LIMIT_MAX_REQUESTS = readNumberEnv("RATE_LIMIT_MAX_REQUESTS", 120, { integer: true, min: 0 });
@@ -606,7 +607,7 @@ function llmModel() {
 function limitedLlmFetch(options) {
   metrics.llm.requestsTotal += 1;
   const startedAt = Date.now();
-  return llmLimiter.run(() => fetch(`${llmBaseUrl()}/chat/completions`, options))
+  return llmLimiter.run(() => fetchWithTimeout(`${llmBaseUrl()}/chat/completions`, options, LLM_REQUEST_TIMEOUT_SECONDS * 1000))
     .then((response) => {
       recordLlmResult(startedAt, response);
       return response;
@@ -615,6 +616,22 @@ function limitedLlmFetch(options) {
       recordLlmResult(startedAt, null, error);
       throw error;
     });
+}
+
+async function fetchWithTimeout(url, options, timeoutMs) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error(`LLM request timed out after ${Math.round(timeoutMs / 1000)} seconds`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function cleanupSessions() {

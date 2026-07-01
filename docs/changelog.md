@@ -27,3 +27,4 @@
 - Added browser UI smoke runbook and recorded manual UI verification.
 - Added HTTP request timeouts and graceful shutdown handling.
 - Added release record template for target-host deployment evidence.
+- Added runtime LLM request timeout handling.

@@ -24,6 +24,7 @@ OPENAI_BASE_URL=http://10.10.214.22:30002/v1
 OPENAI_MODEL=b-glm-5.2
 LLM_MAX_CONCURRENCY=8
 LLM_QUEUE_LIMIT=100
+LLM_REQUEST_TIMEOUT_SECONDS=30
 HTTP_REQUEST_TIMEOUT_SECONDS=60
 SHUTDOWN_GRACE_SECONDS=10
 LLM_SMOKE_TIMEOUT_MS=15000
@@ -152,6 +153,7 @@ The deployment verifier checks:
 - Node.js version.
 - Intranet binding and core runtime settings.
 - LLM key, base URL, and model presence.
+- LLM request timeout and limiter settings.
 - Scenario schema and required operational fields.
 - `/api/health` readiness and exposed limiter status.
 

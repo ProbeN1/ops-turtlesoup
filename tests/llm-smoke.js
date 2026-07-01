@@ -50,7 +50,7 @@ function parseModelJson(content) {
 
 async function main() {
   const apiKey = requiredEnv("OPENAI_API_KEY", "LLM_API_KEY");
-  const timeoutMs = Number(process.env.LLM_SMOKE_TIMEOUT_MS || 15000);
+  const timeoutMs = Number(process.env.LLM_SMOKE_TIMEOUT_MS || Number(process.env.LLM_REQUEST_TIMEOUT_SECONDS || 30) * 1000);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
