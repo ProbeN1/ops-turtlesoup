@@ -165,6 +165,9 @@ async function testServerConfiguration() {
     "GET\" && req.url === \"/api/metrics",
     "publicMetrics",
     "gameQuestionsTotal",
+    "server.requestTimeout",
+    "SHUTDOWN_GRACE_SECONDS",
+    "process.on(\"SIGTERM\"",
     "GET\" && req.url === \"/api/health"
   ]) {
     assert(server.includes(token), `server.js missing ${token}`);
@@ -175,6 +178,33 @@ async function testInvalidRuntimeConfiguration() {
   const result = await runNodeWithEnv({ PORT: "70000" });
   assert(result.code !== 0, "server must fail fast for invalid PORT");
   assert(result.stderr.includes("PORT must be <= 65535"), "invalid PORT error must explain valid range");
+}
+
+async function testGracefulShutdown() {
+  const port = "5737";
+  const child = spawn(process.execPath, ["server.js"], {
+    cwd: root,
+    env: { ...process.env, HOST: "127.0.0.1", PORT: port, SHUTDOWN_GRACE_SECONDS: "2", SHUTDOWN_AFTER_START: "1" },
+    stdio: ["ignore", "pipe", "pipe"]
+  });
+  let stdout = "";
+  let stderr = "";
+
+  child.stdout.on("data", (chunk) => {
+    stdout += chunk;
+  });
+  child.stderr.on("data", (chunk) => {
+    stderr += chunk;
+  });
+
+  try {
+    const code = await waitForExit(child, 5000);
+    assert(code === 0, `server must exit cleanly on graceful shutdown; code=${code} stdout=${stdout} stderr=${stderr}`);
+    assert(stdout.includes("Received TEST"), "server must log graceful shutdown signal");
+  } catch (error) {
+    child.kill("SIGKILL");
+    throw new Error(`${error.message}; stdout=${stdout}; stderr=${stderr}`);
+  }
 }
 
 function runNodeWithEnv(env) {
@@ -195,6 +225,20 @@ function runNodeWithEnv(env) {
     });
     child.on("close", (code) => {
       resolve({ code, stdout, stderr });
+    });
+  });
+}
+
+function waitForExit(child, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      child.kill("SIGKILL");
+      reject(new Error("server did not exit in time"));
+    }, timeoutMs);
+
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      resolve(code);
     });
   });
 }
@@ -244,6 +288,7 @@ await testFrontendBindings();
 await testRevealInfraFormatting();
 await testServerConfiguration();
 await testInvalidRuntimeConfiguration();
+await testGracefulShutdown();
 await testDeploymentConfiguration();
 
 console.log("All tests passed");

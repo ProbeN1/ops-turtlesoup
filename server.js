@@ -14,6 +14,8 @@ const PORT = readNumberEnv("PORT", 5725, { integer: true, min: 1, max: 65535 });
 const REQUEST_LIMIT_BYTES = readNumberEnv("REQUEST_LIMIT_BYTES", 64 * 1024, { integer: true, min: 4096 });
 const SESSION_TTL_MINUTES = readNumberEnv("SESSION_TTL_MINUTES", 120, { integer: true, min: 1 });
 const SESSION_TTL_MS = SESSION_TTL_MINUTES * 60 * 1000;
+const HTTP_REQUEST_TIMEOUT_SECONDS = readNumberEnv("HTTP_REQUEST_TIMEOUT_SECONDS", 60, { integer: true, min: 5 });
+const SHUTDOWN_GRACE_SECONDS = readNumberEnv("SHUTDOWN_GRACE_SECONDS", 10, { integer: true, min: 1 });
 const LLM_MAX_CONCURRENCY = readNumberEnv("LLM_MAX_CONCURRENCY", 8, { integer: true, min: 1 });
 const LLM_QUEUE_LIMIT = readNumberEnv("LLM_QUEUE_LIMIT", 100, { integer: true, min: LLM_MAX_CONCURRENCY });
 const RATE_LIMIT_WINDOW_SECONDS = readNumberEnv("RATE_LIMIT_WINDOW_SECONDS", 60, { integer: true, min: 1 });
@@ -774,8 +776,39 @@ const server = createServer(async (req, res) => {
   }
 });
 
+server.requestTimeout = HTTP_REQUEST_TIMEOUT_SECONDS * 1000;
+server.headersTimeout = Math.max(HTTP_REQUEST_TIMEOUT_SECONDS + 5, 10) * 1000;
+server.keepAliveTimeout = Math.min(5000, server.requestTimeout);
+
 server.listen(PORT, HOST, () => {
   const address = server.address();
   const actualPort = typeof address === "object" && address ? address.port : PORT;
   console.log(`Ops Turtle Soup running at http://${HOST}:${actualPort}`);
+  if (process.env.SHUTDOWN_AFTER_START === "1") {
+    setImmediate(() => shutdown("TEST"));
+  }
 });
+
+function shutdown(signal) {
+  console.log(`Received ${signal}, shutting down`);
+  clearInterval(cleanupTimer);
+  clearInterval(rateLimitCleanupTimer);
+
+  const forceTimer = setTimeout(() => {
+    console.error("Graceful shutdown timed out");
+    process.exit(1);
+  }, SHUTDOWN_GRACE_SECONDS * 1000);
+  forceTimer.unref?.();
+
+  server.close((error) => {
+    clearTimeout(forceTimer);
+    if (error) {
+      console.error(error);
+      process.exit(1);
+    }
+    process.exit(0);
+  });
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));

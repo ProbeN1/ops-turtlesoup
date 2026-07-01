@@ -24,12 +24,23 @@ Examples:
 - `PORT must be <= 65535`
 - `LLM_QUEUE_LIMIT must be >= 8`
 - `REQUEST_LIMIT_BYTES must be >= 4096`
+- `HTTP_REQUEST_TIMEOUT_SECONDS must be >= 5`
 
 Fix `.env`, then restart the service and run:
 
 ```powershell
 npm run verify:deploy:offline
 ```
+
+## Restart Or Stop Hangs
+
+The app handles `SIGTERM` and `SIGINT` by closing the HTTP server and clearing background cleanup timers.
+
+If a process manager reports slow shutdown:
+
+- check `SHUTDOWN_GRACE_SECONDS`;
+- check whether long-running LLM requests are still active through `GET /api/metrics`;
+- inspect process logs for `Received SIGTERM` or `Graceful shutdown timed out`.
 
 Check runtime counters:
 

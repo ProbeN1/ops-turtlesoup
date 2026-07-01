@@ -25,3 +25,4 @@
 - Added `/api/metrics` runtime counters for request volume, game flow, rate limiting, and LLM latency.
 - Added fail-fast validation for numeric runtime configuration.
 - Added browser UI smoke runbook and recorded manual UI verification.
+- Added HTTP request timeouts and graceful shutdown handling.

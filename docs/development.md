@@ -73,6 +73,8 @@ The server includes simple in-process protection for intranet use:
 - `PORT`: listening port, integer from 1 to 65535.
 - `SESSION_TTL_MINUTES`: session retention window, positive integer.
 - `REQUEST_LIMIT_BYTES`: maximum request body size, integer at least 4096.
+- `HTTP_REQUEST_TIMEOUT_SECONDS`: HTTP request timeout, integer at least 5.
+- `SHUTDOWN_GRACE_SECONDS`: graceful shutdown timeout, positive integer.
 - `LLM_MAX_CONCURRENCY`: maximum concurrent LLM requests.
 - `LLM_QUEUE_LIMIT`: maximum queued LLM requests.
 - `RATE_LIMIT_WINDOW_SECONDS`: request limit window.

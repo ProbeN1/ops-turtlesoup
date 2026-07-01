@@ -16,6 +16,7 @@ Expected behavior:
 
 - the container restarts automatically through `restart: unless-stopped`;
 - Docker health status is based on `/api/health`;
+- shutdown uses `SIGTERM` and the app stops accepting new connections before exit;
 - `.env` is loaded by Compose;
 - only one Node process is started, preserving the current in-memory session model.
 
@@ -55,6 +56,8 @@ sudo systemctl status ops-turtle-soup
 sudo journalctl -u ops-turtle-soup -f
 sudo systemctl restart ops-turtle-soup
 ```
+
+Systemd sends `SIGTERM` during stop/restart. The app honors `SHUTDOWN_GRACE_SECONDS` before forcing exit.
 
 ## Windows Host
 

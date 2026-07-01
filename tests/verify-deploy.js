@@ -116,6 +116,8 @@ function checkConfig() {
   const rateLimitWindowSeconds = numberEnv("RATE_LIMIT_WINDOW_SECONDS", 60, { integer: true, min: 1 });
   const rateLimitMax = numberEnv("RATE_LIMIT_MAX_REQUESTS", 120, { integer: true, min: 0 });
   const requestLimitBytes = numberEnv("REQUEST_LIMIT_BYTES", 64 * 1024, { integer: true, min: 4096 });
+  const requestTimeoutSeconds = numberEnv("HTTP_REQUEST_TIMEOUT_SECONDS", 60, { integer: true, min: 5 });
+  const shutdownGraceSeconds = numberEnv("SHUTDOWN_GRACE_SECONDS", 10, { integer: true, min: 1 });
 
   if (port > 0 && port < 65536) pass("PORT is valid");
   else fail("PORT must be between 1 and 65535");
@@ -138,6 +140,8 @@ function checkConfig() {
   if (rateLimitWindowSeconds >= 1) pass("RATE_LIMIT_WINDOW_SECONDS is valid");
   if (rateLimitMax >= 0) pass("RATE_LIMIT_MAX_REQUESTS is valid");
   if (requestLimitBytes >= 4096) pass("REQUEST_LIMIT_BYTES is large enough for game requests");
+  if (requestTimeoutSeconds >= 5) pass("HTTP_REQUEST_TIMEOUT_SECONDS is valid");
+  if (shutdownGraceSeconds >= 1) pass("SHUTDOWN_GRACE_SECONDS is valid");
 }
 
 async function checkScenarios() {

@@ -24,6 +24,8 @@ OPENAI_BASE_URL=http://10.10.214.22:30002/v1
 OPENAI_MODEL=b-glm-5.2
 LLM_MAX_CONCURRENCY=8
 LLM_QUEUE_LIMIT=100
+HTTP_REQUEST_TIMEOUT_SECONDS=60
+SHUTDOWN_GRACE_SECONDS=10
 LLM_SMOKE_TIMEOUT_MS=15000
 APP_SMOKE_BASE_URL=http://127.0.0.1:5725
 APP_SMOKE_DIFFICULTY=easy
@@ -34,6 +36,8 @@ RATE_LIMIT_MAX_REQUESTS=120
 ```
 
 Numeric runtime settings are validated at startup. Invalid values, such as an out-of-range `PORT` or `LLM_QUEUE_LIMIT` lower than `LLM_MAX_CONCURRENCY`, cause the service to exit before listening.
+
+The server sets HTTP request, header, and keep-alive timeouts from runtime configuration. On `SIGTERM` or `SIGINT`, it stops accepting new connections and exits after the graceful shutdown window.
 
 For a quick local check, start service:
 
