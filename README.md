@@ -35,6 +35,7 @@ npm start
 npm run dev
 npm test
 npm run build:release
+npm run evidence:release
 npm run smoke:llm
 npm run smoke:app
 ```

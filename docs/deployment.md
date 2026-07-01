@@ -184,6 +184,16 @@ GET /metrics
 
 The text endpoint uses metric names prefixed with `ops_turtle_soup_`, including request counters, game counters, rate-limit counters, active sessions, and LLM queue/latency gauges.
 
+## Release Evidence
+
+After the service is running, capture a non-sensitive release evidence snapshot:
+
+```powershell
+npm run evidence:release
+```
+
+The command reads `GET /api/health`, `GET /api/ready`, `GET /api/metrics`, and `GET /metrics`, then prints JSON suitable for the release record. Use `RELEASE_EVIDENCE_BASE_URL` when testing through a reverse proxy or coworker-facing intranet hostname.
+
 ## Deployment Verification
 
 After configuring `.env` and starting the service, run:

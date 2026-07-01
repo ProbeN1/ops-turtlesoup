@@ -29,6 +29,7 @@ Create a release record from [Release Record Template](release-record-template.m
 | Online deployment verification | `npm run verify:deploy` | No `FAIL` |
 | Readiness endpoint | `GET /api/ready` | `ok=true`, LLM config present, all scenario sets loaded |
 | Runtime metrics | `GET /api/metrics` and `GET /metrics` | JSON counters and Prometheus text counters are present |
+| Release evidence snapshot | `npm run evidence:release` | Non-sensitive JSON summary captured |
 | LLM compatibility | `npm run smoke:llm` | Pass |
 | Game API flow | `npm run smoke:app` | Pass |
 | LLM ask-path load smoke | `npm run load:llm` | Completed configured live LLM asks with zero LLM failures |
@@ -85,6 +86,7 @@ npm test
 npm run rehearse:release
 npm run verify:deploy:offline
 npm run verify:deploy
+npm run evidence:release
 npm run smoke:llm
 npm run smoke:app
 npm run load:llm
@@ -106,6 +108,8 @@ RATE_LIMIT_MAX_REQUESTS=0
 Restore production rate limiting after the load smoke test.
 
 The load smoke output must show `completed` equal to `LOAD_TEST_USERS`, `metricsDelta.gameStartsTotal` and `metricsDelta.gameRevealsTotal` at least equal to `LOAD_TEST_USERS`, and `prometheusMetrics.gameCountersPresent=true`.
+
+Paste `npm run evidence:release` output into the release record after app smoke and before sharing the coworker URL.
 
 For the LLM ask-path load smoke, start with the default `LLM_LOAD_USERS=10` and `LLM_LOAD_CONCURRENCY=2`. Before the event, run a release rehearsal with values agreed with the internal LLM owner, and confirm `metricsDelta.llmFailuresTotal=0`, `metricsDelta.llmRequestsTotal >= LLM_LOAD_USERS`, and acceptable `askLatency.p95Ms`.
 

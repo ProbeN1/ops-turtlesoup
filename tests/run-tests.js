@@ -449,6 +449,7 @@ async function testDeploymentConfiguration() {
   const loadLlm = await readText("tests/load-llm.js");
   const releaseRehearsal = await readText("tests/release-rehearsal.js");
   const buildRelease = await readText("tests/build-release.js");
+  const releaseEvidence = await readText("tests/release-evidence.js");
   const packageJson = await readText("package.json");
   const releaseChecklist = await readText("docs/runbook/release-checklist.md");
   const releaseRecordTemplate = await readText("docs/runbook/release-record-template.md");
@@ -474,6 +475,7 @@ async function testDeploymentConfiguration() {
   assert(packageJson.includes('"load:llm": "node tests/load-llm.js"'), "package.json missing load:llm script");
   assert(packageJson.includes('"rehearse:release": "node tests/release-rehearsal.js"'), "package.json missing rehearse:release script");
   assert(packageJson.includes('"build:release": "node tests/build-release.js"'), "package.json missing build:release script");
+  assert(packageJson.includes('"evidence:release": "node tests/release-evidence.js"'), "package.json missing evidence:release script");
 
   for (const token of [
     "Compress-Archive",
@@ -488,6 +490,19 @@ async function testDeploymentConfiguration() {
     "\"docs\""
   ]) {
     assert(buildRelease.includes(token), `build-release script missing ${token}`);
+  }
+
+  for (const token of [
+    "RELEASE_EVIDENCE_BASE_URL",
+    "/api/health",
+    "/api/ready",
+    "/api/metrics",
+    "/metrics",
+    "readyForCoworkerAccess",
+    "maxActiveSessionsSufficient",
+    "ops_turtle_soup_llm_requests_total"
+  ]) {
+    assert(releaseEvidence.includes(token), `release evidence script missing ${token}`);
   }
 
   for (const token of [
@@ -522,6 +537,7 @@ async function testDeploymentConfiguration() {
     "npm run verify:deploy",
     "npm run smoke:llm",
     "npm run smoke:app",
+    "npm run evidence:release",
     "npm run load:llm",
     "npm run rehearse:release",
     "UI Smoke Runbook",
@@ -545,6 +561,7 @@ async function testDeploymentConfiguration() {
     "npm run verify:deploy",
     "npm run smoke:llm",
     "npm run smoke:app",
+    "npm run evidence:release",
     "npm run load:llm",
     "npm run rehearse:release",
     "npm run load:local",

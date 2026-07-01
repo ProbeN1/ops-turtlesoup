@@ -157,6 +157,16 @@ Result:
 ```
 
 ```text
+npm run evidence:release
+```
+
+Paste JSON summary:
+
+```json
+
+```
+
+```text
 npm run load:llm
 ```
 

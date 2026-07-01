@@ -39,3 +39,4 @@
 - Added `npm run build:release` for portable non-Docker release archive generation.
 - Disabled static asset caching and versioned `app.js` so reveal formatting fixes reach browsers reliably.
 - Added server-formatted `infraBackgroundText` to reveal responses and made the frontend prefer it.
+- Added `npm run evidence:release` for non-sensitive release evidence snapshots.
