@@ -46,6 +46,24 @@ Example:
 OPENAI_BASE_URL=http://10.10.214.22:30002/v1
 ```
 
+## LLM Smoke Test Fails
+
+Run:
+
+```powershell
+npm run smoke:llm
+```
+
+Common causes:
+
+- `OPENAI_BASE_URL` does not point to an OpenAI-compatible `/v1` endpoint.
+- The configured model name is not available on the internal LLM gateway.
+- The gateway rejects `response_format: {"type":"json_object"}`; gameplay also depends on this behavior.
+- The model cold-starts slowly; increase `LLM_SMOKE_TIMEOUT_MS`.
+- Network ACLs or proxy settings block the app host from reaching the LLM endpoint.
+
+The smoke test intentionally prints only endpoint and model reachability, never the API key.
+
 ## Coworkers Cannot Access The Game
 
 Use:

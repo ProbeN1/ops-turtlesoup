@@ -23,7 +23,13 @@ Invoke-RestMethod http://127.0.0.1:5725/api/health
 npm run verify:deploy
 ```
 
-7. Share:
+7. Run the LLM smoke test:
+
+```powershell
+npm run smoke:llm
+```
+
+8. Share:
 
 ```text
 http://<server-intranet-ip>:5725/

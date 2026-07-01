@@ -24,6 +24,7 @@ OPENAI_BASE_URL=http://10.10.214.22:30002/v1
 OPENAI_MODEL=b-glm-5.2
 LLM_MAX_CONCURRENCY=8
 LLM_QUEUE_LIMIT=100
+LLM_SMOKE_TIMEOUT_MS=15000
 RATE_LIMIT_WINDOW_SECONDS=60
 RATE_LIMIT_MAX_REQUESTS=120
 ```
@@ -89,6 +90,24 @@ npm run verify:deploy:offline
 ```
 
 The offline mode skips only the health endpoint probe.
+
+## LLM Smoke Test
+
+Before sharing the game, verify the internal LLM endpoint can return the JSON shape required by the host logic:
+
+```powershell
+npm run smoke:llm
+```
+
+This command calls the configured OpenAI-compatible `/chat/completions` endpoint once and checks:
+
+- endpoint reachability;
+- HTTP JSON response;
+- `choices[0].message.content` presence;
+- host JSON fields: `answer`, `solved`, and `nudge`;
+- answer value belongs to the allowed host answer set.
+
+It does not print the API key. Tune `LLM_SMOKE_TIMEOUT_MS` if the internal model is slow to wake up.
 
 ## Capacity Notes
 
