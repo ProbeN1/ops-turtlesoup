@@ -15,3 +15,5 @@
 - Added LLM concurrency limiter and bounded queue.
 - Added basic per-client API rate limiting.
 - Added load-test server mode for local capacity smoke tests.
+- Fixed reveal rendering for structured infrastructure background.
+- Added scenario authoring guidance for precise turtle soup openings.

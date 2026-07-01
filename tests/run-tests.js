@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import vm from "node:vm";
 
 const root = process.cwd();
 const scenarioFiles = [
@@ -81,6 +82,76 @@ async function testFrontendBindings() {
   }
 
   assert(html.includes('value="easy"'), "frontend must use standard easy difficulty value");
+  assert(app.includes("function formatInfraBackground"), "frontend must format infra background before rendering reveal");
+  assert(!app.includes("基础设施：${data.infraBackground}"), "frontend must not render infra object directly");
+}
+
+async function testRevealInfraFormatting() {
+  const app = await readText("public/app.js");
+  const elements = new Map();
+
+  function createElement() {
+    return {
+      textContent: "",
+      disabled: false,
+      innerHTML: "",
+      className: "",
+      children: [],
+      classList: {
+        contains: () => false,
+        toggle: () => {},
+        remove: () => {},
+        add: () => {}
+      },
+      style: { setProperty: () => {} },
+      addEventListener: () => {},
+      append(...items) {
+        this.children.push(...items);
+        this.lastAppend = items;
+      },
+      focus: () => {},
+      setAttribute: () => {},
+      scrollTop: 0,
+      scrollHeight: 0
+    };
+  }
+
+  const document = {
+    querySelector(selector) {
+      if (!elements.has(selector)) {
+        elements.set(selector, createElement());
+      }
+      return elements.get(selector);
+    },
+    createElement
+  };
+
+  const context = {
+    document,
+    window: { setTimeout: () => {} },
+    requestAnimationFrame: (fn) => fn(),
+    Math,
+    fetch: () => {},
+    console
+  };
+
+  vm.runInNewContext(app, context);
+  context.renderReveal({
+    infraBackground: {
+      platform: "Proxmox",
+      nodes: { workers: 2 },
+      observability: ["Prometheus", "Grafana"]
+    },
+    hiddenTruth: "truth",
+    solvePoints: ["point"],
+    lesson: "lesson"
+  });
+
+  const chatLog = elements.get("#chatLog");
+  const lastMessageBody = chatLog.children.at(-1).lastAppend[1].textContent;
+  assert(!lastMessageBody.includes("[object Object]"), "reveal must not show [object Object]");
+  assert(lastMessageBody.includes("platform: Proxmox"), "reveal must include formatted infra key/value");
+  assert(lastMessageBody.includes("nodes: workers=2"), "reveal must include nested infra values");
 }
 
 async function testServerConfiguration() {
@@ -98,6 +169,7 @@ async function testServerConfiguration() {
 
 await testScenarioSchema();
 await testFrontendBindings();
+await testRevealInfraFormatting();
 await testServerConfiguration();
 
 console.log("All tests passed");

@@ -56,6 +56,8 @@ data/scenarios/medium.json
 data/scenarios/hard.json
 ```
 
+For story/opening writing rules, difficulty style, and solve standards, see [Scenario Authoring](scenario-authoring.md).
+
 ## Answer Rules
 
 Allowed answers are difficulty-specific:

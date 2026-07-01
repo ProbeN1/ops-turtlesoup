@@ -105,11 +105,36 @@ function handleSolved(reveal) {
 function renderReveal(data, title = "揭晓") {
   setChatCollapsed(false);
   const points = Array.isArray(data.solvePoints) ? data.solvePoints.join("；") : "";
+  const infraBackground = formatInfraBackground(data.infraBackground);
   addMessage(
     "host reveal",
     title,
-    `基础设施：${data.infraBackground}\n真相：${data.hiddenTruth}\n关键点：${points}\n经验：${data.lesson}`
+    `基础设施：${infraBackground}\n真相：${data.hiddenTruth}\n关键点：${points}\n经验：${data.lesson}`
   );
+}
+
+function formatInfraBackground(value) {
+  if (value === null || value === undefined || value === "") return "无";
+  if (typeof value !== "object") return String(value);
+  if (Array.isArray(value)) return value.map(formatInfraValue).join("、");
+
+  const entries = Object.entries(value);
+  if (!entries.length) return "无";
+
+  return entries
+    .map(([key, item]) => `${key}: ${formatInfraValue(item)}`)
+    .join("；");
+}
+
+function formatInfraValue(value) {
+  if (value === null || value === undefined || value === "") return "无";
+  if (Array.isArray(value)) return value.map(formatInfraValue).join("、");
+  if (typeof value === "object") {
+    return Object.entries(value)
+      .map(([key, item]) => `${key}=${formatInfraValue(item)}`)
+      .join(", ");
+  }
+  return String(value);
 }
 
 function toggleChat() {

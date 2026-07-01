@@ -53,5 +53,6 @@ docker compose up -d
 - [Architecture](docs/architecture.md)
 - [Deployment](docs/deployment.md)
 - [Development](docs/development.md)
+- [Scenario Authoring](docs/scenario-authoring.md)
 - [Troubleshooting](docs/troubleshooting.md)
 - [Changelog](docs/changelog.md)
