@@ -65,3 +65,4 @@
 - Replaced email feedback delivery with a polished DingTalk contact page for `0027029145` 姜毅.
 - Added three Keepalived floating-IP high-availability scenarios across easy, medium, and hard difficulties.
 - Changed the chat area into a fixed embedded conversation window so the ask button remains in a stable position while messages scroll.
+- Renamed scenario JSON files to the readable `难度-编号-题目.json` format and updated validation rules.

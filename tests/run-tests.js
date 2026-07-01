@@ -33,6 +33,12 @@ const requiredScenarioFields = [
   "references"
 ];
 
+const difficultyFileLabels = {
+  easy: "简单",
+  medium: "中等",
+  hard: "困难"
+};
+
 function assert(condition, message) {
   if (!condition) {
     throw new Error(message);
@@ -44,6 +50,7 @@ async function readText(file) {
 }
 
 async function readScenarioSet(directory) {
+  const difficulty = path.basename(directory);
   const entries = await readdir(path.join(root, directory), { withFileTypes: true });
   const files = entries
     .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
@@ -53,9 +60,24 @@ async function readScenarioSet(directory) {
   return Promise.all(files.map(async (file) => {
     const scenario = JSON.parse(await readText(path.join(directory, file)));
     assert(!Array.isArray(scenario), `${path.join(directory, file)} must contain one scenario object`);
-    assert(file === `${scenario.id}.json`, `${path.join(directory, file)} filename must match scenario id`);
+    assert(file === scenarioFileName(scenario), `${path.join(directory, file)} filename must match difficulty-number-title format`);
+    assert(file.startsWith(`${difficultyFileLabels[difficulty]}-`), `${path.join(directory, file)} filename must start with localized difficulty`);
     return scenario;
   }));
+}
+
+function scenarioFileName(scenario) {
+  const label = difficultyFileLabels[scenario.difficulty];
+  const number = String(scenario.id || "").split("-").pop();
+  return `${label}-${number}-${safeScenarioFileTitle(scenario.title)}.json`;
+}
+
+function safeScenarioFileTitle(title) {
+  return String(title || "")
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 60);
 }
 
 async function testScenarioSchema() {
@@ -881,9 +903,9 @@ async function testDeploymentConfiguration() {
   }
 
   for (const token of [
-    "data/scenarios/<difficulty>/<id>.json",
+    "data/scenarios/<difficulty>/<难度-编号-题目>.json",
     "每道题一个文件",
-    "文件名必须等于题目 `id`",
+    "难度-编号-题目.json",
     "提取步骤",
     "质量检查",
     "npm test"

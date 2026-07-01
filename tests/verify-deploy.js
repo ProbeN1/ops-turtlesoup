@@ -33,6 +33,12 @@ const requiredScenarioFields = [
   "references"
 ];
 
+const difficultyFileLabels = {
+  easy: "简单",
+  medium: "中等",
+  hard: "困难"
+};
+
 loadEnvFile();
 
 function record(status, message) {
@@ -99,6 +105,7 @@ function localBaseUrl() {
 }
 
 async function readScenarioSet(directory) {
+  const difficulty = path.basename(directory);
   const entries = await readdir(path.join(root, directory), { withFileTypes: true });
   const files = entries
     .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
@@ -112,12 +119,29 @@ async function readScenarioSet(directory) {
       fail(`${path.join(directory, file)} must contain one scenario object`);
       continue;
     }
-    if (file !== `${scenario.id}.json`) {
-      fail(`${path.join(directory, file)} filename must match scenario id`);
+    if (file !== scenarioFileName(scenario)) {
+      fail(`${path.join(directory, file)} filename must match difficulty-number-title format`);
+    }
+    if (!file.startsWith(`${difficultyFileLabels[difficulty]}-`)) {
+      fail(`${path.join(directory, file)} filename must start with localized difficulty`);
     }
     scenarios.push(scenario);
   }
   return scenarios;
+}
+
+function scenarioFileName(scenario) {
+  const label = difficultyFileLabels[scenario.difficulty];
+  const number = String(scenario.id || "").split("-").pop();
+  return `${label}-${number}-${safeScenarioFileTitle(scenario.title)}.json`;
+}
+
+function safeScenarioFileTitle(title) {
+  return String(title || "")
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 60);
 }
 
 function checkNodeVersion() {

@@ -38,7 +38,7 @@
 
 ## 标准题目模板
 
-每道题单独保存为一个 JSON 文件，路径格式为 `data/scenarios/<difficulty>/<id>.json`。文件名必须与 `id` 一致。
+每道题单独保存为一个 JSON 文件，路径格式为 `data/scenarios/<difficulty>/<难度-编号-题目>.json`。文件名采用 `难度-编号-题目.json`，JSON 内部 `id` 保持稳定。
 
 ```json
 {

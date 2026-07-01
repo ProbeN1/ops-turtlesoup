@@ -15,7 +15,7 @@ Browser
   -> /metrics
 
 Node server.js
-  -> data/scenarios/<difficulty>/<scenario-id>.json
+  -> data/scenarios/<difficulty>/<difficulty-label>-<number>-<title>.json
   -> in-memory sessions
   -> OpenAI-compatible LLM API
 ```

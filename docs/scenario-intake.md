@@ -14,15 +14,15 @@
 每道题一个文件，目录按难度拆分：
 
 ```text
-data/scenarios/easy/easy-001.json
-data/scenarios/medium/medium-001.json
-data/scenarios/hard/hard-001.json
+data/scenarios/easy/简单-001-健康的服务没有后端.json
+data/scenarios/medium/中等-001-只影响老用户的发布.json
+data/scenarios/hard/困难-001-恢复后更严重的地域故障.json
 ```
 
-文件名必须等于题目 `id` 加 `.json`。例如：
+文件名必须采用 `难度-编号-题目.json`。编号来自题目 `id` 的数字部分，题目来自 `title`。例如：
 
 ```text
-data/scenarios/easy/easy-003.json
+data/scenarios/easy/简单-003-一直飘不起来的 VIP.json
 ```
 
 对应字段：
@@ -126,7 +126,7 @@ data/scenarios/easy/easy-003.json
 
 1. 根据难度选择目录。
 2. 查看已有最大编号，生成下一个 `id`。
-3. 新建 `data/scenarios/<difficulty>/<id>.json`。
+3. 新建 `data/scenarios/<difficulty>/<难度-编号-题目>.json`。
 4. 用标准模板填充内容。
 5. 运行：
 
@@ -148,7 +148,7 @@ docs/changelog.md
 
 入库前逐项确认：
 
-- 文件名与 `id` 一致。
+- 文件名符合 `难度-编号-题目.json`，且编号与 `id` 的数字部分一致。
 - `difficulty` 与目录一致。
 - `story` 不提前泄露根因。
 - `infra_background` 是对象。
