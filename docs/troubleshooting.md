@@ -26,12 +26,22 @@ Examples:
 - `LLM_REQUEST_TIMEOUT_SECONDS must be >= 1`
 - `REQUEST_LIMIT_BYTES must be >= 4096`
 - `HTTP_REQUEST_TIMEOUT_SECONDS must be >= 5`
+- `Startup failed: 0.0.0.0:5725 is already in use`
+- `Startup failed: permission denied while binding 0.0.0.0:5725`
 
-Fix `.env`, then restart the service and run:
+For validation errors, fix `.env`, then restart the service and run:
 
 ```powershell
 npm run verify:deploy:offline
 ```
+
+For port conflicts:
+
+```powershell
+netstat -ano | Select-String ':5725'
+```
+
+Stop the old process or configure a different `PORT`.
 
 ## Restart Or Stop Hangs
 

@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import vm from "node:vm";
 import { spawn } from "node:child_process";
+import { createServer as createTcpServer } from "node:net";
 
 const root = process.cwd();
 const scenarioFiles = [
@@ -175,6 +176,9 @@ async function testServerConfiguration() {
     "server.requestTimeout",
     "SHUTDOWN_GRACE_SECONDS",
     "process.on(\"SIGTERM\"",
+    "Startup failed:",
+    "EADDRINUSE",
+    "EACCES",
     "GET\" && req.url === \"/api/health"
   ]) {
     assert(server.includes(token), `server.js missing ${token}`);
@@ -211,6 +215,25 @@ async function testGracefulShutdown() {
   } catch (error) {
     child.kill("SIGKILL");
     throw new Error(`${error.message}; stdout=${stdout}; stderr=${stderr}`);
+  }
+}
+
+async function testStartupPortConflict() {
+  const holder = createTcpServer();
+  await new Promise((resolve, reject) => {
+    holder.once("error", reject);
+    holder.listen(0, "127.0.0.1", resolve);
+  });
+  const address = holder.address();
+  const port = String(typeof address === "object" && address ? address.port : "");
+
+  try {
+    const result = await runNodeWithEnv({ HOST: "127.0.0.1", PORT: port });
+    assert(result.code !== 0, "server must fail fast when the configured port is already in use");
+    assert(result.stderr.includes("Startup failed:"), "port conflict error must include startup failure prefix");
+    assert(result.stderr.includes("already in use"), "port conflict error must explain that the port is already in use");
+  } finally {
+    await new Promise((resolve) => holder.close(resolve));
   }
 }
 
@@ -315,6 +338,7 @@ await testRevealInfraFormatting();
 await testServerConfiguration();
 await testInvalidRuntimeConfiguration();
 await testGracefulShutdown();
+await testStartupPortConflict();
 await testDeploymentConfiguration();
 
 console.log("All tests passed");

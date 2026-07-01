@@ -29,3 +29,4 @@
 - Added release record template for target-host deployment evidence.
 - Added runtime LLM request timeout handling.
 - Added Prometheus-format `/metrics` endpoint for intranet monitoring integration.
+- Added clear startup errors for port conflicts and bind permission failures.

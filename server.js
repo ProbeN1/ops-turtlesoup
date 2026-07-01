@@ -904,6 +904,17 @@ server.requestTimeout = HTTP_REQUEST_TIMEOUT_SECONDS * 1000;
 server.headersTimeout = Math.max(HTTP_REQUEST_TIMEOUT_SECONDS + 5, 10) * 1000;
 server.keepAliveTimeout = Math.min(5000, server.requestTimeout);
 
+server.on("error", (error) => {
+  if (error.code === "EADDRINUSE") {
+    console.error(`Startup failed: ${HOST}:${PORT} is already in use. Stop the existing service or configure a different PORT.`);
+  } else if (error.code === "EACCES") {
+    console.error(`Startup failed: permission denied while binding ${HOST}:${PORT}. Use an allowed port or approved service account.`);
+  } else {
+    console.error("Startup failed:", error);
+  }
+  process.exit(1);
+});
+
 server.listen(PORT, HOST, () => {
   const address = server.address();
   const actualPort = typeof address === "object" && address ? address.port : PORT;

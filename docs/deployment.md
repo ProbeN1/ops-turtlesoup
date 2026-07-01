@@ -38,6 +38,8 @@ RATE_LIMIT_MAX_REQUESTS=120
 
 Numeric runtime settings are validated at startup. Invalid values, such as an out-of-range `PORT` or `LLM_QUEUE_LIMIT` lower than `LLM_MAX_CONCURRENCY`, cause the service to exit before listening.
 
+If startup fails while binding the port, stderr prints a `Startup failed:` message. Common causes are an existing process already using `HOST:PORT` or an account without permission to bind the configured port.
+
 The server sets HTTP request, header, and keep-alive timeouts from runtime configuration. On `SIGTERM` or `SIGINT`, it stops accepting new connections and exits after the graceful shutdown window.
 
 For a quick local check, start service:
