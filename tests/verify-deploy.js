@@ -111,6 +111,7 @@ function checkConfig() {
   const host = process.env.HOST || "127.0.0.1";
   const port = numberEnv("PORT", 5725, { integer: true, min: 1, max: 65535 });
   const sessionTtlMinutes = numberEnv("SESSION_TTL_MINUTES", 120, { integer: true, min: 1 });
+  const maxActiveSessions = numberEnv("MAX_ACTIVE_SESSIONS", 300, { integer: true, min: 1 });
   const maxConcurrency = numberEnv("LLM_MAX_CONCURRENCY", 8, { integer: true, min: 1 });
   const queueLimit = numberEnv("LLM_QUEUE_LIMIT", 100, { integer: true, min: maxConcurrency });
   const llmRequestTimeoutSeconds = numberEnv("LLM_REQUEST_TIMEOUT_SECONDS", 30, { integer: true, min: 1 });
@@ -136,6 +137,8 @@ function checkConfig() {
   else warn("LLM model is not configured; fallback model will be used");
 
   if (sessionTtlMinutes >= 1) pass("SESSION_TTL_MINUTES is valid");
+  if (maxActiveSessions >= 100) pass("MAX_ACTIVE_SESSIONS can support the target player count");
+  else fail("MAX_ACTIVE_SESSIONS must be >= 100 for the target release profile");
   if (maxConcurrency >= 1) pass("LLM_MAX_CONCURRENCY is valid");
   if (queueLimit >= maxConcurrency) pass("LLM_QUEUE_LIMIT can absorb current concurrency");
   if (llmRequestTimeoutSeconds >= 1) pass("LLM_REQUEST_TIMEOUT_SECONDS is valid");
@@ -226,6 +229,9 @@ async function checkHealth() {
     if (readiness.scenarioSets?.[difficulty] > 0) pass(`readiness endpoint confirms ${difficulty} scenarios`);
     else fail(`readiness endpoint missing ${difficulty} scenarios`);
   }
+
+  if (readiness.sessions?.maxActive > 0) pass("readiness endpoint exposes session capacity");
+  else fail("readiness endpoint missing session capacity");
 
   const metricsResponse = await fetch(`${baseUrl}/api/metrics`);
   if (!metricsResponse.ok) {

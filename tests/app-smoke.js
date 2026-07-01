@@ -112,10 +112,12 @@ async function main() {
   assert(metrics.gameStartsTotal >= 1, "metrics endpoint did not count game starts");
   assert(metrics.gameQuestionsTotal >= 1, "metrics endpoint did not count game questions");
   assert(metrics.gameRevealsTotal >= 1, "metrics endpoint did not count game reveals");
+  assert(metrics.maxActiveSessions >= 100, "metrics endpoint reports insufficient maxActiveSessions");
   assert(typeof metrics.llm?.requestsTotal === "number", "metrics endpoint missing LLM request counter");
 
   const prometheusMetrics = await getText("/metrics");
   assert(prometheusMetrics.includes("ops_turtle_soup_game_starts_total"), "Prometheus metrics missing game start counter");
+  assert(prometheusMetrics.includes("ops_turtle_soup_max_active_sessions"), "Prometheus metrics missing max active sessions gauge");
   assert(prometheusMetrics.includes("ops_turtle_soup_llm_requests_total"), "Prometheus metrics missing LLM request counter");
 
   console.log("PASS application health endpoint is reachable");

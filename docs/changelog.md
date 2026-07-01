@@ -35,3 +35,4 @@
 - Added `npm run rehearse:release` for one-command local release rehearsal evidence.
 - Return HTTP 503 with a player-friendly message when the LLM queue is full.
 - Added `/api/ready` for non-sensitive deployment readiness checks.
+- Added `MAX_ACTIVE_SESSIONS` to cap active game sessions for intranet capacity protection.

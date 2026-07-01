@@ -14,6 +14,7 @@ const PORT = readNumberEnv("PORT", 5725, { integer: true, min: 1, max: 65535 });
 const REQUEST_LIMIT_BYTES = readNumberEnv("REQUEST_LIMIT_BYTES", 64 * 1024, { integer: true, min: 4096 });
 const SESSION_TTL_MINUTES = readNumberEnv("SESSION_TTL_MINUTES", 120, { integer: true, min: 1 });
 const SESSION_TTL_MS = SESSION_TTL_MINUTES * 60 * 1000;
+const MAX_ACTIVE_SESSIONS = readNumberEnv("MAX_ACTIVE_SESSIONS", 300, { integer: true, min: 1 });
 const HTTP_REQUEST_TIMEOUT_SECONDS = readNumberEnv("HTTP_REQUEST_TIMEOUT_SECONDS", 60, { integer: true, min: 5 });
 const SHUTDOWN_GRACE_SECONDS = readNumberEnv("SHUTDOWN_GRACE_SECONDS", 10, { integer: true, min: 1 });
 const LLM_MAX_CONCURRENCY = readNumberEnv("LLM_MAX_CONCURRENCY", 8, { integer: true, min: 1 });
@@ -229,6 +230,7 @@ function publicMetrics() {
     rateLimitedTotal: metrics.rateLimitedTotal,
     errorsTotal: metrics.errorsTotal,
     activeSessions: sessions.size,
+    maxActiveSessions: MAX_ACTIVE_SESSIONS,
     cachedScenarioSets: scenarioCache.size,
     gameStartsTotal: metrics.gameStartsTotal,
     gameQuestionsTotal: metrics.gameQuestionsTotal,
@@ -283,6 +285,10 @@ async function readinessPayload() {
     windowSeconds: RATE_LIMIT_WINDOW_SECONDS,
     maxRequests: RATE_LIMIT_MAX_REQUESTS
   });
+  record("session-capacity", sessions.size < MAX_ACTIVE_SESSIONS, {
+    activeSessions: sessions.size,
+    maxActiveSessions: MAX_ACTIVE_SESSIONS
+  });
 
   const ok = checks.every((check) => check.ok);
   return {
@@ -296,6 +302,10 @@ async function readinessPayload() {
       ...llmLimiter.stats()
     },
     scenarioSets,
+    sessions: {
+      active: sessions.size,
+      maxActive: MAX_ACTIVE_SESSIONS
+    },
     rateLimit: {
       windowSeconds: RATE_LIMIT_WINDOW_SECONDS,
       maxRequests: RATE_LIMIT_MAX_REQUESTS
@@ -337,6 +347,9 @@ function prometheusMetrics() {
   ]);
   metric("ops_turtle_soup_active_sessions", "gauge", "Current active game sessions.", [
     `ops_turtle_soup_active_sessions ${snapshot.activeSessions}`
+  ]);
+  metric("ops_turtle_soup_max_active_sessions", "gauge", "Configured maximum active game sessions.", [
+    `ops_turtle_soup_max_active_sessions ${snapshot.maxActiveSessions}`
   ]);
   metric("ops_turtle_soup_cached_scenario_sets", "gauge", "Scenario sets cached in memory.", [
     `ops_turtle_soup_cached_scenario_sets ${snapshot.cachedScenarioSets}`
@@ -801,6 +814,7 @@ async function handleApi(req, res) {
       ok: true,
       uptimeSeconds: Math.round(process.uptime()),
       activeSessions: sessions.size,
+      maxActiveSessions: MAX_ACTIVE_SESSIONS,
       cachedScenarioSets: scenarioCache.size,
       llm: llmLimiter.stats(),
       rateLimit: {
@@ -828,6 +842,15 @@ async function handleApi(req, res) {
   }
 
   if (req.method === "POST" && req.url === "/api/game/start") {
+    if (sessions.size >= MAX_ACTIVE_SESSIONS) {
+      return jsonResponse(res, 503, {
+        error: "房间已满，请稍后再试",
+        detail: "active session limit reached",
+        activeSessions: sessions.size,
+        maxActiveSessions: MAX_ACTIVE_SESSIONS
+      });
+    }
+
     const body = await readJson(req);
     const difficulty = normalizeDifficulty(body.difficulty);
     const scenarios = await loadScenarios(difficulty);

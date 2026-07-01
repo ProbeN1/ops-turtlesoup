@@ -19,6 +19,7 @@ Set `.env`:
 ```env
 HOST=0.0.0.0
 PORT=5725
+MAX_ACTIVE_SESSIONS=300
 OPENAI_API_KEY=your_api_key_here
 OPENAI_BASE_URL=http://10.10.214.22:30002/v1
 OPENAI_MODEL=b-glm-5.2
@@ -261,6 +262,7 @@ For around 100 intranet users:
 - Keep the LLM endpoint on the same intranet or low-latency network.
 - Monitor `server.err.log` or process stderr.
 - Use one Node process unless session persistence is externalized.
+- Keep `MAX_ACTIVE_SESSIONS` at least 100 for the target release profile; the default `300` leaves rehearsal and retry headroom.
 - Tune `LLM_MAX_CONCURRENCY` to match the internal LLM service capacity.
 - Tune `RATE_LIMIT_MAX_REQUESTS` if many players share one proxy IP.
 

@@ -185,6 +185,9 @@ async function testServerConfiguration() {
     "readinessPayload",
     "GET\" && req.url === \"/api/ready",
     "apiKeyConfigured",
+    "MAX_ACTIVE_SESSIONS",
+    "maxActiveSessions",
+    "房间已满，请稍后再试",
     "GET\" && req.url === \"/api/health"
   ]) {
     assert(server.includes(token), `server.js missing ${token}`);
@@ -300,6 +303,43 @@ async function testLlmQueueFullReturns503() {
     child.kill("SIGKILL");
     await new Promise((resolve) => child.once("close", resolve));
     await new Promise((resolve) => blocker.close(resolve));
+  }
+
+  assert(!stderr.includes("Startup failed"), `server startup failed unexpectedly; stdout=${stdout}; stderr=${stderr}`);
+}
+
+async function testSessionCapacityReturns503() {
+  const appPort = await reserveLocalPort();
+  const child = spawn(process.execPath, ["server.js"], {
+    cwd: root,
+    env: {
+      ...process.env,
+      HOST: "127.0.0.1",
+      PORT: String(appPort),
+      OPENAI_API_KEY: "test-key",
+      OPENAI_BASE_URL: "http://127.0.0.1:1/v1",
+      OPENAI_MODEL: "test-model",
+      MAX_ACTIVE_SESSIONS: "1",
+      RATE_LIMIT_MAX_REQUESTS: "0"
+    },
+    stdio: ["ignore", "pipe", "pipe"]
+  });
+  let stdout = "";
+  let stderr = "";
+  child.stdout.on("data", (chunk) => { stdout += chunk; });
+  child.stderr.on("data", (chunk) => { stderr += chunk; });
+
+  try {
+    await waitForHttp(`http://127.0.0.1:${appPort}/api/health`, 5000);
+    await postJson(`http://127.0.0.1:${appPort}/api/game/start`, { difficulty: "easy" });
+    const secondStart = await postJsonAllowError(`http://127.0.0.1:${appPort}/api/game/start`, { difficulty: "easy" });
+    assert(secondStart.status === 503, `session capacity overflow must return 503, got ${secondStart.status}`);
+    assert(secondStart.body.error === "房间已满，请稍后再试", "503 response must explain session capacity limit");
+    assert(secondStart.body.activeSessions === 1, "503 response must include activeSessions");
+    assert(secondStart.body.maxActiveSessions === 1, "503 response must include maxActiveSessions");
+  } finally {
+    child.kill("SIGKILL");
+    await new Promise((resolve) => child.once("close", resolve));
   }
 
   assert(!stderr.includes("Startup failed"), `server startup failed unexpectedly; stdout=${stdout}; stderr=${stderr}`);
@@ -453,6 +493,7 @@ async function testDeploymentConfiguration() {
     "UI Smoke Runbook",
     "Release Record Template",
     "npm run load:local",
+    "MAX_ACTIVE_SESSIONS=300",
     "GET /api/metrics",
     "GET /api/ready",
     "GET /metrics",
@@ -473,6 +514,7 @@ async function testDeploymentConfiguration() {
     "npm run load:llm",
     "npm run rehearse:release",
     "npm run load:local",
+    "MAX_ACTIVE_SESSIONS=",
     "Coworker Access Check",
     "GET /api/metrics",
     "GET /api/ready",
@@ -510,6 +552,7 @@ await testInvalidRuntimeConfiguration();
 await testGracefulShutdown();
 await testStartupPortConflict();
 await testLlmQueueFullReturns503();
+await testSessionCapacityReturns503();
 await testDeploymentConfiguration();
 
 console.log("All tests passed");

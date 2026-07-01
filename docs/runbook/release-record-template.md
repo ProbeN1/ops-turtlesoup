@@ -31,6 +31,7 @@ Record non-secret values only.
 HOST=
 PORT=
 SESSION_TTL_MINUTES=
+MAX_ACTIVE_SESSIONS=
 REQUEST_LIMIT_BYTES=
 HTTP_REQUEST_TIMEOUT_SECONDS=
 SHUTDOWN_GRACE_SECONDS=
@@ -235,6 +236,8 @@ ready.llm.modelConfigured=
 ready.scenarioSets.easy=
 ready.scenarioSets.medium=
 ready.scenarioSets.hard=
+ready.sessions.active=
+ready.sessions.maxActive=
 ```
 
 Capture runtime metrics after smoke checks:

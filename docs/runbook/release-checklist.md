@@ -44,6 +44,7 @@ Confirm production `.env`:
 ```env
 HOST=0.0.0.0
 PORT=5725
+MAX_ACTIVE_SESSIONS=300
 OPENAI_API_KEY=...
 OPENAI_BASE_URL=http://<internal-llm>/v1
 OPENAI_MODEL=...

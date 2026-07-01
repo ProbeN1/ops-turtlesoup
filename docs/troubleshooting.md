@@ -138,6 +138,25 @@ Then ensure Windows Firewall or the server security group allows inbound traffic
 
 Sessions are currently in memory. Restarting the Node process clears active games.
 
+## Players See Room Full 503 Errors
+
+Players may receive HTTP `503` with `房间已满，请稍后再试` when active game sessions reach `MAX_ACTIVE_SESSIONS`.
+
+Check:
+
+```text
+GET /api/ready
+GET /api/metrics
+```
+
+Look at `ready.sessions.active`, `ready.sessions.maxActive`, `activeSessions`, `maxActiveSessions`, and `responsesByStatus.503`.
+
+Options:
+
+- Wait for inactive sessions to expire after `SESSION_TTL_MINUTES`.
+- Increase `MAX_ACTIVE_SESSIONS` if the host has enough memory.
+- Lower `SESSION_TTL_MINUTES` if abandoned games should be cleaned up sooner.
+
 ## Players See 429 Errors
 
 The API rate limiter is rejecting too many requests from the same client IP.
