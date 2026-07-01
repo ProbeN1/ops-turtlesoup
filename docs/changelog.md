@@ -66,3 +66,4 @@
 - Added three Keepalived floating-IP high-availability scenarios across easy, medium, and hard difficulties.
 - Changed the chat area into a fixed embedded conversation window so the ask button remains in a stable position while messages scroll.
 - Renamed scenario JSON files to the readable `难度-编号-题目.json` format and updated validation rules.
+- Deployed release `ops-turtle-soup-0.1.0-20260701T083806Z` commit `39702ed` to `10.10.214.4` and verified readable scenario filenames on the intranet host.
