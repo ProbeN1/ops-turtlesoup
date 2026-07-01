@@ -3,8 +3,8 @@ import path from "node:path";
 
 const root = process.cwd();
 const allowedAnswersByDifficulty = {
-  easy: new Set(["是", "否", "无关", "请换一种问法", "是，但不完整", "否，但不完整"]),
-  medium: new Set(["是", "否", "无关", "请换一种问法"]),
+  easy: new Set(["是", "否", "无关"]),
+  medium: new Set(["是", "否", "无关"]),
   hard: new Set(["是", "否", "无关"])
 };
 

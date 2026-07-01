@@ -47,8 +47,8 @@ const difficultyAliases = {
 };
 
 const allowedAnswersByDifficulty = {
-  easy: ["是", "否", "无关", "请换一种问法", "是，但不完整", "否，但不完整"],
-  medium: ["是", "否", "无关", "请换一种问法"],
+  easy: ["是", "否", "无关"],
+  medium: ["是", "否", "无关"],
   hard: ["是", "否", "无关"]
 };
 
@@ -768,12 +768,11 @@ function getAllowedAnswers(difficulty) {
 }
 
 function defaultAnswerFor(difficulty) {
-  return getAllowedAnswers(difficulty).includes("请换一种问法") ? "请换一种问法" : "无关";
+  return "无关";
 }
 
 function fallbackAnswer(question, difficulty) {
   const text = question.trim();
-  const allowed = getAllowedAnswers(difficulty);
   if (!/[吗么?？]$/.test(text) && !/(是不是|是否|有没有|能否|会不会|是.*吗|和.*有关吗)/.test(text)) {
     return defaultAnswerFor(difficulty);
   }
@@ -781,9 +780,9 @@ function fallbackAnswer(question, difficulty) {
   if (/(提示|线索|hint)/i.test(text)) return "无关";
   if (/(数据库|CPU|内存|证书|DNS|监控误报)/i.test(text)) return "否";
   if (/(发布|流量|缓存|连接|重试|配置|Kubernetes|Pod|Service|告警|备份|压缩|磁盘)/i.test(text)) {
-    return allowed.includes("是，但不完整") ? "是，但不完整" : "是";
+    return "是";
   }
-  return allowed.includes("无关") ? "无关" : defaultAnswerFor(difficulty);
+  return defaultAnswerFor(difficulty);
 }
 
 function buildMessages(session, question) {
@@ -804,7 +803,7 @@ function buildMessages(session, question) {
         `成功标准：${solveStandardFor(scenario.difficulty)}`,
         "成功判定基于完整对话累计事实和玩家最新猜测；如果玩家已经在多轮对话中拼齐关键事实，solved 必须为 true。",
         "形如“是备份吗”“是存储问题吗”“是否和发布有关”“有没有重试”的问题都是合格的是/否问题，必须回答允许值里的判断结果，不要让玩家换问法。",
-        "只有开放式要求分析、解释、列步骤、直接要答案、或无法用是/否判断的问题，才回答“请换一种问法”。",
+        "开放式要求分析、解释、列步骤、直接要答案、或无法用是/否判断的问题，统一回答“无关”。",
         "只允许输出 JSON，不要输出 Markdown。",
         `本局难度只允许 answer 使用这些值之一：${allowedAnswers.join(" | ")}`,
         `JSON 格式必须是：{"answer":"${allowedAnswers.join("|")}","solved":false,"nudge":""}`,

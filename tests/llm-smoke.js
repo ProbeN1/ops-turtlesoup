@@ -3,7 +3,7 @@ import { connect } from "node:net";
 import path from "node:path";
 
 const root = process.cwd();
-const allowedAnswers = new Set(["是", "否", "无关", "请换一种问法", "是，但不完整", "否，但不完整"]);
+const allowedAnswers = new Set(["是", "否", "无关"]);
 
 loadEnvFile();
 

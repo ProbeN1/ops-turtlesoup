@@ -66,8 +66,8 @@ For story/opening writing rules, difficulty style, and solve standards, see [Sce
 
 Allowed answers are difficulty-specific:
 
-- easy: `是`, `否`, `无关`, `请换一种问法`, `是，但不完整`, `否，但不完整`
-- medium: `是`, `否`, `无关`, `请换一种问法`
+- easy: `是`, `否`, `无关`
+- medium: `是`, `否`, `无关`
 - hard: `是`, `否`, `无关`
 
 ## Runtime Protection

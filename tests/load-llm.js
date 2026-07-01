@@ -3,8 +3,8 @@ import path from "node:path";
 
 const root = process.cwd();
 const allowedAnswersByDifficulty = {
-  easy: new Set(["\u662f", "\u5426", "\u65e0\u5173", "\u8bf7\u6362\u4e00\u79cd\u95ee\u6cd5", "\u662f\uff0c\u4f46\u4e0d\u5b8c\u6574", "\u5426\uff0c\u4f46\u4e0d\u5b8c\u6574"]),
-  medium: new Set(["\u662f", "\u5426", "\u65e0\u5173", "\u8bf7\u6362\u4e00\u79cd\u95ee\u6cd5"]),
+  easy: new Set(["\u662f", "\u5426", "\u65e0\u5173"]),
+  medium: new Set(["\u662f", "\u5426", "\u65e0\u5173"]),
   hard: new Set(["\u662f", "\u5426", "\u65e0\u5173"])
 };
 
