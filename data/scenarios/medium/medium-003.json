@@ -1,0 +1,97 @@
+{
+  "id": "medium-003",
+  "title": "被别人抢话的 VRID",
+  "difficulty": "medium",
+  "category": "network",
+  "tags": [
+    "keepalived",
+    "vrid",
+    "vrrp",
+    "floating-ip",
+    "ha-test"
+  ],
+  "infra_background": {
+    "platform": "bare-metal Kubernetes",
+    "ha_component": "Keepalived VRRP",
+    "nodes": {
+      "primary": "dr-cbs01 / 10.10.181.141",
+      "secondary": "dr-cbs02 / 10.10.181.142"
+    },
+    "interfaces": {
+      "vip_interface": "bond0",
+      "container_link_interfaces": [
+        "kp101018120",
+        "kp101018121",
+        "kp101018122"
+      ]
+    },
+    "vips": {
+      "vgrp_olc_intra": "10.10.181.20/24",
+      "vgrp_cgweb_intra": "10.10.181.21/24",
+      "vgrp_agigrest_intra": "10.10.181.22/24"
+    },
+    "configured_vrids": {
+      "vgrp_olc_intra": 40,
+      "vgrp_cgweb_intra": 78,
+      "vgrp_agigrest_intra": 79
+    }
+  },
+  "story": "04:55 接手高可用测试，`dr-cbs01` 和 `dr-cbs02` 的 Keepalived 都显示 BACKUP，10.10.181.20 连续 7 分钟没有落到任何一台机器。日志里只反复出现收到 VRRP advert，业务容器也没有被拉起。",
+  "answer": "问题出在同一个二层网络里存在另一组 Keepalived 使用了相同的 virtual_router_id。VRRP 的身份识别依赖 VRID，同 VRID 的通告会被当成同一组实例的选举消息；外部实例的 advert 干扰了这组高可用测试，使本该接管 VIP 的节点一直以为还有更合适的 MASTER 或选举状态被扰乱，所以 VIP 没有按预期拉起。",
+  "must_discover": [
+    "这是 Keepalived VRRP 选举问题，不是单纯容器启动问题",
+    "影响发生在同一个二层网络内",
+    "存在另一组 Keepalived 使用相同 virtual_router_id",
+    "相同 VRID 的 VRRP 通告干扰本组 MASTER/BACKUP 判断",
+    "VIP 没拉起是选举被干扰后的结果"
+  ],
+  "misleading": [
+    "两台测试节点配置看起来主备优先级正常",
+    "日志没有直接说“VRID 重复”",
+    "容易误以为是 nopreempt 或 priority 配置问题",
+    "容器未启动只是 VIP 没有归属后的连带现象"
+  ],
+  "forbidden": [
+    "不要在未成功前直接说相同 VRID",
+    "不要主动透露外部 Keepalived 实例在同一二层网络里"
+  ],
+  "question_rules": {
+    "yes": [
+      "和 VRRP 选举有关",
+      "和 virtual_router_id 有关",
+      "同一个二层网络里还有别的 Keepalived",
+      "外部 VRRP advert 会影响本组判断",
+      "更换成唯一 VRID 可以恢复"
+    ],
+    "no": [
+      "不是 VIP 和节点 IP 不在同一网段",
+      "不是 auth_pass 不一致导致两节点完全收不到彼此",
+      "不是 Kubernetes 调度器没有调度 Pod",
+      "不是 bond0 物理链路 down"
+    ],
+    "irrelevant": [
+      "数据库连接池",
+      "镜像仓库",
+      "磁盘 IO",
+      "浏览器 DNS 缓存"
+    ]
+  },
+  "thinking_path": [
+    "确认本组两台机器的 priority、state、unicast_peer 是否匹配",
+    "抓包或看日志确认是否收到非预期 VRRP advert",
+    "核对同一 VLAN 或广播域内所有 Keepalived 的 virtual_router_id",
+    "将 VRID 改为全网唯一后重新测试 VIP 接管"
+  ],
+  "root_cause": "同一二层网络内存在相同 virtual_router_id 的 Keepalived 实例，VRRP 通告互相干扰，导致本组无法稳定成为 MASTER 并拉起 VIP。",
+  "temporary_fix": "暂停或隔离冲突的 Keepalived 实例，或临时把本组 virtual_router_id 调整为未被使用的值后重启 Keepalived。",
+  "permanent_fix": "建立 VRID 分配台账和变更校验，在同一二层域内保证 VRID 唯一；上线前通过抓包或自动扫描检查 VRRP 冲突。",
+  "knowledge_points": [
+    "VRID 在同一二层域内必须唯一",
+    "VRRP 冲突常表现为 BACKUP 不接管或状态抖动",
+    "VIP 漂移问题需要同时看本机配置和同广播域里的其他 VRRP 参与者"
+  ],
+  "references": [
+    "internal material: keepalive脚本及配置/141.txt",
+    "internal material: keepalive脚本及配置/142.txt"
+  ]
+}

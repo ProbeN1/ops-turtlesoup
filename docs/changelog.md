@@ -63,3 +63,4 @@
 - Added a `v0.1` version badge and feedback page with SMTP-backed delivery to `532015746@qq.com`.
 - Simplified host answers so all difficulties only return `是`, `否`, or `无关`.
 - Replaced email feedback delivery with a polished DingTalk contact page for `0027029145` 姜毅.
+- Added three Keepalived floating-IP high-availability scenarios across easy, medium, and hard difficulties.

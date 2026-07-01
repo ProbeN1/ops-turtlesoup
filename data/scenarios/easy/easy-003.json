@@ -1,0 +1,87 @@
+{
+  "id": "easy-003",
+  "title": "一直飘不起来的 VIP",
+  "difficulty": "easy",
+  "category": "network",
+  "tags": [
+    "keepalived",
+    "floating-ip",
+    "layer2",
+    "bare-metal-kubernetes"
+  ],
+  "infra_background": {
+    "platform": "bare-metal Kubernetes",
+    "hosts": [
+      "dr-cbs01",
+      "dr-cbs02"
+    ],
+    "host_ips": [
+      "10.10.181.141",
+      "10.10.181.142"
+    ],
+    "ha_component": "Keepalived VRRP over bond0",
+    "vip_examples": [
+      "10.10.181.20",
+      "10.10.181.21",
+      "10.10.181.22"
+    ],
+    "workload": "stateful containers are started or stopped according to floating IP ownership",
+    "network_assumption": "VIP failover depends on ARP/GARP visibility in the same Layer 2 broadcast domain"
+  },
+  "story": "04:55 高可用测试刚开始，群里只丢了一句“VIP 还是没起来”。`ip addr show bond0` 里 10.10.181.20 从 0 个变成 0 个，持续 10 分钟；Keepalived 服务状态却一直是 running。",
+  "answer": "这次并不是 Keepalived 进程没启动，而是测试节点、承载 VIP 的 bond0 网段和验证路径没有处在同一个二层网络内。VRRP/Keepalived 即使切到 MASTER，也需要在同一二层广播域里通过 ARP 或 gratuitous ARP 让网关和邻居学习 VIP 所在 MAC；测试路径跨了三层或 VLAN 不一致时，看起来就像浮动 IP 拉不起来。",
+  "must_discover": [
+    "这是裸机 Kubernetes 上用 Keepalived 承载浮动 IP",
+    "VIP 接管依赖同一二层广播域内的 ARP/GARP",
+    "问题不是 Keepalived 进程未启动",
+    "根因是验证路径或承载网段不在同一个二层网络内"
+  ],
+  "misleading": [
+    "Keepalived 进程状态是 running",
+    "配置里能看到 virtual_ipaddress",
+    "容易先怀疑容器没有启动或 Kubernetes Service 异常"
+  ],
+  "forbidden": [
+    "不要在未成功前直接说不在同一个二层网络",
+    "不要主动透露 ARP/GARP 广播域这个定位点"
+  ],
+  "question_rules": {
+    "yes": [
+      "和网络二层有关",
+      "Keepalived 服务本身能启动",
+      "VIP 需要通过 ARP 或 gratuitous ARP 被学习",
+      "测试路径和 VIP 承载网段有关",
+      "裸机节点使用 bond0 承载 VIP"
+    ],
+    "no": [
+      "不是 Kubernetes Service selector 错误",
+      "不是容器镜像拉取失败",
+      "不是防火墙直接丢弃 VRRP 导致的唯一原因",
+      "不是 VIP 地址写错成不存在的地址"
+    ],
+    "irrelevant": [
+      "数据库主从复制",
+      "磁盘容量",
+      "浏览器缓存",
+      "证书过期"
+    ]
+  },
+  "thinking_path": [
+    "先确认 Keepalived 进程和配置是否加载",
+    "再确认 VIP 是否真的出现在承载接口上",
+    "检查 VIP、节点 IP、网关和验证来源是否处于同一二层域",
+    "确认 GARP 能否被相邻设备学习"
+  ],
+  "root_cause": "VIP failover 的验证路径不在同一个二层广播域内，ARP/GARP 无法按预期让外部学习 VIP 所在节点。",
+  "temporary_fix": "把测试入口或验证主机切到 VIP 所在 VLAN/二层域内，或先在同网段节点上验证 VIP 接管。",
+  "permanent_fix": "明确 VIP 地址池、节点 bond0、网关和调用方的二层边界；跨三层访问场景改用路由宣告、BGP、负载均衡器或网络团队认可的漂移方案。",
+  "knowledge_points": [
+    "Keepalived VRRP 接管成功不等于所有跨网段路径都会自动可达",
+    "VIP 漂移依赖邻居表和网关学习，二层边界是第一检查项",
+    "裸机 Kubernetes 的浮动 IP 方案要先定义网络域，而不是只定义 IP"
+  ],
+  "references": [
+    "internal material: keepalive脚本及配置/141.txt",
+    "internal material: keepalive脚本及配置/142.txt"
+  ]
+}

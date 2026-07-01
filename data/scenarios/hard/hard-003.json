@@ -1,0 +1,113 @@
+{
+  "id": "hard-003",
+  "title": "一打开健康检查就集体 FAULT",
+  "difficulty": "hard",
+  "category": "ha",
+  "tags": [
+    "keepalived",
+    "track-script",
+    "fault-state",
+    "container-lifecycle",
+    "crontab"
+  ],
+  "infra_background": {
+    "platform": "bare-metal Kubernetes",
+    "ha_component": "Keepalived VRRP on bond0",
+    "nodes": {
+      "dr-cbs01": {
+        "ip": "10.10.181.141",
+        "priority": 100
+      },
+      "dr-cbs02": {
+        "ip": "10.10.181.142",
+        "priority": 90
+      }
+    },
+    "vips": [
+      "10.10.181.20",
+      "10.10.181.21",
+      "10.10.181.22"
+    ],
+    "scripts": {
+      "health_checks": [
+        "/etc/keepalived/shell/chk-olc-service.sh",
+        "/etc/keepalived/shell/chk-cg-restservice.sh"
+      ],
+      "container_link": "/etc/keepalived/shell/olc-as-cluster.sh"
+    },
+    "container_link_behavior": "if local VIP exists, start the matching container; if VIP is absent for two checks, stop the matching container",
+    "known_recovery": "after commenting keepalived vrrp_script and track_script, crontab runs the container-link scripts and VIP takeover succeeds"
+  },
+  "story": "04:57 刚接手测试，三组 VIP 都没有接管；04:57:28 日志同时刷出三条 `VRRP_Script ... timed_out`，随后三个 vrrp group 都进了 FAULT。到 05:04:21 重启后又能看到 10.10.181.20/21/22 一起 setting VIPs。",
+  "answer": "根因是把容器联动脚本接进了 Keepalived 的 vrrp_script/track_script。健康检查脚本每 10 秒跑一次、循环 60 秒，并调用 `olc-as-cluster.sh` 根据 VIP 是否存在去 start/stop 容器；但 Keepalived 按 3 秒 interval 调度 track_script，脚本不能及时返回，于是 `VRRP_Script(...) timed_out`，对应 VRRP group 被同步到 FAULT 状态，节点无法接管 VIP。后来把 keepalived.conf 里的 `vrrp_script` 和 `track_script` 注释掉，改由 crontab 周期执行检查脚本，Keepalived 只负责 VIP 选举，脚本再根据 VIP 归属拉起或停止容器，所以 VIP 切换和容器拉起都恢复正常。",
+  "must_discover": [
+    "Keepalived 配置启用了 vrrp_script 和 track_script",
+    "track_script 调用的是容器联动健康检查脚本",
+    "健康检查脚本内部有 60 秒循环，不能按 Keepalived 调度周期快速返回",
+    "日志出现 VRRP_Script timed_out，随后 vrrp group 进入 FAULT",
+    "进入 FAULT 后节点不会接管 VIP",
+    "恢复动作是注释 Keepalived 的 vrrp_script/track_script，并用 crontab 执行容器联动脚本"
+  ],
+  "misleading": [
+    "脚本名字像健康检查，容易以为启用它会让 HA 更可靠",
+    "容器没起来会让人先排查 Kubernetes 或 Docker",
+    "两台机器 Keepalived 主备 priority、VIP、peer 配置看起来都正常",
+    "注释脚本后 VIP 能起来，容易误判为脚本本身内容完全无用"
+  ],
+  "forbidden": [
+    "不要在未成功前直接说 track_script 超时",
+    "不要主动透露最终处理是注释 vrrp_script 和 track_script 后改用 crontab",
+    "不要提前说脚本循环 60 秒"
+  ],
+  "question_rules": {
+    "yes": [
+      "和 Keepalived 健康检查脚本有关",
+      "和 track_script 有关",
+      "日志里有 VRRP_Script timed_out",
+      "vrrp group 进入了 FAULT 状态",
+      "脚本会联动容器 start 或 stop",
+      "脚本运行时间超过了 Keepalived 期望",
+      "注释 vrrp_script 和 track_script 后 VIP 可以拉起",
+      "后来由 crontab 周期执行脚本"
+    ],
+    "no": [
+      "不是单纯二层网络不通",
+      "不是相同 VRID 干扰导致的最终根因",
+      "不是 VIP 地址池配置错",
+      "不是 Docker 镜像不存在",
+      "不是 Keepalived 进程无法启动"
+    ],
+    "irrelevant": [
+      "数据库慢查询",
+      "对象存储上传",
+      "证书链",
+      "前端浏览器缓存"
+    ]
+  },
+  "thinking_path": [
+    "先比较启用脚本前后 Keepalived 的状态变化",
+    "从日志定位 `VRRP_Script ... timed_out` 和 `Syncing instances to FAULT state`",
+    "阅读 `chk-*.sh`，确认它们循环 60 秒并调用容器联动脚本",
+    "阅读 `olc-as-cluster.sh`，确认它根据 VIP 是否存在 start/stop 容器",
+    "解释为什么 Keepalived 进入 FAULT 后 VIP 无法接管",
+    "将 VIP 选举职责和容器联动职责解耦"
+  ],
+  "root_cause": "Keepalived 的 track_script 调用了长运行的容器联动检查脚本，脚本超时后 VRRP group 进入 FAULT，导致 VIP 无法接管。",
+  "temporary_fix": "注释 keepalived.conf 中的 `vrrp_script` 和 `track_script`，重启 Keepalived 让 VIP 正常选举；用 crontab 周期执行原检查脚本来联动容器启停。",
+  "permanent_fix": "把 Keepalived 健康检查脚本改成快速、幂等、只返回健康状态的脚本；容器启停放到 notify hook、独立控制器或明确的定时任务中，并设置合理 timeout、fall/rise、监控和变更验证。",
+  "knowledge_points": [
+    "Keepalived track_script 必须快速返回，不能承载长时间编排动作",
+    "FAULT 状态会阻止 VRRP 实例接管 VIP",
+    "健康检查和自愈编排要解耦，否则检查脚本本身会成为 HA 故障源",
+    "crontab 可以临时承接容器联动，但长期应使用更清晰的生命周期控制机制"
+  ],
+  "references": [
+    "internal material: keepalive脚本及配置/141.txt",
+    "internal material: keepalive脚本及配置/142.txt",
+    "internal material: keepalive脚本及配置/chk-olc-service.sh",
+    "internal material: keepalive脚本及配置/chk-cg-restservice.sh",
+    "internal material: keepalive脚本及配置/olc-as-cluster.sh",
+    "internal material: keepalive脚本及配置/log141.log",
+    "internal material: keepalive脚本及配置/log142.log"
+  ]
+}
