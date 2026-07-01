@@ -48,3 +48,4 @@
 - Added `npm run check:release-record` to validate release record completeness and secret hygiene.
 - Hardened reveal infrastructure rendering so object payloads never appear as `[object Object]`.
 - Added `npm run verify:release-archive` to validate release zip checksums and contents.
+- Strengthened release record validation for final intranet go-live evidence.

@@ -86,7 +86,7 @@ After filling the release evidence, validate the record:
 npm run check:release-record
 ```
 
-Use `RELEASE_RECORD_PATH` to check a specific record file.
+Use `RELEASE_RECORD_PATH` to check a specific record file. The checker is a final-release gate, not a loose lint: it requires intranet binding, at least 100 active sessions, verified release archive contents, passing live LLM load evidence, coworker access evidence, browser UI smoke evidence, risk acknowledgement, and release approval.
 
 ## Docker
 

@@ -49,6 +49,8 @@ npm run init:release-record
 
 `WARN` from deployment verification must be reviewed. A `HOST` warning is acceptable only for local testing, not for coworker access.
 
+`npm run check:release-record` is intentionally strict for a final intranet release. It fails unless the record proves `HOST=0.0.0.0`, target capacity is at least 100 active sessions, release archive verification passed, live LLM load ran with zero LLM failures, coworker access passed, browser UI smoke passed, required risks are acknowledged, and approval is `yes`.
+
 ## Configuration Gate
 
 Confirm production `.env`:
@@ -133,6 +135,8 @@ To include live LLM load in the one-command rehearsal, run:
 ```powershell
 REHEARSAL_RUN_LLM=1 npm run rehearse:release
 ```
+
+The final release record must use a rehearsal where `runLlm=true` and `live LLM ask-path load smoke=pass`.
 
 ## Monitoring During Play
 

@@ -9,6 +9,7 @@ release-record-YYYY-MM-DD.md
 ```
 
 Do not paste API keys or full `.env` secrets into the record.
+For a final release, replace every option list with a single selected value. `npm run check:release-record` requires the release evidence to prove intranet binding, 100-player capacity, archive verification, live LLM load, coworker access, browser UI smoke, risk acknowledgement, and approval.
 
 ## Release Summary
 

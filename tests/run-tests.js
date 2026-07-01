@@ -563,8 +563,19 @@ async function testDeploymentConfiguration() {
     "OPENAI_API_KEY",
     "LLM_API_KEY",
     "Release approved",
+    "assertLineEquals",
+    "assertAssignmentEquals",
+    "HOST",
+    "0.0.0.0",
+    "MAX_ACTIVE_SESSIONS",
+    "metricsDelta.llmFailuresTotal",
+    "live LLM ask-path load smoke",
+    "LLM capacity confirmed for event",
+    "Docker build verified on target host",
+    "Rate limit tuned for shared proxy IPs",
     "release record not found",
     "still contains an unselected option",
+    "still contains a placeholder",
     "appears to contain sensitive text"
   ]) {
     assert(checkReleaseRecord.includes(token), `check release record script missing ${token}`);
@@ -659,6 +670,7 @@ async function testDeploymentConfiguration() {
     "npm run rehearse:release",
     "UI Smoke Runbook",
     "Release Record Template",
+    "check:release-record",
     "npm run load:local",
     "MAX_ACTIVE_SESSIONS=300",
     "GET /api/metrics",
