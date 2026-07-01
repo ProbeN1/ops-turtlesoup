@@ -450,6 +450,7 @@ async function testDeploymentConfiguration() {
   const releaseRehearsal = await readText("tests/release-rehearsal.js");
   const buildRelease = await readText("tests/build-release.js");
   const releaseEvidence = await readText("tests/release-evidence.js");
+  const coworkerSmoke = await readText("tests/coworker-access-smoke.js");
   const packageJson = await readText("package.json");
   const releaseChecklist = await readText("docs/runbook/release-checklist.md");
   const releaseRecordTemplate = await readText("docs/runbook/release-record-template.md");
@@ -476,6 +477,7 @@ async function testDeploymentConfiguration() {
   assert(packageJson.includes('"rehearse:release": "node tests/release-rehearsal.js"'), "package.json missing rehearse:release script");
   assert(packageJson.includes('"build:release": "node tests/build-release.js"'), "package.json missing build:release script");
   assert(packageJson.includes('"evidence:release": "node tests/release-evidence.js"'), "package.json missing evidence:release script");
+  assert(packageJson.includes('"smoke:coworker": "node tests/coworker-access-smoke.js"'), "package.json missing smoke:coworker script");
 
   for (const token of [
     "Compress-Archive",
@@ -503,6 +505,20 @@ async function testDeploymentConfiguration() {
     "ops_turtle_soup_llm_requests_total"
   ]) {
     assert(releaseEvidence.includes(token), `release evidence script missing ${token}`);
+  }
+
+  for (const token of [
+    "COWORKER_SMOKE_BASE_URL",
+    "/api/health",
+    "/api/ready",
+    "/app.js",
+    "/api/game/start",
+    "/api/game/reveal",
+    "homepageLoaded",
+    "gameStarted",
+    "revealComplete"
+  ]) {
+    assert(coworkerSmoke.includes(token), `coworker access smoke missing ${token}`);
   }
 
   for (const token of [
@@ -541,6 +557,7 @@ async function testDeploymentConfiguration() {
     "npm run verify:deploy",
     "npm run smoke:llm",
     "npm run smoke:app",
+    "npm run smoke:coworker",
     "npm run evidence:release",
     "npm run load:llm",
     "npm run rehearse:release",
@@ -565,6 +582,7 @@ async function testDeploymentConfiguration() {
     "npm run verify:deploy",
     "npm run smoke:llm",
     "npm run smoke:app",
+    "npm run smoke:coworker",
     "npm run evidence:release",
     "npm run load:llm",
     "npm run rehearse:release",

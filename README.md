@@ -38,6 +38,7 @@ npm run build:release
 npm run evidence:release
 npm run smoke:llm
 npm run smoke:app
+npm run smoke:coworker
 ```
 
 ## Health Check

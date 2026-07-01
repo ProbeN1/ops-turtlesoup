@@ -256,6 +256,17 @@ This command calls:
 
 It validates that a game can be started, one question can be answered with a difficulty-allowed host answer, and the reveal payload is complete. Use `APP_SMOKE_BASE_URL` when testing through a reverse proxy or a different intranet hostname.
 
+## Coworker Access Smoke Test
+
+From a coworker machine or another intranet segment, verify that the shared URL is reachable:
+
+```powershell
+$env:COWORKER_SMOKE_BASE_URL="http://<server-intranet-ip>:5725"
+npm run smoke:coworker
+```
+
+This checks health, readiness, homepage loading, `app.js` loading with `no-store`, game start, and reveal payload. It does not call the LLM ask path, so pair it with `npm run smoke:llm` or `npm run load:llm` on the release host.
+
 ## LLM Load Smoke Test
 
 After the app smoke test passes, run a small live LLM ask-path load smoke:

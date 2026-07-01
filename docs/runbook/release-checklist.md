@@ -32,6 +32,7 @@ Create a release record from [Release Record Template](release-record-template.m
 | Release evidence snapshot | `npm run evidence:release` | Non-sensitive JSON summary captured |
 | LLM compatibility | `npm run smoke:llm` | Pass |
 | Game API flow | `npm run smoke:app` | Pass |
+| Coworker access smoke | `COWORKER_SMOKE_BASE_URL=http://<server>:5725 npm run smoke:coworker` | Pass from another intranet machine |
 | LLM ask-path load smoke | `npm run load:llm` | Completed configured live LLM asks with zero LLM failures |
 | Browser UI flow | [UI Smoke Runbook](ui-smoke.md) | Manual browser flow passes |
 | Local 100-session smoke | `npm run load:local` | Completed 100 sessions and reported game counter deltas >= 100 |
@@ -89,6 +90,7 @@ npm run verify:deploy
 npm run evidence:release
 npm run smoke:llm
 npm run smoke:app
+npm run smoke:coworker
 npm run load:llm
 npm run load:local
 ```

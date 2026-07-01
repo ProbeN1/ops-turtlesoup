@@ -41,3 +41,4 @@
 - Added server-formatted `infraBackgroundText` to reveal responses and made the frontend prefer it.
 - Added `npm run evidence:release` for non-sensitive release evidence snapshots.
 - Included release archive build and release evidence capture in `npm run rehearse:release`.
+- Added `npm run smoke:coworker` for same-intranet access verification from another machine.

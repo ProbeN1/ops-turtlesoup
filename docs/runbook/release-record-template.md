@@ -159,6 +159,16 @@ Result:
 ```
 
 ```text
+COWORKER_SMOKE_BASE_URL=http://<server-intranet-ip>:5725 npm run smoke:coworker
+```
+
+Result:
+
+```text
+
+```
+
+```text
 npm run evidence:release
 ```
 
@@ -237,6 +247,7 @@ Notes:
 - Page loaded:
 - Game started:
 - One question answered:
+- `npm run smoke:coworker` passed:
 
 Notes:
 
