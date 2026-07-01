@@ -167,6 +167,7 @@ Capture after smoke checks:
 
 ```text
 GET /api/metrics
+GET /metrics
 ```
 
 Paste non-sensitive summary:
@@ -182,6 +183,8 @@ llm.queued=
 llm.requestsTotal=
 llm.failuresTotal=
 llm.avgLatencyMs=
+prometheus.ops_turtle_soup_http_requests_total=present | missing
+prometheus.ops_turtle_soup_llm_requests_total=present | missing
 ```
 
 ## Risks And Decisions

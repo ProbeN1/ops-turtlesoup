@@ -25,7 +25,7 @@ Create a release record from [Release Record Template](release-record-template.m
 | Offline deployment preflight | `npm run verify:deploy:offline` | No `FAIL` |
 | Long-running process configured | `docker compose ps` or `systemctl status ops-turtle-soup` | Service is running with restart policy |
 | Online deployment verification | `npm run verify:deploy` | No `FAIL` |
-| Runtime metrics | `GET /api/metrics` | Request, game, rate limit, and LLM counters are present |
+| Runtime metrics | `GET /api/metrics` and `GET /metrics` | JSON counters and Prometheus text counters are present |
 | LLM compatibility | `npm run smoke:llm` | Pass |
 | Game API flow | `npm run smoke:app` | Pass |
 | Browser UI flow | [UI Smoke Runbook](ui-smoke.md) | Manual browser flow passes |
@@ -103,6 +103,7 @@ Watch:
 
 - service health: `GET /api/health`;
 - runtime counters: `GET /api/metrics`;
+- Prometheus scrape counters: `GET /metrics`;
 - active sessions;
 - LLM limiter active and queued counts;
 - process logs: `docker compose logs -f ops-turtle-soup` or `journalctl -u ops-turtle-soup -f`;

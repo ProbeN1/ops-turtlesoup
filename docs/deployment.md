@@ -140,6 +140,14 @@ The metrics endpoint returns in-memory counters for:
 - active sessions and cached scenario sets;
 - LLM active/queued calls, failures, and average latency.
 
+For Prometheus-compatible monitoring, scrape:
+
+```text
+GET /metrics
+```
+
+The text endpoint uses metric names prefixed with `ops_turtle_soup_`, including request counters, game counters, rate-limit counters, active sessions, and LLM queue/latency gauges.
+
 ## Deployment Verification
 
 After configuring `.env` and starting the service, run:
@@ -156,6 +164,7 @@ The deployment verifier checks:
 - LLM request timeout and limiter settings.
 - Scenario schema and required operational fields.
 - `/api/health` readiness and exposed limiter status.
+- JSON and Prometheus runtime metrics endpoints.
 
 For offline preflight before starting the service, run:
 

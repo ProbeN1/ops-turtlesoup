@@ -59,6 +59,13 @@ async function getJson(apiPath) {
   return data;
 }
 
+async function getText(apiPath) {
+  const response = await fetchWithTimeout(`${baseUrl}${apiPath}`);
+  const text = await response.text();
+  assert(response.ok, `${apiPath} failed: HTTP ${response.status} ${text}`);
+  return text;
+}
+
 async function postJson(apiPath, payload) {
   const response = await fetchWithTimeout(`${baseUrl}${apiPath}`, {
     method: "POST",
@@ -102,11 +109,16 @@ async function main() {
   assert(metrics.gameRevealsTotal >= 1, "metrics endpoint did not count game reveals");
   assert(typeof metrics.llm?.requestsTotal === "number", "metrics endpoint missing LLM request counter");
 
+  const prometheusMetrics = await getText("/metrics");
+  assert(prometheusMetrics.includes("ops_turtle_soup_game_starts_total"), "Prometheus metrics missing game start counter");
+  assert(prometheusMetrics.includes("ops_turtle_soup_llm_requests_total"), "Prometheus metrics missing LLM request counter");
+
   console.log("PASS application health endpoint is reachable");
   console.log(`PASS started ${difficulty} game ${start.gameId}`);
   console.log(`PASS ask path returned allowed answer: ${ask.answer}`);
   console.log("PASS reveal path returned complete answer payload");
   console.log("PASS metrics endpoint reported game counters");
+  console.log("PASS Prometheus metrics endpoint reported game counters");
 }
 
 try {

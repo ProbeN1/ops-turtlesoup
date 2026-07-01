@@ -218,6 +218,19 @@ async function checkHealth() {
 
   if (typeof metrics.llm?.requestsTotal === "number") pass("metrics endpoint exposes LLM counters");
   else fail("metrics endpoint missing LLM counters");
+
+  const prometheusResponse = await fetch(`${baseUrl}/metrics`);
+  if (!prometheusResponse.ok) {
+    fail(`Prometheus metrics endpoint returned HTTP ${prometheusResponse.status}`);
+    return;
+  }
+
+  const prometheusText = await prometheusResponse.text();
+  if (prometheusText.includes("ops_turtle_soup_http_requests_total")) pass("Prometheus metrics expose request counters");
+  else fail("Prometheus metrics missing request counters");
+
+  if (prometheusText.includes("ops_turtle_soup_llm_requests_total")) pass("Prometheus metrics expose LLM counters");
+  else fail("Prometheus metrics missing LLM counters");
 }
 
 async function main() {

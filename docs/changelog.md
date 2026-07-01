@@ -28,3 +28,4 @@
 - Added HTTP request timeouts and graceful shutdown handling.
 - Added release record template for target-host deployment evidence.
 - Added runtime LLM request timeout handling.
+- Added Prometheus-format `/metrics` endpoint for intranet monitoring integration.

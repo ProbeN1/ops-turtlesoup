@@ -166,7 +166,11 @@ async function testServerConfiguration() {
     "RATE_LIMIT_WINDOW_SECONDS",
     "RATE_LIMIT_MAX_REQUESTS",
     "GET\" && req.url === \"/api/metrics",
+    "req.url === \"/metrics\"",
     "publicMetrics",
+    "prometheusMetrics",
+    "ops_turtle_soup_http_requests_total",
+    "text/plain; version=0.0.4",
     "gameQuestionsTotal",
     "server.requestTimeout",
     "SHUTDOWN_GRACE_SECONDS",
@@ -270,6 +274,7 @@ async function testDeploymentConfiguration() {
     "Release Record Template",
     "npm run load:local",
     "GET /api/metrics",
+    "GET /metrics",
     "docker compose ps",
     "systemctl status ops-turtle-soup"
   ]) {
@@ -285,6 +290,8 @@ async function testDeploymentConfiguration() {
     "npm run load:local",
     "Coworker Access Check",
     "GET /api/metrics",
+    "GET /metrics",
+    "prometheus.ops_turtle_soup_http_requests_total",
     "Release approved"
   ]) {
     assert(releaseRecordTemplate.includes(token), `release record template missing ${token}`);

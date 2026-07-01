@@ -185,3 +185,18 @@ Options:
 - Increase `LLM_REQUEST_TIMEOUT_SECONDS` if the model is slow but reliable.
 - Lower `LLM_MAX_CONCURRENCY` if the LLM service is overloaded.
 - Run `npm run smoke:llm` from the app host to isolate gateway connectivity and JSON compatibility.
+
+## Monitoring Scrape Fails
+
+Prometheus-compatible metrics are exposed at:
+
+```text
+GET /metrics
+```
+
+Check:
+
+- The service URL and port are reachable from the monitoring host.
+- The scrape path is `/metrics`, not `/api/metrics`.
+- The response contains metric names prefixed with `ops_turtle_soup_`.
+- `npm run verify:deploy` passes on the release host.

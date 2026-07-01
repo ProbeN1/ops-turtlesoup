@@ -160,6 +160,15 @@ function jsonResponse(res, status, payload) {
   res.end(body);
 }
 
+function textResponse(res, status, body, contentType = "text/plain; charset=utf-8") {
+  recordResponseStatus(status);
+  res.writeHead(status, {
+    "content-type": contentType,
+    "cache-control": "no-store"
+  });
+  res.end(body);
+}
+
 function createMetrics() {
   return {
     startedAt: new Date().toISOString(),
@@ -234,6 +243,91 @@ function publicMetrics() {
       trackedClients: rateLimitBuckets.size
     }
   };
+}
+
+function prometheusMetrics() {
+  const snapshot = publicMetrics();
+  const lines = [];
+  const metric = (name, type, help, samples) => {
+    lines.push(`# HELP ${name} ${help}`);
+    lines.push(`# TYPE ${name} ${type}`);
+    for (const sample of samples) {
+      lines.push(sample);
+    }
+  };
+
+  metric("ops_turtle_soup_uptime_seconds", "gauge", "Process uptime in seconds.", [
+    `ops_turtle_soup_uptime_seconds ${snapshot.uptimeSeconds}`
+  ]);
+  metric("ops_turtle_soup_http_requests_total", "counter", "Total HTTP requests.", [
+    `ops_turtle_soup_http_requests_total ${snapshot.httpRequestsTotal}`
+  ]);
+  metric("ops_turtle_soup_api_requests_total", "counter", "Total API requests.", [
+    `ops_turtle_soup_api_requests_total ${snapshot.apiRequestsTotal}`
+  ]);
+  metric("ops_turtle_soup_static_requests_total", "counter", "Total static asset requests.", [
+    `ops_turtle_soup_static_requests_total ${snapshot.staticRequestsTotal}`
+  ]);
+  metric("ops_turtle_soup_http_responses_total", "counter", "HTTP responses by status code.", [
+    ...Object.entries(snapshot.responsesByStatus).map(([status, count]) => `ops_turtle_soup_http_responses_total{status="${status}"} ${count}`)
+  ]);
+  metric("ops_turtle_soup_errors_total", "counter", "Total unhandled application errors.", [
+    `ops_turtle_soup_errors_total ${snapshot.errorsTotal}`
+  ]);
+  metric("ops_turtle_soup_rate_limited_total", "counter", "Total rate-limited API requests.", [
+    `ops_turtle_soup_rate_limited_total ${snapshot.rateLimitedTotal}`
+  ]);
+  metric("ops_turtle_soup_active_sessions", "gauge", "Current active game sessions.", [
+    `ops_turtle_soup_active_sessions ${snapshot.activeSessions}`
+  ]);
+  metric("ops_turtle_soup_cached_scenario_sets", "gauge", "Scenario sets cached in memory.", [
+    `ops_turtle_soup_cached_scenario_sets ${snapshot.cachedScenarioSets}`
+  ]);
+  metric("ops_turtle_soup_game_starts_total", "counter", "Total started games.", [
+    `ops_turtle_soup_game_starts_total ${snapshot.gameStartsTotal}`
+  ]);
+  metric("ops_turtle_soup_game_questions_total", "counter", "Total player questions.", [
+    `ops_turtle_soup_game_questions_total ${snapshot.gameQuestionsTotal}`
+  ]);
+  metric("ops_turtle_soup_game_reveals_total", "counter", "Total answer reveals.", [
+    `ops_turtle_soup_game_reveals_total ${snapshot.gameRevealsTotal}`
+  ]);
+  metric("ops_turtle_soup_games_solved_total", "counter", "Total solved games.", [
+    `ops_turtle_soup_games_solved_total ${snapshot.gamesSolvedTotal}`
+  ]);
+  metric("ops_turtle_soup_llm_requests_total", "counter", "Total LLM requests.", [
+    `ops_turtle_soup_llm_requests_total ${snapshot.llm.requestsTotal}`
+  ]);
+  metric("ops_turtle_soup_llm_failures_total", "counter", "Total failed LLM requests.", [
+    `ops_turtle_soup_llm_failures_total ${snapshot.llm.failuresTotal}`
+  ]);
+  metric("ops_turtle_soup_llm_active", "gauge", "Current active LLM requests.", [
+    `ops_turtle_soup_llm_active ${snapshot.llm.active}`
+  ]);
+  metric("ops_turtle_soup_llm_queued", "gauge", "Current queued LLM requests.", [
+    `ops_turtle_soup_llm_queued ${snapshot.llm.queued}`
+  ]);
+  metric("ops_turtle_soup_llm_max_concurrency", "gauge", "Configured LLM maximum concurrency.", [
+    `ops_turtle_soup_llm_max_concurrency ${snapshot.llm.maxConcurrency}`
+  ]);
+  metric("ops_turtle_soup_llm_queue_limit", "gauge", "Configured LLM queue limit.", [
+    `ops_turtle_soup_llm_queue_limit ${snapshot.llm.queueLimit}`
+  ]);
+  metric("ops_turtle_soup_llm_latency_ms", "gauge", "LLM latency in milliseconds.", [
+    `ops_turtle_soup_llm_latency_ms{stat="average"} ${snapshot.llm.avgLatencyMs}`,
+    `ops_turtle_soup_llm_latency_ms{stat="last"} ${snapshot.llm.lastLatencyMs}`
+  ]);
+  metric("ops_turtle_soup_rate_limit_window_seconds", "gauge", "Configured rate limit window in seconds.", [
+    `ops_turtle_soup_rate_limit_window_seconds ${snapshot.rateLimit.windowSeconds}`
+  ]);
+  metric("ops_turtle_soup_rate_limit_max_requests", "gauge", "Configured maximum requests per rate limit window.", [
+    `ops_turtle_soup_rate_limit_max_requests ${snapshot.rateLimit.maxRequests}`
+  ]);
+  metric("ops_turtle_soup_rate_limit_tracked_clients", "gauge", "Current clients tracked by the rate limiter.", [
+    `ops_turtle_soup_rate_limit_tracked_clients ${snapshot.rateLimit.trackedClients}`
+  ]);
+
+  return `${lines.join("\n")}\n`;
 }
 
 function clientIp(req) {
@@ -735,6 +829,14 @@ async function handleApi(req, res) {
   return jsonResponse(res, 404, { error: "API not found" });
 }
 
+function handlePrometheusMetrics(req, res) {
+  if (req.method !== "GET") {
+    return textResponse(res, 405, "Method not allowed\n");
+  }
+
+  return textResponse(res, 200, prometheusMetrics(), "text/plain; version=0.0.4; charset=utf-8");
+}
+
 async function serveStatic(req, res) {
   const requested = decodeURIComponent(new URL(req.url, `http://localhost:${PORT}`).pathname);
   const safePath = requested === "/" ? "/index.html" : requested;
@@ -781,6 +883,11 @@ const server = createServer(async (req, res) => {
       }
 
       await handleApi(req, res);
+      return;
+    }
+
+    if (req.url === "/metrics") {
+      handlePrometheusMetrics(req, res);
       return;
     }
 
