@@ -84,7 +84,8 @@ async function testFrontendBindings() {
   }
 
   assert(html.includes('value="easy"'), "frontend must use standard easy difficulty value");
-  assert(html.includes('/app.js?v=20260701-infra-format'), "frontend must version app.js after reveal formatting fixes");
+  assert(html.includes('/app.js?v=20260701-infra-format-v2'), "frontend must version app.js after reveal formatting fixes");
+  assert(app.includes("function formatRevealInfraBackground"), "frontend must normalize reveal infra fields before rendering");
   assert(app.includes("function formatInfraBackground"), "frontend must format infra background before rendering reveal");
   assert(!app.includes("基础设施：${data.infraBackground}"), "frontend must not render infra object directly");
 }
@@ -168,6 +169,35 @@ async function testRevealInfraFormatting() {
   const serverTextMessageBody = chatLog.children.at(-1).lastAppend[1].textContent;
   assert(serverTextMessageBody.includes("platform: Bare metal K8S; storage: local SSD"), "reveal must prefer server formatted infra text");
   assert(!serverTextMessageBody.includes("shouldNotRender"), "reveal must not reformat infra object when server text is present");
+
+  context.renderReveal({
+    infraBackgroundText: "[object Object]",
+    infraBackground: {
+      platform: "裸机 K8S",
+      storage: { type: "本地 SSD" }
+    },
+    hiddenTruth: "truth",
+    solvePoints: ["point"],
+    lesson: "lesson"
+  });
+
+  const badServerTextMessageBody = chatLog.children.at(-1).lastAppend[1].textContent;
+  assert(!badServerTextMessageBody.includes("[object Object]"), "reveal must ignore object-like server infra text");
+  assert(badServerTextMessageBody.includes("platform: 裸机 K8S"), "reveal must fall back to formatted infra object");
+
+  context.renderReveal({
+    infra_background: {
+      platform: "磁阵 + 虚拟化",
+      storage: { volume: "/data" }
+    },
+    hiddenTruth: "truth",
+    solvePoints: ["point"],
+    lesson: "lesson"
+  });
+
+  const snakeCaseMessageBody = chatLog.children.at(-1).lastAppend[1].textContent;
+  assert(!snakeCaseMessageBody.includes("[object Object]"), "reveal must format snake_case infra background");
+  assert(snakeCaseMessageBody.includes("platform: 磁阵 + 虚拟化"), "reveal must support snake_case infra background");
 }
 
 async function testServerConfiguration() {

@@ -105,7 +105,7 @@ function handleSolved(reveal) {
 function renderReveal(data, title = "揭晓") {
   setChatCollapsed(false);
   const points = Array.isArray(data.solvePoints) ? data.solvePoints.join("；") : "";
-  const infraBackground = data.infraBackgroundText || formatInfraBackground(data.infraBackground);
+  const infraBackground = formatRevealInfraBackground(data);
   addMessage(
     "host reveal",
     title,
@@ -113,8 +113,17 @@ function renderReveal(data, title = "揭晓") {
   );
 }
 
+function formatRevealInfraBackground(data) {
+  const serverText = typeof data.infraBackgroundText === "string" ? data.infraBackgroundText.trim() : "";
+  if (serverText && serverText !== "[object Object]") return serverText;
+
+  if (data.infraBackground !== undefined) return formatInfraBackground(data.infraBackground);
+  return formatInfraBackground(data.infra_background);
+}
+
 function formatInfraBackground(value) {
   if (value === null || value === undefined || value === "") return "无";
+  if (String(value) === "[object Object]" && typeof value !== "object") return "无";
   if (typeof value !== "object") return String(value);
   if (Array.isArray(value)) return value.map(formatInfraValue).join("、");
 
