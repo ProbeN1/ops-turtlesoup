@@ -71,6 +71,14 @@ npm run build:release
 
 The command writes `dist/ops-turtle-soup-<version>-<timestamp>.zip`, a sidecar `.sha256` checksum file, and a `RELEASE_MANIFEST.txt`. The archive excludes `.env`, `.git`, `node_modules`, logs, and previous `dist` output. Copy the archive to the intranet host, verify the checksum, extract it, create `.env` from `.env.example`, then start the service with Docker Compose, systemd, Windows Scheduled Task, or the approved local process manager.
 
+To start a release record from the template:
+
+```powershell
+npm run init:release-record
+```
+
+The command creates `docs/runbook/release-record-YYYY-MM-DD.md` and pre-fills non-sensitive fields such as date, git commit, host OS, expected player count, selected runtime settings, and LLM model. It refuses to overwrite an existing record.
+
 ## Docker
 
 Docker Compose is the preferred long-running deployment path for a small intranet host.

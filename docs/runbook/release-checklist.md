@@ -19,9 +19,16 @@ Do not share the game URL until every required gate below is complete.
 
 Create a release record from [Release Record Template](release-record-template.md) and paste command summaries there as evidence.
 
+To create the record from the template and pre-fill non-sensitive fields, run:
+
+```powershell
+npm run init:release-record
+```
+
 | Gate | Command or Evidence | Required Result |
 | --- | --- | --- |
 | Code and scenario checks | `npm test` | Pass |
+| Release record created | `npm run init:release-record` or existing filled record | Record exists for this release |
 | Release archive | `npm run build:release` | Zip and `.sha256` created under `dist/` and excludes `.env` |
 | Local release rehearsal | `npm run rehearse:release` | Archive/evidence/offline/online/app/capacity smoke pass |
 | Offline deployment preflight | `npm run verify:deploy:offline` | No `FAIL` |
@@ -84,6 +91,7 @@ Run from the release host:
 
 ```powershell
 npm test
+npm run init:release-record
 npm run rehearse:release
 npm run verify:deploy:offline
 npm run verify:deploy

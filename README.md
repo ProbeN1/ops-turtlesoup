@@ -34,6 +34,7 @@ PORT=5725
 npm start
 npm run dev
 npm test
+npm run init:release-record
 npm run build:release
 npm run evidence:release
 npm run smoke:llm

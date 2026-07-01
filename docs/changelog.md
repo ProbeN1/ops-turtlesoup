@@ -44,3 +44,4 @@
 - Added `npm run smoke:coworker` for same-intranet access verification from another machine.
 - Added a Windows Scheduled Task deployment script for non-Docker intranet hosts.
 - Added SHA256 checksum generation for release archives.
+- Added `npm run init:release-record` to create pre-filled non-sensitive release records.
