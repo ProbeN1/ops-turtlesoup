@@ -1,0 +1,10 @@
+.env
+server.out.log
+server.err.log
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+coverage/
+dist/
+.cache/

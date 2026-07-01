@@ -1,0 +1,130 @@
+[
+  {
+    "id": "medium-001",
+    "title": "只影响老用户的发布",
+    "difficulty": "medium",
+    "category": "frontend",
+    "tags": ["localStorage", "release", "sentry", "compatibility"],
+    "infra_background": {
+      "frontend": "internal CDN",
+      "backend": "Java services on Kubernetes",
+      "auth": "SSO",
+      "browser_error_tracking": "Sentry",
+      "tracing": "OpenTelemetry"
+    },
+    "story": "14:06 客服转来 18 个工单，描述都是“登录后白屏”，但同一时间登录成功率仍是 99.2%，后端 5xx 只有 0.04%。14:22 回滚前端静态包后，新工单停止增长，但已打开页面的用户还在报白屏。",
+    "answer": "前端新版读取了新的 localStorage 字段格式；老用户浏览器里有旧格式缓存，初始化代码没有兼容迁移，导致前端运行时异常。",
+    "must_discover": [
+      "受影响的是有历史浏览器状态的用户",
+      "后端请求少是因为前端在发请求前崩溃",
+      "回滚前端能阻止新增问题",
+      "根因是客户端本地缓存 schema 不兼容"
+    ],
+    "misleading": [
+      "老用户容易让人误判为账号数据问题",
+      "后端告警安静",
+      "回滚后已打开页面仍异常"
+    ],
+    "forbidden": [
+      "不要提前说 localStorage 字段格式不兼容",
+      "不要主动要求玩家清浏览器缓存"
+    ],
+    "question_rules": {
+      "yes": [
+        "受影响用户多为老用户",
+        "清理站点数据可恢复",
+        "浏览器控制台有 JavaScript 异常",
+        "后端没有收到完整请求链路"
+      ],
+      "no": [
+        "不是数据库迁移失败",
+        "不是灰度路由只命中特定账号",
+        "不是 CDN 没刷新"
+      ],
+      "irrelevant": [
+        "磁盘空间",
+        "支付风控",
+        "数据库执行计划"
+      ]
+    },
+    "thinking_path": [
+      "确认受影响用户特征",
+      "比较前端和后端观测差异",
+      "检查浏览器控制台和 Sentry",
+      "定位客户端持久化状态兼容问题"
+    ],
+    "root_cause": "前端 localStorage schema 变化缺少兼容迁移。",
+    "temporary_fix": "回滚前端并提示受影响用户刷新或清理站点数据。",
+    "permanent_fix": "为本地状态增加版本迁移、容错读取和旧缓存回归用例。",
+    "knowledge_points": [
+      "客户端缓存也是状态",
+      "前端发布需要覆盖旧本地状态",
+      "后端无异常不代表用户体验正常"
+    ],
+    "references": []
+  },
+  {
+    "id": "medium-002",
+    "title": "低峰期才变慢的数据库",
+    "difficulty": "medium",
+    "category": "database",
+    "tags": ["postgresql", "query-plan", "statistics", "batch-job"],
+    "infra_background": {
+      "database": "PostgreSQL 14 primary-replica",
+      "virtualization": "VMware",
+      "storage": "all-flash array",
+      "batch_scheduler": "Airflow",
+      "observability": ["pg_stat_statements", "slow query log", "Prometheus exporter"]
+    },
+    "story": "早班 08:30 接手时，昨晚 02:10-02:37 的 `order-search` 超时率从 0.2% 升到 31.6%，慢 SQL p95 到 18.4 秒。奇怪的是，09:00 早高峰 QPS 高了 4 倍，接口 p95 却回到 420ms。",
+    "answer": "凌晨统计任务删除并重建了关键表的部分数据，导致统计信息失真或缓存变冷；查询计划选错索引，白天自动分析和热缓存恢复后正常。",
+    "must_discover": [
+      "低峰期慢不是流量压力",
+      "问题与凌晨批处理或维护任务有关",
+      "故障时查询计划发生变化",
+      "根因是统计信息或缓存状态变化导致错误执行计划"
+    ],
+    "misleading": [
+      "数据库慢容易直接归因于资源不足",
+      "白天高峰正常反直觉",
+      "扩容只能缓解一点"
+    ],
+    "forbidden": [
+      "不要提前说执行计划选错索引",
+      "不要主动给出 analyze 解决方案"
+    ],
+    "question_rules": {
+      "yes": [
+        "慢查询集中在固定 SQL",
+        "凌晨有批处理",
+        "执行计划会变化",
+        "手动 analyze 或预热可改善"
+      ],
+      "no": [
+        "不是连接池耗尽",
+        "不是网络抖动",
+        "不是主从复制延迟导致读旧数据"
+      ],
+      "irrelevant": [
+        "浏览器缓存",
+        "Ingress 证书",
+        "支付风控"
+      ]
+    },
+    "thinking_path": [
+      "比较低峰和高峰差异",
+      "保存故障时执行计划",
+      "关联凌晨批处理任务",
+      "确认统计信息和缓存状态变化"
+    ],
+    "root_cause": "批处理后统计信息和缓存状态变化，导致 PostgreSQL 选择错误执行计划。",
+    "temporary_fix": "手动 analyze 关键表并预热热点查询。",
+    "permanent_fix": "批处理后自动更新统计信息，必要时稳定执行计划并优化索引。",
+    "knowledge_points": [
+      "慢查询需要保存故障时执行计划",
+      "低流量不代表数据库压力低",
+      "维护任务可能改变优化器输入"
+    ],
+    "references": []
+  }
+]

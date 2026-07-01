@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>运维海龟汤</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="celebration" id="celebration" aria-hidden="true"></div>
+    <main class="shell">
+      <section class="incident-panel">
+        <div class="topbar">
+          <div>
+            <p class="eyebrow">OPS TURTLE SOUP</p>
+            <h1>运维海龟汤</h1>
+          </div>
+          <div class="status-pill" id="llmStatus">待开始</div>
+        </div>
+
+        <div class="war-room" aria-hidden="true">
+          <svg viewBox="0 0 920 210" role="img">
+            <defs>
+              <linearGradient id="trace" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0%" stop-color="#31c48d" />
+                <stop offset="52%" stop-color="#ffb020" />
+                <stop offset="100%" stop-color="#ff5a5f" />
+              </linearGradient>
+              <pattern id="grid" width="34" height="34" patternUnits="userSpaceOnUse">
+                <path d="M 34 0 L 0 0 0 34" fill="none" stroke="#23303a" stroke-width="1" />
+              </pattern>
+            </defs>
+            <rect width="920" height="210" fill="url(#grid)" />
+            <path class="pulse-line" d="M40 140 C130 30 210 160 300 86 S500 70 588 126 760 190 875 54" />
+            <g class="nodes">
+              <circle cx="118" cy="62" r="10" />
+              <circle cx="300" cy="86" r="10" />
+              <circle cx="588" cy="126" r="10" />
+              <circle cx="875" cy="54" r="10" />
+            </g>
+            <text x="42" y="188">handoff unclear</text>
+            <text x="685" y="188">ask yes/no only</text>
+          </svg>
+        </div>
+
+        <div class="controls">
+          <label for="difficulty">难度</label>
+          <select id="difficulty">
+            <option value="easy">简单</option>
+            <option value="medium">中等</option>
+            <option value="hard">困难</option>
+          </select>
+          <button id="startBtn" type="button">开始</button>
+          <button id="revealBtn" type="button" disabled>揭晓</button>
+        </div>
+
+        <section class="opening" aria-live="polite">
+          <span class="label">汤面</span>
+          <p id="openingText">选择难度后开始一局。你只能问能用“是/否”判断的问题。</p>
+        </section>
+      </section>
+
+      <section class="chat-panel">
+        <div class="chat-header">
+          <span>对话</span>
+          <button id="toggleChatBtn" type="button" aria-expanded="true">收起对话</button>
+        </div>
+        <div class="chat-log" id="chatLog" aria-live="polite">
+          <div class="message host">
+            <strong>值班主持</strong>
+            <span>选择一个难度，开始接手这场有点不讲理的故障。</span>
+          </div>
+        </div>
+        <form class="ask-form" id="askForm">
+          <input id="questionInput" autocomplete="off" placeholder="例如：这和最近发布有关吗？" disabled />
+          <button id="askBtn" type="submit" disabled>提问</button>
+        </form>
+      </section>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

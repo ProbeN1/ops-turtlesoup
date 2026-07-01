@@ -1,0 +1,133 @@
+[
+  {
+    "id": "easy-001",
+    "title": "健康的服务没有后端",
+    "difficulty": "easy",
+    "category": "kubernetes",
+    "tags": ["service", "selector", "endpoint", "helm"],
+    "infra_background": {
+      "platform": "bare-metal kubernetes",
+      "kubernetes_version": "1.28",
+      "nodes": { "control_plane": 3, "workers": 12 },
+      "ingress": "Nginx Ingress + MetalLB",
+      "release": "Helm",
+      "observability": ["Prometheus", "Alertmanager", "Grafana"]
+    },
+    "story": "09:17 被拉进故障群，Grafana 上 `checkout-api` 入口 5xx 从 0.3% 跳到 47.8%，持续 8 分钟。值班截图里 4 个业务 Pod 都是 `Ready 1/1`，重启其中 1 个后 5xx 没变化。",
+    "answer": "应用进程健康，但 Service selector 在一次 Helm 修改后不再匹配 Pod labels，流量没有后端 endpoint。",
+    "must_discover": [
+      "Pod 本身没有崩溃",
+      "健康检查只证明容器内应用可响应",
+      "Service 没有可用 endpoint",
+      "根因是 Service selector 与 Pod label 不匹配"
+    ],
+    "misleading": [
+      "Pod 全部 Ready",
+      "重启 Pod 看起来像合理处置",
+      "入口 502 容易被误认为应用崩溃"
+    ],
+    "forbidden": [
+      "不要在未成功前直接说 selector 和 label 不匹配",
+      "不要主动给出 kubectl endpoints 结论"
+    ],
+    "question_rules": {
+      "yes": [
+        "Pod 状态是 Running",
+        "readiness probe 是通过的",
+        "Service 没有可用 endpoint",
+        "最近改过 Helm values 或 Kubernetes labels"
+      ],
+      "no": [
+        "不是数据库故障",
+        "不是 CPU 或内存耗尽",
+        "不是 Ingress 证书过期"
+      ],
+      "irrelevant": [
+        "黑客入侵",
+        "用户量暴涨",
+        "磁盘空间"
+      ]
+    },
+    "thinking_path": [
+      "先确认 Pod 是否真的异常",
+      "再确认 Ingress 到 Service 的转发链路",
+      "最后检查 Service selector 与 EndpointSlice"
+    ],
+    "root_cause": "Service selector 与 Pod labels 不匹配，导致 Service 后面没有 endpoint。",
+    "temporary_fix": "临时修正 Service selector 或 Pod label，使 endpoint 重新出现。",
+    "permanent_fix": "为 Helm chart 增加 selector/label 一致性校验和发布前检查。",
+    "knowledge_points": [
+      "Kubernetes Service 依赖 selector 匹配 Pod label",
+      "Pod Ready 不等于 Service 有后端",
+      "排查 502 时应检查 EndpointSlice"
+    ],
+    "references": []
+  },
+  {
+    "id": "easy-002",
+    "title": "只在午夜响起的磁盘告警",
+    "difficulty": "easy",
+    "category": "storage",
+    "tags": ["backup", "disk", "cron", "temporary-file"],
+    "infra_background": {
+      "platform": "Proxmox virtualization",
+      "hosts": 2,
+      "storage": "RAID10 disk array",
+      "monitored_mount": "/data",
+      "backup_scheduler": "host cron",
+      "observability": ["node_exporter", "Prometheus", "Alertmanager"],
+      "disk_alert_threshold": "95%"
+    },
+    "story": "00:03 被电话叫醒，`billing-vm-02:/data` 使用率从 78.4% 升到 96.8%，Alertmanager 连续打了 6 条电话。00:14 告警自动恢复到 79.1%，期间业务错误率一直低于 0.1%。",
+    "answer": "每日备份任务先在本机 `/data` 生成临时压缩包，再上传对象存储；上传完成后临时文件被删除，所以磁盘短时冲高后自动回落。",
+    "must_discover": [
+      "告警与定时备份任务有关",
+      "磁盘增长来自备份临时压缩文件",
+      "临时压缩文件落在 `/data`",
+      "上传完成后临时文件被删除，因此磁盘自动恢复"
+    ],
+    "misleading": [
+      "业务错误率很低",
+      "告警自动恢复",
+      "容易怀疑监控误报或磁盘坏块"
+    ],
+    "forbidden": [
+      "不要在未成功前直接说备份压缩包上传后删除",
+      "不要主动给出 cron 任务名"
+    ],
+    "question_rules": {
+      "yes": [
+        "告警时间固定",
+        "磁盘空间会自动恢复",
+        "有备份或导出任务",
+        "临时文件和业务数据在同一分区"
+      ],
+      "no": [
+        "不是日志泄漏",
+        "不是磁盘坏块",
+        "不是监控误报",
+        "不是用户流量导致"
+      ],
+      "irrelevant": [
+        "黑客入侵",
+        "Kubernetes Service",
+        "浏览器缓存"
+      ]
+    },
+    "thinking_path": [
+      "先看告警时间是否固定",
+      "再排除业务流量和日志持续增长",
+      "定位到定时备份生成临时压缩文件",
+      "确认上传完成后临时文件被删除"
+    ],
+    "root_cause": "备份任务在被监控的 `/data` 分区生成临时压缩包，短时间占满磁盘。",
+    "temporary_fix": "将临时压缩目录移出 `/data` 或临时提高告警延迟。",
+    "permanent_fix": "改为流式上传或使用独立临时分区，并为备份任务增加容量预检查。",
+    "knowledge_points": [
+      "周期性告警优先关联定时任务",
+      "临时文件也需要容量规划",
+      "自动恢复不等于误报"
+    ],
+    "references": []
+  }
+]
