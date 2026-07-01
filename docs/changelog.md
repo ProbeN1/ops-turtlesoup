@@ -33,3 +33,4 @@
 - Strengthened `npm run load:local` to verify runtime metric deltas and Prometheus game counters.
 - Added `npm run load:llm` for configurable live LLM ask-path load smoke testing.
 - Added `npm run rehearse:release` for one-command local release rehearsal evidence.
+- Return HTTP 503 with a player-friendly message when the LLM queue is full.

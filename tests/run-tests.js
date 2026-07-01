@@ -179,6 +179,9 @@ async function testServerConfiguration() {
     "Startup failed:",
     "EADDRINUSE",
     "EACCES",
+    "isLlmQueueFullError",
+    "jsonResponse(res, 503",
+    "主持繁忙，请稍后再试",
     "GET\" && req.url === \"/api/health"
   ]) {
     assert(server.includes(token), `server.js missing ${token}`);
@@ -235,6 +238,111 @@ async function testStartupPortConflict() {
   } finally {
     await new Promise((resolve) => holder.close(resolve));
   }
+}
+
+async function testLlmQueueFullReturns503() {
+  const blocker = createTcpServer((socket) => {
+    socket.on("error", () => {});
+  });
+  await new Promise((resolve, reject) => {
+    blocker.once("error", reject);
+    blocker.listen(0, "127.0.0.1", resolve);
+  });
+  const blockerAddress = blocker.address();
+  const blockerPort = typeof blockerAddress === "object" && blockerAddress ? blockerAddress.port : 0;
+
+  const appPort = await reserveLocalPort();
+  const child = spawn(process.execPath, ["server.js"], {
+    cwd: root,
+    env: {
+      ...process.env,
+      HOST: "127.0.0.1",
+      PORT: String(appPort),
+      OPENAI_API_KEY: "test-key",
+      OPENAI_BASE_URL: `http://127.0.0.1:${blockerPort}/v1`,
+      OPENAI_MODEL: "test-model",
+      LLM_MAX_CONCURRENCY: "1",
+      LLM_QUEUE_LIMIT: "1",
+      LLM_REQUEST_TIMEOUT_SECONDS: "5",
+      RATE_LIMIT_MAX_REQUESTS: "0"
+    },
+    stdio: ["ignore", "pipe", "pipe"]
+  });
+  let stdout = "";
+  let stderr = "";
+  child.stdout.on("data", (chunk) => { stdout += chunk; });
+  child.stderr.on("data", (chunk) => { stderr += chunk; });
+
+  try {
+    await waitForHttp(`http://127.0.0.1:${appPort}/api/health`, 5000);
+    const gameIds = [];
+    for (let i = 0; i < 3; i += 1) {
+      const start = await postJson(`http://127.0.0.1:${appPort}/api/game/start`, { difficulty: "easy" });
+      gameIds.push(start.gameId);
+    }
+
+    const controller = new AbortController();
+    const asks = gameIds.map((gameId, index) => postJsonAllowError(`http://127.0.0.1:${appPort}/api/game/ask`, {
+      gameId,
+      question: `这是压力测试问题 ${index + 1} 吗？`
+    }, controller.signal));
+
+    const firstSettled = await Promise.race(asks.map((promise) => promise.then((result) => result)));
+    controller.abort();
+    await Promise.allSettled(asks);
+    assert(firstSettled.status === 503, `queue overflow must return 503, got ${firstSettled.status}`);
+    assert(firstSettled.body.error === "主持繁忙，请稍后再试", "503 response must explain host backpressure");
+    assert(firstSettled.body.detail === "LLM queue is full", "503 response must include queue-full detail");
+  } finally {
+    child.kill("SIGKILL");
+    await new Promise((resolve) => child.once("close", resolve));
+    await new Promise((resolve) => blocker.close(resolve));
+  }
+
+  assert(!stderr.includes("Startup failed"), `server startup failed unexpectedly; stdout=${stdout}; stderr=${stderr}`);
+}
+
+async function reserveLocalPort() {
+  const holder = createTcpServer();
+  await new Promise((resolve, reject) => {
+    holder.once("error", reject);
+    holder.listen(0, "127.0.0.1", resolve);
+  });
+  const address = holder.address();
+  const port = typeof address === "object" && address ? address.port : 0;
+  await new Promise((resolve) => holder.close(resolve));
+  return port;
+}
+
+async function waitForHttp(url, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(url);
+      if (response.ok) return;
+    } catch {
+      // Retry until deadline.
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw new Error(`${url} did not become ready`);
+}
+
+async function postJson(url, payload) {
+  const result = await postJsonAllowError(url, payload);
+  assert(result.response.ok, `${url} failed: HTTP ${result.status} ${JSON.stringify(result.body)}`);
+  return result.body;
+}
+
+async function postJsonAllowError(url, payload, signal) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload),
+    signal
+  });
+  const body = await response.json();
+  return { response, status: response.status, body };
 }
 
 function runNodeWithEnv(env) {
@@ -396,6 +504,7 @@ await testServerConfiguration();
 await testInvalidRuntimeConfiguration();
 await testGracefulShutdown();
 await testStartupPortConflict();
+await testLlmQueueFullReturns503();
 await testDeploymentConfiguration();
 
 console.log("All tests passed");

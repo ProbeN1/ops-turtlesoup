@@ -164,7 +164,7 @@ RATE_LIMIT_MAX_REQUESTS=0
 
 ## LLM Queue Is Full
 
-The internal LLM service cannot keep up with current gameplay traffic. Options:
+Players may receive HTTP `503` with `主持繁忙，请稍后再试` when the in-process LLM queue is full. This means the app is applying backpressure instead of hiding overload as a generic server error.
 
 Check:
 
@@ -172,10 +172,11 @@ Check:
 GET /api/metrics
 ```
 
-Look at `llm.active`, `llm.queued`, `llm.failuresTotal`, and `llm.avgLatencyMs`.
+Look at `llm.active`, `llm.queued`, `llm.failuresTotal`, `llm.avgLatencyMs`, and `responsesByStatus.503`.
 
 - Increase `LLM_MAX_CONCURRENCY` if the LLM service can handle it.
 - Increase `LLM_QUEUE_LIMIT` for short traffic bursts.
+- Lower game concurrency or ask players to retry after a few seconds.
 - Add a reverse proxy or shared queue before scaling to multiple Node processes.
 
 ## LLM Requests Time Out

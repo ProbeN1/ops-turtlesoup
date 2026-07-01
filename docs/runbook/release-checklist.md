@@ -122,6 +122,7 @@ Watch:
 - LLM limiter active and queued counts;
 - process logs: `docker compose logs -f ops-turtle-soup` or `journalctl -u ops-turtle-soup -f`;
 - 429 responses from shared IP rate limiting;
+- 503 responses from LLM queue backpressure;
 - LLM queue full errors.
 
 ## Rollback

@@ -210,6 +210,10 @@ function recordLlmResult(startedAt, response, error) {
   }
 }
 
+function isLlmQueueFullError(error) {
+  return error?.message === "LLM queue is full";
+}
+
 function publicMetrics() {
   const avgLlmLatencyMs = metrics.llm.requestsTotal
     ? Math.round(metrics.llm.totalLatencyMs / metrics.llm.requestsTotal)
@@ -895,6 +899,12 @@ const server = createServer(async (req, res) => {
     await serveStatic(req, res);
   } catch (error) {
     metrics.errorsTotal += 1;
+    if (isLlmQueueFullError(error)) {
+      return jsonResponse(res, 503, {
+        error: "主持繁忙，请稍后再试",
+        detail: "LLM queue is full"
+      });
+    }
     console.error(error);
     jsonResponse(res, 500, { error: error.message || "Internal server error" });
   }
