@@ -45,3 +45,4 @@
 - Added a Windows Scheduled Task deployment script for non-Docker intranet hosts.
 - Added SHA256 checksum generation for release archives.
 - Added `npm run init:release-record` to create pre-filled non-sensitive release records.
+- Added `npm run check:release-record` to validate release record completeness and secret hygiene.

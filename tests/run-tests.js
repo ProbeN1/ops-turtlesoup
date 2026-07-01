@@ -451,6 +451,7 @@ async function testDeploymentConfiguration() {
   const releaseRehearsal = await readText("tests/release-rehearsal.js");
   const buildRelease = await readText("tests/build-release.js");
   const initReleaseRecord = await readText("tests/init-release-record.js");
+  const checkReleaseRecord = await readText("tests/check-release-record.js");
   const releaseEvidence = await readText("tests/release-evidence.js");
   const coworkerSmoke = await readText("tests/coworker-access-smoke.js");
   const packageJson = await readText("package.json");
@@ -491,6 +492,7 @@ async function testDeploymentConfiguration() {
   assert(packageJson.includes('"rehearse:release": "node tests/release-rehearsal.js"'), "package.json missing rehearse:release script");
   assert(packageJson.includes('"build:release": "node tests/build-release.js"'), "package.json missing build:release script");
   assert(packageJson.includes('"init:release-record": "node tests/init-release-record.js"'), "package.json missing init:release-record script");
+  assert(packageJson.includes('"check:release-record": "node tests/check-release-record.js"'), "package.json missing check:release-record script");
   assert(packageJson.includes('"evidence:release": "node tests/release-evidence.js"'), "package.json missing evidence:release script");
   assert(packageJson.includes('"smoke:coworker": "node tests/coworker-access-smoke.js"'), "package.json missing smoke:coworker script");
 
@@ -522,6 +524,18 @@ async function testDeploymentConfiguration() {
     "writeFile"
   ]) {
     assert(initReleaseRecord.includes(token), `init release record script missing ${token}`);
+  }
+
+  for (const token of [
+    "RELEASE_RECORD_PATH",
+    "OPENAI_API_KEY",
+    "LLM_API_KEY",
+    "Release approved",
+    "release record not found",
+    "still contains an unselected option",
+    "appears to contain sensitive text"
+  ]) {
+    assert(checkReleaseRecord.includes(token), `check release record script missing ${token}`);
   }
 
   for (const token of [
@@ -589,6 +603,7 @@ async function testDeploymentConfiguration() {
     "npm run smoke:app",
     "npm run smoke:coworker",
     "npm run init:release-record",
+    "npm run check:release-record",
     "npm run evidence:release",
     "npm run load:llm",
     "npm run rehearse:release",

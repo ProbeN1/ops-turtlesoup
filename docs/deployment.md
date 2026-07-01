@@ -79,6 +79,14 @@ npm run init:release-record
 
 The command creates `docs/runbook/release-record-YYYY-MM-DD.md` and pre-fills non-sensitive fields such as date, git commit, host OS, expected player count, selected runtime settings, and LLM model. It refuses to overwrite an existing record.
 
+After filling the release evidence, validate the record:
+
+```powershell
+npm run check:release-record
+```
+
+Use `RELEASE_RECORD_PATH` to check a specific record file.
+
 ## Docker
 
 Docker Compose is the preferred long-running deployment path for a small intranet host.

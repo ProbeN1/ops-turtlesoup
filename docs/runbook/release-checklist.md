@@ -29,6 +29,7 @@ npm run init:release-record
 | --- | --- | --- |
 | Code and scenario checks | `npm test` | Pass |
 | Release record created | `npm run init:release-record` or existing filled record | Record exists for this release |
+| Release record checked | `npm run check:release-record` | No missing evidence or sensitive values |
 | Release archive | `npm run build:release` | Zip and `.sha256` created under `dist/` and excludes `.env` |
 | Local release rehearsal | `npm run rehearse:release` | Archive/evidence/offline/online/app/capacity smoke pass |
 | Offline deployment preflight | `npm run verify:deploy:offline` | No `FAIL` |
@@ -93,6 +94,7 @@ Run from the release host:
 npm test
 npm run init:release-record
 npm run rehearse:release
+npm run check:release-record
 npm run verify:deploy:offline
 npm run verify:deploy
 npm run evidence:release
