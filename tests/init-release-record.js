@@ -5,7 +5,7 @@ import path from "node:path";
 
 const root = process.cwd();
 const templatePath = path.join(root, "docs", "runbook", "release-record-template.md");
-const outputPath = path.join(root, process.env.RELEASE_RECORD_PATH || defaultRecordPath());
+const outputPath = resolveFromRoot(process.env.RELEASE_RECORD_PATH || defaultRecordPath());
 const nonSecretConfigKeys = [
   "HOST",
   "PORT",
@@ -24,6 +24,10 @@ const nonSecretConfigKeys = [
 function defaultRecordPath() {
   const day = new Date().toISOString().slice(0, 10);
   return path.join("docs", "runbook", `release-record-${day}.md`);
+}
+
+function resolveFromRoot(filePath) {
+  return path.isAbsolute(filePath) ? filePath : path.join(root, filePath);
 }
 
 function loadEnvFile() {

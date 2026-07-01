@@ -1,4 +1,5 @@
-import { readFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import vm from "node:vm";
 import { spawn } from "node:child_process";
@@ -551,6 +552,7 @@ async function testDeploymentConfiguration() {
     "RELEASE_RECORD_PATH",
     "nonSecretConfigKeys",
     "OPENAI_MODEL",
+    "resolveFromRoot",
     "rev-parse",
     "release record already exists",
     "writeFile"
@@ -565,6 +567,7 @@ async function testDeploymentConfiguration() {
     "Release approved",
     "assertLineEquals",
     "assertAssignmentEquals",
+    "resolveFromRoot",
     "HOST",
     "0.0.0.0",
     "MAX_ACTIVE_SESSIONS",
@@ -728,6 +731,196 @@ async function testDeploymentConfiguration() {
   }
 }
 
+function validReleaseRecord() {
+  return [
+    "# Release Record",
+    "",
+    "- Date: 2026-07-01T05:36:54.587Z",
+    "- Operator: ops",
+    "- Release host: ops-game-01",
+    "- Host OS: linux x64; node 24.15.0",
+    "- Deployment mode: systemd",
+    "- Git commit: 81dd496",
+    "- Expected player count: 100",
+    "- Shared URL: http://10.0.0.10:5725/",
+    "- LLM endpoint host, without key: internal-llm.example/v1",
+    "- LLM model: b-glm-5.2",
+    "",
+    "HOST=0.0.0.0",
+    "PORT=5725",
+    "MAX_ACTIVE_SESSIONS=300",
+    "LLM_MAX_CONCURRENCY=8",
+    "LLM_QUEUE_LIMIT=100",
+    "RATE_LIMIT_MAX_REQUESTS=120",
+    "",
+    "archivePath=dist/ops-turtle-soup.zip",
+    "sha256Path=dist/ops-turtle-soup.zip.sha256",
+    "sha256=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "releaseName=ops-turtle-soup-0.1.0-20260701T053641Z",
+    ".env excluded=yes",
+    "expected files present=yes",
+    "forbidden paths absent=yes",
+    "manifest checked=yes",
+    "",
+    "npm test",
+    "npm run rehearse:release",
+    "runLlm=true",
+    "release archive build=pass",
+    "release archive verification=pass",
+    "offline deployment preflight=pass",
+    "online deployment verification=pass",
+    "application smoke=pass",
+    "release evidence snapshot=pass",
+    "100-session local capacity smoke=pass",
+    "live LLM ask-path load smoke=pass",
+    "npm run verify:deploy",
+    "npm run smoke:llm",
+    "npm run smoke:app",
+    "npm run smoke:coworker",
+    "npm run evidence:release",
+    "npm run load:llm",
+    "npm run load:local",
+    "",
+    "ready.ok=true",
+    "ready.llm.apiKeyConfigured=true",
+    "ready.llm.baseUrlConfigured=true",
+    "ready.llm.modelConfigured=true",
+    "ready.scenarioSets.easy=2",
+    "ready.scenarioSets.medium=2",
+    "ready.scenarioSets.hard=2",
+    "ready.sessions.maxActive=300",
+    "activeSessions=1",
+    "gameStartsTotal=101",
+    "gameQuestionsTotal=11",
+    "gameRevealsTotal=101",
+    "llm.requestsTotal=20",
+    "llm.failuresTotal=0",
+    "",
+    "completed=100",
+    "askLatency.p95Ms=5518",
+    "metricsDelta.gameQuestionsTotal=10",
+    "metricsDelta.llmRequestsTotal=20",
+    "metricsDelta.llmFailuresTotal=0",
+    "metricsDelta.gameStartsTotal=100",
+    "metricsDelta.gameRevealsTotal=100",
+    "prometheusMetrics.gameCountersPresent=true",
+    "prometheusMetrics.llmCountersPresent=true",
+    "prometheus.ops_turtle_soup_http_requests_total=present",
+    "prometheus.ops_turtle_soup_llm_requests_total=present",
+    "",
+    "## Browser UI Smoke",
+    "- Browser machine: coworker-laptop",
+    "- Browser: Chrome",
+    "- Difficulty selection passed: yes",
+    "- Question flow passed: yes",
+    "- Chat collapse/expand passed: yes",
+    "- Reveal formatting passed: yes",
+    "- Solved celebration passed: yes",
+    "",
+    "## Coworker Access Check",
+    "- Coworker machine or subnet: office-subnet",
+    "- URL opened: http://10.0.0.10:5725/",
+    "- Page loaded: yes",
+    "- Game started: yes",
+    "- One question answered: yes",
+    "- `npm run smoke:coworker` passed: yes",
+    "",
+    "## Risks And Decisions",
+    "- Docker build verified on target host: no",
+    "- Browser UI smoke automated: no",
+    "- Sessions are in memory and will be lost on restart: acknowledged yes",
+    "- Single instance only, no horizontal scaling: acknowledged yes",
+    "- Rate limit tuned for shared proxy IPs: not applicable",
+    "- LLM capacity confirmed for event: yes",
+    "Coworker Access Check",
+    "Browser UI Smoke",
+    "Risks And Decisions",
+    "",
+    "- Release approved: yes",
+    "- Approval time: 2026-07-01T06:00:00.000Z",
+    ""
+  ].join("\n");
+}
+
+async function runReleaseRecordCheck(text) {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "ops-turtle-soup-record-"));
+  const recordPath = path.join(tempDir, "release-record.md");
+  await writeFile(recordPath, text, "utf8");
+
+  try {
+    return await runNodeScript(["tests/check-release-record.js"], { RELEASE_RECORD_PATH: recordPath });
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+}
+
+async function testReleaseRecordGateFailures() {
+  const valid = validReleaseRecord();
+  const validResult = await runReleaseRecordCheck(valid);
+  assert(validResult.code === 0, `valid release record should pass; stderr=${validResult.stderr}`);
+
+  const cases = [
+    {
+      name: "local host binding",
+      text: valid.replace("HOST=0.0.0.0", "HOST=127.0.0.1"),
+      expected: "HOST= must be 0.0.0.0"
+    },
+    {
+      name: "capacity below target",
+      text: valid.replace("MAX_ACTIVE_SESSIONS=300", "MAX_ACTIVE_SESSIONS=99"),
+      expected: "MAX_ACTIVE_SESSIONS= must be >= 100"
+    },
+    {
+      name: "live llm not run",
+      text: valid.replace("runLlm=true", "runLlm=false"),
+      expected: "runLlm= must be true"
+    },
+    {
+      name: "llm failures",
+      text: valid.replace("metricsDelta.llmFailuresTotal=0", "metricsDelta.llmFailuresTotal=1"),
+      expected: "metricsDelta.llmFailuresTotal= must be 0"
+    },
+    {
+      name: "coworker access not passed",
+      text: valid.replace("- `npm run smoke:coworker` passed: yes", "- `npm run smoke:coworker` passed: no"),
+      expected: "- `npm run smoke:coworker` passed: must be yes"
+    },
+    {
+      name: "not approved",
+      text: valid.replace("- Release approved: yes", "- Release approved: no"),
+      expected: "- Release approved: must be yes"
+    }
+  ];
+
+  for (const item of cases) {
+    const result = await runReleaseRecordCheck(item.text);
+    assert(result.code !== 0, `${item.name} should fail release record check`);
+    assert(result.stderr.includes(item.expected), `${item.name} failure missing ${item.expected}; stderr=${result.stderr}`);
+  }
+}
+
+function runNodeScript(args, env = {}) {
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, args, {
+      cwd: root,
+      env: { ...process.env, ...env },
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk;
+    });
+    child.on("close", (code) => {
+      resolve({ code, stdout, stderr });
+    });
+  });
+}
+
 await testScenarioSchema();
 await testFrontendBindings();
 await testRevealInfraFormatting();
@@ -738,5 +931,6 @@ await testStartupPortConflict();
 await testLlmQueueFullReturns503();
 await testSessionCapacityReturns503();
 await testDeploymentConfiguration();
+await testReleaseRecordGateFailures();
 
 console.log("All tests passed");

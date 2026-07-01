@@ -49,3 +49,5 @@
 - Hardened reveal infrastructure rendering so object payloads never appear as `[object Object]`.
 - Added `npm run verify:release-archive` to validate release zip checksums and contents.
 - Strengthened release record validation for final intranet go-live evidence.
+- Added negative regression tests for final release record gates.
+- Fixed absolute `RELEASE_RECORD_PATH` handling in release record scripts.

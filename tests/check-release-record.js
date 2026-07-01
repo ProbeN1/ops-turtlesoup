@@ -3,12 +3,16 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 const root = process.cwd();
-const recordPath = path.join(root, process.env.RELEASE_RECORD_PATH || defaultRecordPath());
+const recordPath = resolveFromRoot(process.env.RELEASE_RECORD_PATH || defaultRecordPath());
 const failures = [];
 
 function defaultRecordPath() {
   const day = new Date().toISOString().slice(0, 10);
   return path.join("docs", "runbook", `release-record-${day}.md`);
+}
+
+function resolveFromRoot(filePath) {
+  return path.isAbsolute(filePath) ? filePath : path.join(root, filePath);
 }
 
 function fail(message) {
