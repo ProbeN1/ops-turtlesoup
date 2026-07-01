@@ -35,6 +35,7 @@ npm run init:release-record
 | Local release rehearsal | `npm run rehearse:release` | Archive verification/evidence/offline/online/app/capacity smoke pass |
 | Offline deployment preflight | `npm run verify:deploy:offline` | No `FAIL` |
 | Long-running process configured | `docker compose ps`, `systemctl status ops-turtle-soup`, or `Get-ScheduledTask -TaskName OpsTurtleSoup` | Service is running with restart policy |
+| Process evidence snapshot | `npm run evidence:process` | Running service build identity, listening port, and available process manager evidence captured |
 | Online deployment verification | `npm run verify:deploy` | No `FAIL` |
 | Readiness endpoint | `GET /api/ready` | `ok=true`, LLM config present, all scenario sets loaded |
 | Runtime metrics | `GET /api/metrics` and `GET /metrics` | JSON counters and Prometheus text counters are present |
@@ -106,6 +107,7 @@ npm run rehearse:release
 npm run check:release-record
 npm run verify:deploy:offline
 npm run verify:deploy
+npm run evidence:process
 npm run evidence:release
 npm run smoke:llm
 EXPECTED_RELEASE_GIT_COMMIT=<git-short-sha> npm run smoke:app
@@ -149,6 +151,7 @@ The final release record must use a rehearsal where `runLlm=true` and `live LLM 
 Watch:
 
 - service health: `GET /api/health`;
+- process evidence: `npm run evidence:process`;
 - deployment readiness: `GET /api/ready`;
 - runtime counters: `GET /api/metrics`;
 - Prometheus scrape counters: `GET /metrics`;

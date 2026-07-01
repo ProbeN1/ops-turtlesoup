@@ -232,10 +232,13 @@ The text endpoint uses metric names prefixed with `ops_turtle_soup_`, including 
 After the service is running, capture a non-sensitive release evidence snapshot:
 
 ```powershell
+npm run evidence:process
 npm run evidence:release
 ```
 
-The command reads `GET /api/health`, `GET /api/ready`, `GET /api/metrics`, and `GET /metrics`, then prints JSON suitable for the release record. Use `RELEASE_EVIDENCE_BASE_URL` when testing through a reverse proxy or coworker-facing intranet hostname.
+`npm run evidence:process` captures non-sensitive target-host process evidence, including build identity, listening port status, and available Docker Compose, systemd, or Windows Scheduled Task status. Use `PROCESS_EVIDENCE_BASE_URL` when probing through a reverse proxy or a different hostname.
+
+`npm run evidence:release` reads `GET /api/health`, `GET /api/ready`, `GET /api/metrics`, and `GET /metrics`, then prints JSON suitable for the release record. Use `RELEASE_EVIDENCE_BASE_URL` when testing through a reverse proxy or coworker-facing intranet hostname.
 The JSON includes non-sensitive build identity so the release record can prove which version and commit is running on the target host.
 
 ## Deployment Verification

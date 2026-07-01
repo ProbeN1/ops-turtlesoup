@@ -141,6 +141,12 @@ async function main() {
     "sha256Path",
     "sha256",
     "releaseName",
+    "processEvidence.build.gitCommit",
+    "processEvidence.longRunningEvidencePresent",
+    "processEvidence.port.listening",
+    "processEvidence.managers.dockerCompose.active",
+    "processEvidence.managers.systemd.active",
+    "processEvidence.managers.windowsScheduledTask.active",
     "expected files present",
     "forbidden paths absent",
     "manifest checked",
@@ -190,6 +196,8 @@ async function main() {
   assertAssignmentEquals(text, "HOST", "0.0.0.0");
   assertAssignmentNumberAtLeast(text, "MAX_ACTIVE_SESSIONS", 100);
   assertAssignmentEquals(text, ".env excluded", "yes");
+  assertAssignmentNotOneOf(text, "processEvidence.build.gitCommit", ["unknown"]);
+  assertAssignmentEquals(text, "processEvidence.longRunningEvidencePresent", "true");
   assertAssignmentEquals(text, "expected files present", "yes");
   assertAssignmentEquals(text, "forbidden paths absent", "yes");
   assertAssignmentEquals(text, "manifest checked", "yes");

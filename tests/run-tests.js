@@ -490,6 +490,7 @@ async function testDeploymentConfiguration() {
   const initReleaseRecord = await readText("tests/init-release-record.js");
   const checkReleaseRecord = await readText("tests/check-release-record.js");
   const releaseEvidence = await readText("tests/release-evidence.js");
+  const processEvidence = await readText("tests/process-evidence.js");
   const coworkerSmoke = await readText("tests/coworker-access-smoke.js");
   const packageJson = await readText("package.json");
   const releaseChecklist = await readText("docs/runbook/release-checklist.md");
@@ -535,6 +536,7 @@ async function testDeploymentConfiguration() {
   assert(packageJson.includes('"init:release-record": "node tests/init-release-record.js"'), "package.json missing init:release-record script");
   assert(packageJson.includes('"check:release-record": "node tests/check-release-record.js"'), "package.json missing check:release-record script");
   assert(packageJson.includes('"evidence:release": "node tests/release-evidence.js"'), "package.json missing evidence:release script");
+  assert(packageJson.includes('"evidence:process": "node tests/process-evidence.js"'), "package.json missing evidence:process script");
   assert(packageJson.includes('"smoke:coworker": "node tests/coworker-access-smoke.js"'), "package.json missing smoke:coworker script");
 
   for (const token of [
@@ -583,6 +585,7 @@ async function testDeploymentConfiguration() {
     "HOST",
     "0.0.0.0",
     "MAX_ACTIVE_SESSIONS",
+    "processEvidence.longRunningEvidencePresent",
     "metricsDelta.llmFailuresTotal",
     "live LLM ask-path load smoke",
     "LLM capacity confirmed for event",
@@ -609,6 +612,19 @@ async function testDeploymentConfiguration() {
     "ops_turtle_soup_llm_requests_total"
   ]) {
     assert(releaseEvidence.includes(token), `release evidence script missing ${token}`);
+  }
+
+  for (const token of [
+    "PROCESS_EVIDENCE_BASE_URL",
+    "/api/health",
+    "Get-NetTCPConnection",
+    "docker",
+    "systemctl",
+    "Get-ScheduledTask",
+    "longRunningEvidencePresent",
+    "build.gitCommit"
+  ]) {
+    assert(processEvidence.includes(token), `process evidence script missing ${token}`);
   }
 
   for (const token of [
@@ -708,6 +724,7 @@ async function testDeploymentConfiguration() {
     "EXPECTED_RELEASE_GIT_COMMIT",
     "npm run init:release-record",
     "npm run check:release-record",
+    "npm run evidence:process",
     "npm run evidence:release",
     "npm run load:llm",
     "npm run rehearse:release",
@@ -730,6 +747,8 @@ async function testDeploymentConfiguration() {
 
   for (const token of [
     "Git commit:",
+    "npm run evidence:process",
+    "processEvidence.longRunningEvidencePresent=",
     "npm run verify:release-archive",
     "docker compose ps",
     "Get-ScheduledTask -TaskName OpsTurtleSoup",
@@ -802,6 +821,12 @@ function validReleaseRecord() {
     "sha256=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
     "releaseName=ops-turtle-soup-0.1.0-20260701T053641Z",
     ".env excluded=yes",
+    "processEvidence.build.gitCommit=81dd496",
+    "processEvidence.longRunningEvidencePresent=true",
+    "processEvidence.port.listening=true",
+    "processEvidence.managers.dockerCompose.active=false",
+    "processEvidence.managers.systemd.active=true",
+    "processEvidence.managers.windowsScheduledTask.active=false",
     "expected files present=yes",
     "forbidden paths absent=yes",
     "manifest checked=yes",

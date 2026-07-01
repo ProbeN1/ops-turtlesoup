@@ -7,7 +7,7 @@
     "start": "node server.js",
     "dev": "node server.js",
     "start:loadtest": "node tests/start-loadtest-server.js",
-    "check": "node --check server.js && node --check public/app.js && node --check tests/verify-deploy.js && node --check tests/llm-smoke.js && node --check tests/app-smoke.js && node --check tests/load-llm.js && node --check tests/release-rehearsal.js && node --check tests/build-release.js && node --check tests/verify-release-archive.js && node --check tests/init-release-record.js && node --check tests/check-release-record.js && node --check tests/release-evidence.js && node --check tests/coworker-access-smoke.js",
+    "check": "node --check server.js && node --check public/app.js && node --check tests/verify-deploy.js && node --check tests/llm-smoke.js && node --check tests/app-smoke.js && node --check tests/load-llm.js && node --check tests/release-rehearsal.js && node --check tests/build-release.js && node --check tests/verify-release-archive.js && node --check tests/init-release-record.js && node --check tests/check-release-record.js && node --check tests/release-evidence.js && node --check tests/process-evidence.js && node --check tests/coworker-access-smoke.js",
     "test": "npm run check && node tests/run-tests.js",
     "build:release": "node tests/build-release.js",
     "verify:release-archive": "node tests/verify-release-archive.js",
@@ -19,6 +19,7 @@
     "verify:deploy:offline": "node tests/verify-deploy.js --offline",
     "rehearse:release": "node tests/release-rehearsal.js",
     "evidence:release": "node tests/release-evidence.js",
+    "evidence:process": "node tests/process-evidence.js",
     "smoke:llm": "node tests/llm-smoke.js",
     "smoke:app": "node tests/app-smoke.js",
     "smoke:coworker": "node tests/coworker-access-smoke.js"

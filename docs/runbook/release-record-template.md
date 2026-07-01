@@ -118,6 +118,23 @@ Paste summary:
 
 ```
 
+Process evidence snapshot:
+
+```text
+npm run evidence:process
+```
+
+Paste non-sensitive summary:
+
+```text
+processEvidence.build.gitCommit=
+processEvidence.longRunningEvidencePresent=
+processEvidence.port.listening=
+processEvidence.managers.dockerCompose.active=
+processEvidence.managers.systemd.active=
+processEvidence.managers.windowsScheduledTask.active=
+```
+
 ## Verification Results
 
 ```text
