@@ -78,4 +78,4 @@
 - `scheduler`
 - `dependency`
 
-揭晓时前端会将该对象格式化为可读文本。
+揭晓接口会同时返回可直接展示的 `infraBackground` / `infraBackgroundText` 文本，以及保留结构的 `infraBackgroundRaw` / `infra_background` 对象。前端应优先展示文本字段，只有文本缺失或异常时才格式化原始对象。

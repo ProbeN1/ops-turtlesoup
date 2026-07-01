@@ -85,7 +85,7 @@ async function testFrontendBindings() {
   }
 
   assert(html.includes('value="easy"'), "frontend must use standard easy difficulty value");
-  assert(html.includes('/app.js?v=20260701-infra-format-v2'), "frontend must version app.js after reveal formatting fixes");
+  assert(html.includes('/app.js?v=20260701-infra-format-v3'), "frontend must version app.js after reveal formatting fixes");
   assert(app.includes("function formatRevealInfraBackground"), "frontend must normalize reveal infra fields before rendering");
   assert(app.includes("function formatInfraBackground"), "frontend must format infra background before rendering reveal");
   assert(!app.includes("基础设施：${data.infraBackground}"), "frontend must not render infra object directly");
@@ -185,6 +185,22 @@ async function testRevealInfraFormatting() {
   const badServerTextMessageBody = chatLog.children.at(-1).lastAppend[1].textContent;
   assert(!badServerTextMessageBody.includes("[object Object]"), "reveal must ignore object-like server infra text");
   assert(badServerTextMessageBody.includes("platform: 裸机 K8S"), "reveal must fall back to formatted infra object");
+
+  context.renderReveal({
+    infraBackgroundText: "",
+    infraBackgroundRaw: {
+      platform: "Bare metal K8S",
+      storage: { volume: "/data" }
+    },
+    infraBackground: "[object Object]",
+    hiddenTruth: "truth",
+    solvePoints: ["point"],
+    lesson: "lesson"
+  });
+
+  const rawFallbackMessageBody = chatLog.children.at(-1).lastAppend[1].textContent;
+  assert(!rawFallbackMessageBody.includes("[object Object]"), "reveal must prefer raw infra object over object-like compatibility text");
+  assert(rawFallbackMessageBody.includes("platform: Bare metal K8S"), "reveal must format raw infra object fallback");
 
   context.renderReveal({
     infra_background: {
@@ -354,6 +370,41 @@ async function testLlmQueueFullReturns503() {
     child.kill("SIGKILL");
     await new Promise((resolve) => child.once("close", resolve));
     await new Promise((resolve) => blocker.close(resolve));
+  }
+
+  assert(!stderr.includes("Startup failed"), `server startup failed unexpectedly; stdout=${stdout}; stderr=${stderr}`);
+}
+
+async function testRevealApiInfraPayload() {
+  const appPort = await reserveLocalPort();
+  const child = spawn(process.execPath, ["server.js"], {
+    cwd: root,
+    env: {
+      ...process.env,
+      HOST: "127.0.0.1",
+      PORT: String(appPort),
+      RATE_LIMIT_MAX_REQUESTS: "0"
+    },
+    stdio: ["ignore", "pipe", "pipe"]
+  });
+  let stdout = "";
+  let stderr = "";
+  child.stdout.on("data", (chunk) => { stdout += chunk; });
+  child.stderr.on("data", (chunk) => { stderr += chunk; });
+
+  try {
+    await waitForHttp(`http://127.0.0.1:${appPort}/api/health`, 5000);
+    const started = await postJson(`http://127.0.0.1:${appPort}/api/game/start`, { difficulty: "easy" });
+    const revealed = await postJson(`http://127.0.0.1:${appPort}/api/game/reveal`, { gameId: started.gameId });
+
+    assert(typeof revealed.infraBackground === "string", "reveal infraBackground must be compatibility display text");
+    assert(revealed.infraBackground && revealed.infraBackground !== "[object Object]", "reveal infraBackground must not be object text");
+    assert(revealed.infraBackgroundText === revealed.infraBackground, "reveal infraBackgroundText must match display text");
+    assert(revealed.infraBackgroundRaw && typeof revealed.infraBackgroundRaw === "object", "reveal must include raw camelCase infra object");
+    assert(revealed.infra_background && typeof revealed.infra_background === "object", "reveal must include raw snake_case infra object");
+  } finally {
+    child.kill("SIGKILL");
+    await new Promise((resolve) => child.once("close", resolve));
   }
 
   assert(!stderr.includes("Startup failed"), `server startup failed unexpectedly; stdout=${stdout}; stderr=${stderr}`);
@@ -1007,6 +1058,7 @@ await testGracefulShutdown();
 await testStartupPortConflict();
 await testLlmQueueFullReturns503();
 await testSessionCapacityReturns503();
+await testRevealApiInfraPayload();
 await testDeploymentConfiguration();
 await testReleaseRecordGateFailures();
 

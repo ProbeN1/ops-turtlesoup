@@ -55,3 +55,4 @@
 - Added TCP preflight diagnostics to the live LLM smoke test.
 - Added build identity checks to application and coworker access smoke tests.
 - Added process evidence capture for target-host release records.
+- Hardened reveal API infrastructure payloads so cached clients do not render `[object Object]`.

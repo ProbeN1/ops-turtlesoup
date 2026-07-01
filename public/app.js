@@ -117,6 +117,7 @@ function formatRevealInfraBackground(data) {
   const serverText = typeof data.infraBackgroundText === "string" ? data.infraBackgroundText.trim() : "";
   if (serverText && serverText !== "[object Object]") return serverText;
 
+  if (data.infraBackgroundRaw !== undefined) return formatInfraBackground(data.infraBackgroundRaw);
   if (data.infraBackground !== undefined) return formatInfraBackground(data.infraBackground);
   return formatInfraBackground(data.infra_background);
 }

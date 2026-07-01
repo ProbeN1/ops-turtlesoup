@@ -541,9 +541,12 @@ function publicScenario(scenario) {
 }
 
 function revealPayload(scenario) {
+  const infraBackgroundText = formatInfraBackground(scenario.infra_background);
   return {
-    infraBackground: scenario.infra_background,
-    infraBackgroundText: formatInfraBackground(scenario.infra_background),
+    infraBackground: infraBackgroundText,
+    infraBackgroundText,
+    infraBackgroundRaw: scenario.infra_background,
+    infra_background: scenario.infra_background,
     hiddenTruth: scenario.answer,
     solvePoints: scenario.must_discover,
     rootCause: scenario.root_cause,
