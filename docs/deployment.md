@@ -41,7 +41,7 @@ RATE_LIMIT_MAX_REQUESTS=120
 
 Numeric runtime settings are validated at startup. Invalid values, such as an out-of-range `PORT` or `LLM_QUEUE_LIMIT` lower than `LLM_MAX_CONCURRENCY`, cause the service to exit before listening.
 
-The feedback page is a static intranet contact page. Players send feedback through DingTalk to `0027029145` 姜毅, using the copyable template on `/feedback`.
+The feedback page is a static intranet contact page. Players send feedback through DingTalk to `0027029145` 姜毅 or email `jiang.yi12@iwhalecloud.com`, using the copyable template on `/feedback`.
 
 If startup fails while binding the port, stderr prints a `Startup failed:` message. Common causes are an existing process already using `HOST:PORT` or an account without permission to bind the configured port.
 

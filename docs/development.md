@@ -88,7 +88,7 @@ The server includes simple in-process protection for intranet use:
 
 Set `RATE_LIMIT_MAX_REQUESTS=0` to disable API rate limiting for a trusted test environment.
 
-Feedback is handled through the static `/feedback` page. Players contact `0027029145` 姜毅 on DingTalk and can copy the provided feedback template.
+Feedback is handled through the static `/feedback` page. Players contact `0027029145` 姜毅 on DingTalk or email `jiang.yi12@iwhalecloud.com` and can copy the provided feedback template.
 
 Invalid numeric runtime configuration fails fast during startup.
 

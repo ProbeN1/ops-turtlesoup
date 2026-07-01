@@ -202,7 +202,7 @@ function validateScenario(scenario, expectedDifficulty) {
 }
 
 function pickRandom(items) {
-  return items[Math.floor(Math.random() * items.length)];
+  return items[crypto.randomInt(items.length)];
 }
 
 function jsonResponse(res, status, payload) {

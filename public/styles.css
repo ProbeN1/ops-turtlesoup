@@ -429,9 +429,19 @@ input:disabled {
   font-weight: 800;
 }
 
+.email-label {
+  margin-top: 14px;
+}
+
 .dingtalk-contact strong {
   font-size: clamp(1.8rem, 4vw, 3.2rem);
   line-height: 1;
+}
+
+.contact-email {
+  overflow-wrap: anywhere;
+  font-size: 1rem !important;
+  line-height: 1.35 !important;
 }
 
 .dingtalk-contact span:last-of-type {

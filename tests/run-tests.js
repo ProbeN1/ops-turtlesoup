@@ -129,6 +129,8 @@ async function testFrontendBindings() {
   assert(html.includes('href="/feedback"'), "frontend must link to feedback page");
   assert(feedbackHtml.includes("0027029145"), "feedback page must expose DingTalk contact id");
   assert(feedbackHtml.includes("姜毅"), "feedback page must expose DingTalk contact name");
+  assert(feedbackHtml.includes("jiang.yi12@iwhalecloud.com"), "feedback page must expose contact email");
+  assert(feedbackHtml.includes("contactEmail"), "feedback page must allow copying contact email");
   assert(feedbackHtml.includes("/feedback.js?v=20260701-dingtalk-v1"), "feedback page must version feedback.js");
   assert(feedbackHtml.includes("v0.1"), "feedback page must show current version badge");
   assert(feedbackJs.includes("navigator.clipboard"), "feedback script must support copying contact details");
@@ -308,7 +310,8 @@ async function testServerConfiguration() {
     "GET\" && req.url === \"/api/health",
     "BUILD_INFO",
     "buildInfo",
-    "RELEASE_INFO.json"
+    "RELEASE_INFO.json",
+    "crypto.randomInt(items.length)"
   ]) {
     assert(server.includes(token), `server.js missing ${token}`);
   }
