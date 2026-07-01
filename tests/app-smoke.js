@@ -14,6 +14,7 @@ const baseUrl = appSmokeBaseUrl();
 const difficulty = process.env.APP_SMOKE_DIFFICULTY || "easy";
 const question = process.env.APP_SMOKE_QUESTION || "这个问题和业务流量暴涨有关吗？";
 const timeoutMs = Number(process.env.APP_SMOKE_TIMEOUT_MS || 30000);
+const expectedGitCommit = process.env.APP_SMOKE_EXPECTED_GIT_COMMIT || process.env.EXPECTED_RELEASE_GIT_COMMIT || "";
 
 function loadEnvFile() {
   const envPath = path.join(root, ".env");
@@ -39,6 +40,15 @@ function appSmokeBaseUrl() {
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
+}
+
+function assertBuildIdentity(build) {
+  assert(build && typeof build === "object", "health endpoint missing build identity");
+  assert(typeof build.version === "string" && build.version.length > 0, "health endpoint missing build.version");
+  assert(typeof build.gitCommit === "string" && build.gitCommit.length > 0, "health endpoint missing build.gitCommit");
+  if (expectedGitCommit) {
+    assert(build.gitCommit === expectedGitCommit, `build.gitCommit ${build.gitCommit} does not match expected ${expectedGitCommit}`);
+  }
 }
 
 async function fetchWithTimeout(url, options = {}) {
@@ -80,6 +90,7 @@ async function postJson(apiPath, payload) {
 async function main() {
   const health = await getJson("/api/health");
   assert(health.ok === true, "health endpoint did not report ok");
+  assertBuildIdentity(health.build);
   assert(Array.isArray(health.difficulties), "health endpoint missing difficulties");
   assert(health.difficulties.includes(difficulty), `health endpoint does not list ${difficulty}`);
 
@@ -122,6 +133,7 @@ async function main() {
   assert(prometheusMetrics.includes("ops_turtle_soup_llm_requests_total"), "Prometheus metrics missing LLM request counter");
 
   console.log("PASS application health endpoint is reachable");
+  console.log(`PASS build identity ${health.build.version} ${health.build.gitCommit}`);
   console.log("PASS application readiness endpoint reports deployable configuration");
   console.log(`PASS started ${difficulty} game ${start.gameId}`);
   console.log(`PASS ask path returned allowed answer: ${ask.answer}`);

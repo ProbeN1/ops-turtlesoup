@@ -40,8 +40,8 @@ npm run init:release-record
 | Runtime metrics | `GET /api/metrics` and `GET /metrics` | JSON counters and Prometheus text counters are present |
 | Release evidence snapshot | `npm run evidence:release` | Non-sensitive JSON summary captured, including build version and git commit |
 | LLM compatibility | `npm run smoke:llm` | Pass |
-| Game API flow | `npm run smoke:app` | Pass |
-| Coworker access smoke | `COWORKER_SMOKE_BASE_URL=http://<server>:5725 npm run smoke:coworker` | Pass from another intranet machine |
+| Game API flow | `EXPECTED_RELEASE_GIT_COMMIT=<git-short-sha> npm run smoke:app` | Pass and build commit matches release |
+| Coworker access smoke | `COWORKER_SMOKE_BASE_URL=http://<server>:5725 EXPECTED_RELEASE_GIT_COMMIT=<git-short-sha> npm run smoke:coworker` | Pass from another intranet machine and build commit matches release |
 | LLM ask-path load smoke | `npm run load:llm` | Completed configured live LLM asks with zero LLM failures |
 | Browser UI flow | [UI Smoke Runbook](ui-smoke.md) | Manual browser flow passes |
 | Local 100-session smoke | `npm run load:local` | Completed 100 sessions and reported game counter deltas >= 100 |
@@ -108,8 +108,8 @@ npm run verify:deploy:offline
 npm run verify:deploy
 npm run evidence:release
 npm run smoke:llm
-npm run smoke:app
-npm run smoke:coworker
+EXPECTED_RELEASE_GIT_COMMIT=<git-short-sha> npm run smoke:app
+COWORKER_SMOKE_BASE_URL=http://<server-intranet-ip>:5725 EXPECTED_RELEASE_GIT_COMMIT=<git-short-sha> npm run smoke:coworker
 npm run load:llm
 npm run load:local
 ```
@@ -132,6 +132,7 @@ The load smoke output must show `completed` equal to `LOAD_TEST_USERS`, `metrics
 
 Paste `npm run evidence:release` output into the release record after app smoke and before sharing the coworker URL.
 Confirm `build.gitCommit` in the evidence matches the intended release commit.
+Also confirm the `build.gitCommit` printed by `npm run smoke:coworker` matches the intended release commit from the coworker network path.
 
 For the LLM ask-path load smoke, start with the default `LLM_LOAD_USERS=10` and `LLM_LOAD_CONCURRENCY=2`. Before the event, run a release rehearsal with values agreed with the internal LLM owner, and confirm `metricsDelta.llmFailuresTotal=0`, `metricsDelta.llmRequestsTotal >= LLM_LOAD_USERS`, and acceptable `askLatency.p95Ms`.
 

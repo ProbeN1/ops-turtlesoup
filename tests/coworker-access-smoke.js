@@ -1,6 +1,7 @@
 const baseUrl = requiredBaseUrl();
 const timeoutMs = Number(process.env.COWORKER_SMOKE_TIMEOUT_MS || 15000);
 const difficulty = process.env.COWORKER_SMOKE_DIFFICULTY || "easy";
+const expectedGitCommit = process.env.COWORKER_SMOKE_EXPECTED_GIT_COMMIT || process.env.EXPECTED_RELEASE_GIT_COMMIT || "";
 
 function requiredBaseUrl() {
   const value = process.env.COWORKER_SMOKE_BASE_URL || process.env.APP_SMOKE_BASE_URL || "";
@@ -12,6 +13,15 @@ function requiredBaseUrl() {
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
+}
+
+function assertBuildIdentity(build) {
+  assert(build && typeof build === "object", "health endpoint missing build identity");
+  assert(typeof build.version === "string" && build.version.length > 0, "health endpoint missing build.version");
+  assert(typeof build.gitCommit === "string" && build.gitCommit.length > 0, "health endpoint missing build.gitCommit");
+  if (expectedGitCommit) {
+    assert(build.gitCommit === expectedGitCommit, `build.gitCommit ${build.gitCommit} does not match expected ${expectedGitCommit}`);
+  }
 }
 
 async function fetchWithTimeout(url, options = {}) {
@@ -55,6 +65,7 @@ async function main() {
 
   const health = await getJson("/api/health");
   assert(health.ok === true, "health endpoint did not report ok");
+  assertBuildIdentity(health.build);
   assert(health.maxActiveSessions >= 100, "service capacity is below 100 active sessions");
 
   const readiness = await getJson("/api/ready");
@@ -83,6 +94,7 @@ async function main() {
     baseUrl,
     difficulty,
     healthOk: health.ok === true,
+    build: health.build,
     readinessOk: readiness.ok === true,
     maxActiveSessions: health.maxActiveSessions,
     homepageLoaded: true,

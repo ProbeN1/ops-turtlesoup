@@ -483,6 +483,7 @@ async function testDeploymentConfiguration() {
   const loadLocal = await readText("tests/load-local.js");
   const llmSmoke = await readText("tests/llm-smoke.js");
   const loadLlm = await readText("tests/load-llm.js");
+  const appSmoke = await readText("tests/app-smoke.js");
   const releaseRehearsal = await readText("tests/release-rehearsal.js");
   const buildRelease = await readText("tests/build-release.js");
   const verifyReleaseArchive = await readText("tests/verify-release-archive.js");
@@ -612,6 +613,10 @@ async function testDeploymentConfiguration() {
 
   for (const token of [
     "COWORKER_SMOKE_BASE_URL",
+    "COWORKER_SMOKE_EXPECTED_GIT_COMMIT",
+    "EXPECTED_RELEASE_GIT_COMMIT",
+    "assertBuildIdentity",
+    "build.gitCommit",
     "/api/health",
     "/api/ready",
     "/app.js",
@@ -632,6 +637,16 @@ async function testDeploymentConfiguration() {
     "chat/completions"
   ]) {
     assert(llmSmoke.includes(token), `llm-smoke missing ${token}`);
+  }
+
+  for (const token of [
+    "APP_SMOKE_EXPECTED_GIT_COMMIT",
+    "EXPECTED_RELEASE_GIT_COMMIT",
+    "assertBuildIdentity",
+    "build.gitCommit",
+    "PASS build identity"
+  ]) {
+    assert(appSmoke.includes(token), `app smoke missing ${token}`);
   }
 
   for (const token of [
@@ -690,6 +705,7 @@ async function testDeploymentConfiguration() {
     "npm run smoke:llm",
     "npm run smoke:app",
     "npm run smoke:coworker",
+    "EXPECTED_RELEASE_GIT_COMMIT",
     "npm run init:release-record",
     "npm run check:release-record",
     "npm run evidence:release",
@@ -741,6 +757,7 @@ async function testDeploymentConfiguration() {
     "prometheusMetrics.gameCountersPresent=",
     "prometheusMetrics.llmCountersPresent=",
     "prometheus.ops_turtle_soup_http_requests_total",
+    "coworker smoke build.gitCommit",
     "Release approved"
   ]) {
     assert(releaseRecordTemplate.includes(token), `release record template missing ${token}`);

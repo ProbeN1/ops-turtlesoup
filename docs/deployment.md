@@ -300,6 +300,7 @@ This command calls:
 - `POST /api/game/reveal`
 
 It validates that a game can be started, one question can be answered with a difficulty-allowed host answer, and the reveal payload is complete. Use `APP_SMOKE_BASE_URL` when testing through a reverse proxy or a different intranet hostname.
+Set `EXPECTED_RELEASE_GIT_COMMIT` or `APP_SMOKE_EXPECTED_GIT_COMMIT` to fail the smoke when the running service is not the intended release commit.
 
 ## Coworker Access Smoke Test
 
@@ -307,10 +308,12 @@ From a coworker machine or another intranet segment, verify that the shared URL 
 
 ```powershell
 $env:COWORKER_SMOKE_BASE_URL="http://<server-intranet-ip>:5725"
+$env:EXPECTED_RELEASE_GIT_COMMIT="<git-short-sha>"
 npm run smoke:coworker
 ```
 
 This checks health, readiness, homepage loading, `app.js` loading with `no-store`, game start, and reveal payload. It does not call the LLM ask path, so pair it with `npm run smoke:llm` or `npm run load:llm` on the release host.
+It also prints the build identity returned by the coworker-facing URL, and fails when `EXPECTED_RELEASE_GIT_COMMIT` or `COWORKER_SMOKE_EXPECTED_GIT_COMMIT` is set but does not match.
 
 ## LLM Load Smoke Test
 

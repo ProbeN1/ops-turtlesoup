@@ -285,6 +285,7 @@ Notes:
 - Game started:
 - One question answered:
 - `npm run smoke:coworker` passed:
+- coworker smoke build.gitCommit:
 
 Notes:
 
