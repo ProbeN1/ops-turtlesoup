@@ -59,3 +59,4 @@
 - Deployed release `ops-turtle-soup-0.1.0-20260701T064851Z` to intranet host `10.10.214.4` with systemd and recorded remaining LLM key gate.
 - Switched scenarios to one JSON file per case, disabled host hints, fixed BOM-aware `.env` loading, and improved collapsed chat UI.
 - Added scenario intake documentation for turning raw incident notes into repository-ready scenario JSON.
+- Deployed release `ops-turtle-soup-0.1.0-20260701T071142Z` to `10.10.214.4` and verified ready, LLM, app, coworker, process, and live LLM load smokes.
