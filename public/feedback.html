@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>反馈 - 运维海龟汤</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="feedback-shell">
+      <section class="feedback-panel">
+        <div class="topbar">
+          <div>
+            <p class="eyebrow">FEEDBACK</p>
+            <h1>反馈</h1>
+          </div>
+          <a class="back-link" href="/">返回游戏</a>
+        </div>
+
+        <form class="feedback-form" id="feedbackForm">
+          <label for="feedbackContent">内容</label>
+          <textarea id="feedbackContent" name="content" rows="9" maxlength="4000" placeholder="写下题目、主持人回答、页面体验或其他建议。" required></textarea>
+
+          <label for="feedbackContact">联系方式</label>
+          <input id="feedbackContact" name="contact" maxlength="200" placeholder="可选，便于追问" />
+
+          <div class="feedback-actions">
+            <button id="feedbackSubmit" type="submit">发送反馈</button>
+            <span id="feedbackStatus" role="status" aria-live="polite"></span>
+          </div>
+        </form>
+
+        <a id="mailtoFallback" class="mailto-fallback" href="mailto:532015746@qq.com" hidden>打开邮件客户端发送</a>
+      </section>
+    </main>
+
+    <div class="version-badge">
+      <a href="/">游戏</a>
+      <span>v0.1</span>
+    </div>
+
+    <script src="/feedback.js?v=20260701-feedback-v1" type="module"></script>
+  </body>
+</html>

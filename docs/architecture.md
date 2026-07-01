@@ -11,6 +11,7 @@ Browser
   -> /api/game/start
   -> /api/game/ask
   -> /api/game/reveal
+  -> /api/feedback
   -> /api/metrics
   -> /metrics
 
@@ -29,6 +30,7 @@ Node server.js
 - Session state: in-memory `Map`, with periodic cleanup.
 - LLM provider: OpenAI-compatible `/chat/completions` endpoint.
 - LLM protection: in-process concurrency limiter and bounded queue.
+- Feedback delivery: optional SMTP client that sends player feedback to the configured mailbox.
 - API protection: per-client sliding-window request limit.
 - Runtime metrics: in-memory counters exposed as JSON at `/api/metrics` and Prometheus text at `/metrics`.
 - Build identity: non-sensitive package version, git commit, release name, and release creation time exposed in health, readiness, metrics, and release evidence.
@@ -43,6 +45,7 @@ Node server.js
 - `POST /api/game/start`: create a game session.
 - `POST /api/game/ask`: answer a player question.
 - `POST /api/game/reveal`: reveal answer for a session.
+- `POST /api/feedback`: send player feedback to the configured feedback mailbox.
 
 ## Scenario Model
 
