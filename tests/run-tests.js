@@ -116,8 +116,10 @@ async function testFrontendBindings() {
   assert(app.includes("const answer = data.answer"), "frontend must not append host hints to answer messages");
   assert(!app.includes("基础设施：${data.infraBackground}"), "frontend must not render infra object directly");
   assert(!app.includes("[data.answer, data.nudge]"), "frontend must ignore nudge text in chat output");
-  assert(css.includes(".chat-panel.chat-collapsed .ask-form"), "collapsed chat must hide the ask form");
-  assert(css.includes("align-self: start"), "collapsed chat must remain compact instead of filling the column");
+  assert(!html.includes("toggleChatBtn"), "chat window must not expose a layout-changing collapse button");
+  assert(html.includes("chat-window-label"), "chat header must label the embedded conversation window");
+  assert(css.includes("grid-template-rows: auto 1fr auto"), "chat window must keep header, scrollback, and ask form in fixed rows");
+  assert(css.includes(".chat-log") && css.includes("min-height: 0"), "chat log must scroll inside the fixed chat window");
 }
 
 async function testRevealInfraFormatting() {

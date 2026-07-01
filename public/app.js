@@ -13,13 +13,10 @@ const questionInput = document.querySelector("#questionInput");
 const openingText = document.querySelector("#openingText");
 const chatLog = document.querySelector("#chatLog");
 const llmStatus = document.querySelector("#llmStatus");
-const chatPanel = document.querySelector(".chat-panel");
-const toggleChatBtn = document.querySelector("#toggleChatBtn");
 
 startBtn.addEventListener("click", startGame);
 revealBtn.addEventListener("click", revealAnswer);
 askForm.addEventListener("submit", askQuestion);
-toggleChatBtn.addEventListener("click", toggleChat);
 
 async function startGame() {
   setBusy(true);
@@ -90,7 +87,6 @@ function handleSolved(reveal) {
   if (state.solved) return;
 
   state.solved = true;
-  setChatCollapsed(false);
   llmStatus.textContent = "已破案";
   questionInput.disabled = true;
   askBtn.disabled = true;
@@ -103,7 +99,6 @@ function handleSolved(reveal) {
 }
 
 function renderReveal(data, title = "揭晓") {
-  setChatCollapsed(false);
   const points = Array.isArray(data.solvePoints) ? data.solvePoints.join("；") : "";
   const infraBackground = formatRevealInfraBackground(data);
   addMessage(
@@ -145,16 +140,6 @@ function formatInfraValue(value) {
       .join(", ");
   }
   return String(value);
-}
-
-function toggleChat() {
-  setChatCollapsed(!chatPanel.classList.contains("chat-collapsed"));
-}
-
-function setChatCollapsed(collapsed) {
-  chatPanel.classList.toggle("chat-collapsed", collapsed);
-  toggleChatBtn.textContent = collapsed ? "展开对话" : "收起对话";
-  toggleChatBtn.setAttribute("aria-expanded", String(!collapsed));
 }
 
 async function postJson(url, payload) {
