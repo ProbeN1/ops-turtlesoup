@@ -56,3 +56,4 @@
 - Added build identity checks to application and coworker access smoke tests.
 - Added process evidence capture for target-host release records.
 - Hardened reveal API infrastructure payloads so cached clients do not render `[object Object]`.
+- Deployed release `ops-turtle-soup-0.1.0-20260701T064851Z` to intranet host `10.10.214.4` with systemd and recorded remaining LLM key gate.
