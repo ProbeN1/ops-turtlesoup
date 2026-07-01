@@ -29,7 +29,13 @@ npm run verify:deploy
 npm run smoke:llm
 ```
 
-8. Share:
+8. Run the application smoke test:
+
+```powershell
+npm run smoke:app
+```
+
+9. Share:
 
 ```text
 http://<server-intranet-ip>:5725/

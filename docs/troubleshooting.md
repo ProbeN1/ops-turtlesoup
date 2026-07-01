@@ -64,6 +64,22 @@ Common causes:
 
 The smoke test intentionally prints only endpoint and model reachability, never the API key.
 
+## Application Smoke Test Fails
+
+Run:
+
+```powershell
+npm run smoke:app
+```
+
+Common causes:
+
+- The service is not running, or `APP_SMOKE_BASE_URL` points to the wrong host.
+- `HOST` is still `127.0.0.1` while testing from another machine.
+- Rate limiting is too low for repeated checks from the same source IP.
+- LLM request failures surface through `/api/game/ask`; run `npm run smoke:llm` to isolate the LLM layer.
+- Scenario files are invalid or missing required reveal fields; run `npm test` and `npm run verify:deploy:offline`.
+
 ## Coworkers Cannot Access The Game
 
 Use:

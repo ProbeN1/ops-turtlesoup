@@ -25,6 +25,10 @@ OPENAI_MODEL=b-glm-5.2
 LLM_MAX_CONCURRENCY=8
 LLM_QUEUE_LIMIT=100
 LLM_SMOKE_TIMEOUT_MS=15000
+APP_SMOKE_BASE_URL=http://127.0.0.1:5725
+APP_SMOKE_DIFFICULTY=easy
+APP_SMOKE_QUESTION=这个问题和业务流量暴涨有关吗？
+APP_SMOKE_TIMEOUT_MS=30000
 RATE_LIMIT_WINDOW_SECONDS=60
 RATE_LIMIT_MAX_REQUESTS=120
 ```
@@ -108,6 +112,23 @@ This command calls the configured OpenAI-compatible `/chat/completions` endpoint
 - answer value belongs to the allowed host answer set.
 
 It does not print the API key. Tune `LLM_SMOKE_TIMEOUT_MS` if the internal model is slow to wake up.
+
+## Application Smoke Test
+
+After the service starts and the LLM smoke test passes, verify the full game API path:
+
+```powershell
+npm run smoke:app
+```
+
+This command calls:
+
+- `GET /api/health`
+- `POST /api/game/start`
+- `POST /api/game/ask`
+- `POST /api/game/reveal`
+
+It validates that a game can be started, one question can be answered with a difficulty-allowed host answer, and the reveal payload is complete. Use `APP_SMOKE_BASE_URL` when testing through a reverse proxy or a different intranet hostname.
 
 ## Capacity Notes
 

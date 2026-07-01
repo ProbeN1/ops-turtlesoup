@@ -19,3 +19,4 @@
 - Added scenario authoring guidance for precise turtle soup openings.
 - Added deployment verification commands for intranet readiness checks.
 - Added live LLM smoke test for OpenAI-compatible host JSON responses.
+- Added application smoke test for health, start, ask, and reveal API flow.
