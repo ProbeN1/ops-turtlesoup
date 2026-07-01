@@ -1,0 +1,22 @@
+[Unit]
+Description=Ops Turtle Soup intranet game
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/ops-turtle-soup
+EnvironmentFile=/opt/ops-turtle-soup/.env
+ExecStart=/usr/bin/node /opt/ops-turtle-soup/server.js
+Restart=always
+RestartSec=5
+User=ops-turtle-soup
+Group=ops-turtle-soup
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/ops-turtle-soup
+
+[Install]
+WantedBy=multi-user.target

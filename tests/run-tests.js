@@ -167,9 +167,22 @@ async function testServerConfiguration() {
   }
 }
 
+async function testDeploymentConfiguration() {
+  const dockerfile = await readText("Dockerfile");
+  const compose = await readText("docker-compose.yml");
+  const systemd = await readText("deploy/systemd/ops-turtle-soup.service.example");
+
+  assert(dockerfile.includes("HEALTHCHECK"), "Dockerfile must define a container healthcheck");
+  assert(dockerfile.includes("/api/health"), "Docker healthcheck must probe /api/health");
+  assert(compose.includes("restart: unless-stopped"), "docker-compose.yml must restart the service");
+  assert(systemd.includes("Restart=always"), "systemd unit example must restart on failure");
+  assert(systemd.includes("EnvironmentFile="), "systemd unit example must load .env");
+}
+
 await testScenarioSchema();
 await testFrontendBindings();
 await testRevealInfraFormatting();
 await testServerConfiguration();
+await testDeploymentConfiguration();
 
 console.log("All tests passed");

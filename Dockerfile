@@ -12,4 +12,6 @@ ENV PORT=5725
 
 EXPOSE 5725
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD node -e "const port=process.env.PORT||5725; fetch(`http://127.0.0.1:${port}/api/health`).then((res)=>process.exit(res.ok?0:1)).catch(()=>process.exit(1))"
+
 CMD ["node", "server.js"]

@@ -33,11 +33,13 @@ RATE_LIMIT_WINDOW_SECONDS=60
 RATE_LIMIT_MAX_REQUESTS=120
 ```
 
-Start service:
+For a quick local check, start service:
 
 ```powershell
 npm start
 ```
+
+For a long-running intranet service, prefer Docker Compose or systemd instead of leaving an interactive terminal open.
 
 Users access:
 
@@ -51,6 +53,8 @@ Allow inbound TCP on the configured `PORT`.
 
 ## Docker
 
+Docker Compose is the preferred long-running deployment path for a small intranet host.
+
 Build:
 
 ```bash
@@ -62,6 +66,44 @@ Run:
 ```bash
 docker run --env-file .env -p 5725:5725 ops-turtle-soup
 ```
+
+Run with Compose:
+
+```bash
+docker compose up -d
+```
+
+Check container health:
+
+```bash
+docker compose ps
+docker compose logs -f ops-turtle-soup
+```
+
+The image probes `/api/health` through a Docker `HEALTHCHECK`, and `docker-compose.yml` uses `restart: unless-stopped`.
+
+## Systemd
+
+For a Linux host without Docker, use the sample unit:
+
+```text
+deploy/systemd/ops-turtle-soup.service.example
+```
+
+Typical installation outline:
+
+```bash
+sudo useradd --system --home /opt/ops-turtle-soup --shell /usr/sbin/nologin ops-turtle-soup
+sudo mkdir -p /opt/ops-turtle-soup
+sudo cp -r . /opt/ops-turtle-soup
+sudo chown -R ops-turtle-soup:ops-turtle-soup /opt/ops-turtle-soup
+sudo cp deploy/systemd/ops-turtle-soup.service.example /etc/systemd/system/ops-turtle-soup.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now ops-turtle-soup
+sudo systemctl status ops-turtle-soup
+```
+
+Run deployment verification after the service is active.
 
 ## Health Check
 

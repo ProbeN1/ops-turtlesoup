@@ -11,6 +11,8 @@
 npm start
 ```
 
+For shared intranet hosting, use the long-running process guidance in [Process Management](process-management.md). Do not use an interactive terminal as the final hosting method.
+
 5. Verify health:
 
 ```powershell
