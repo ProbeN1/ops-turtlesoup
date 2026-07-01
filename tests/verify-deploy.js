@@ -206,6 +206,27 @@ async function checkHealth() {
   if (health.llm?.maxConcurrency > 0) pass("health endpoint exposes LLM limiter status");
   else fail("health endpoint missing LLM limiter status");
 
+  const readyResponse = await fetch(`${baseUrl}/api/ready`);
+  if (!readyResponse.ok) {
+    fail(`readiness endpoint returned HTTP ${readyResponse.status}`);
+    return;
+  }
+
+  const readiness = await readyResponse.json();
+  if (readiness.ok === true) pass("readiness endpoint reports ok");
+  else fail("readiness endpoint did not report ok");
+
+  if (readiness.llm?.apiKeyConfigured && readiness.llm?.baseUrlConfigured && readiness.llm?.modelConfigured) {
+    pass("readiness endpoint confirms LLM configuration");
+  } else {
+    fail("readiness endpoint reports incomplete LLM configuration");
+  }
+
+  for (const difficulty of ["easy", "medium", "hard"]) {
+    if (readiness.scenarioSets?.[difficulty] > 0) pass(`readiness endpoint confirms ${difficulty} scenarios`);
+    else fail(`readiness endpoint missing ${difficulty} scenarios`);
+  }
+
   const metricsResponse = await fetch(`${baseUrl}/api/metrics`);
   if (!metricsResponse.ok) {
     fail(`metrics endpoint returned HTTP ${metricsResponse.status}`);

@@ -26,6 +26,7 @@ Create a release record from [Release Record Template](release-record-template.m
 | Offline deployment preflight | `npm run verify:deploy:offline` | No `FAIL` |
 | Long-running process configured | `docker compose ps` or `systemctl status ops-turtle-soup` | Service is running with restart policy |
 | Online deployment verification | `npm run verify:deploy` | No `FAIL` |
+| Readiness endpoint | `GET /api/ready` | `ok=true`, LLM config present, all scenario sets loaded |
 | Runtime metrics | `GET /api/metrics` and `GET /metrics` | JSON counters and Prometheus text counters are present |
 | LLM compatibility | `npm run smoke:llm` | Pass |
 | Game API flow | `npm run smoke:app` | Pass |
@@ -116,6 +117,7 @@ REHEARSAL_RUN_LLM=1 npm run rehearse:release
 Watch:
 
 - service health: `GET /api/health`;
+- deployment readiness: `GET /api/ready`;
 - runtime counters: `GET /api/metrics`;
 - Prometheus scrape counters: `GET /metrics`;
 - active sessions;

@@ -42,6 +42,7 @@ npm run smoke:app
 
 ```text
 GET /api/health
+GET /api/ready
 ```
 
 ## Docker

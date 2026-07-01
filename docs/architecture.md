@@ -34,7 +34,8 @@ Node server.js
 
 ## API Surface
 
-- `GET /api/health`: process health and basic readiness.
+- `GET /api/health`: process health and basic runtime status.
+- `GET /api/ready`: deployment readiness checks for LLM configuration, scenario loading, limiter settings, and rate-limit settings.
 - `GET /api/metrics`: JSON operational counters for intranet hosting.
 - `GET /metrics`: Prometheus-format runtime counters for monitoring scrape jobs.
 - `GET /api/difficulties`: available difficulty options.

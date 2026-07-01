@@ -83,6 +83,11 @@ async function main() {
   assert(Array.isArray(health.difficulties), "health endpoint missing difficulties");
   assert(health.difficulties.includes(difficulty), `health endpoint does not list ${difficulty}`);
 
+  const readiness = await getJson("/api/ready");
+  assert(readiness.ok === true, "readiness endpoint did not report ok");
+  assert(readiness.llm?.apiKeyConfigured === true, "readiness endpoint missing LLM key configuration");
+  assert(readiness.scenarioSets?.[difficulty] > 0, `readiness endpoint missing ${difficulty} scenarios`);
+
   const start = await postJson("/api/game/start", { difficulty });
   assert(typeof start.gameId === "string" && start.gameId.length > 0, "start response missing gameId");
   assert(start.scenario?.difficulty === difficulty, "start response difficulty mismatch");
@@ -114,6 +119,7 @@ async function main() {
   assert(prometheusMetrics.includes("ops_turtle_soup_llm_requests_total"), "Prometheus metrics missing LLM request counter");
 
   console.log("PASS application health endpoint is reachable");
+  console.log("PASS application readiness endpoint reports deployable configuration");
   console.log(`PASS started ${difficulty} game ${start.gameId}`);
   console.log(`PASS ask path returned allowed answer: ${ask.answer}`);
   console.log("PASS reveal path returned complete answer payload");

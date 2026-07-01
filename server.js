@@ -249,6 +249,60 @@ function publicMetrics() {
   };
 }
 
+async function readinessPayload() {
+  const checks = [];
+  const scenarioSets = {};
+
+  const record = (name, ok, detail = {}) => {
+    checks.push({ name, ok, ...detail });
+  };
+
+  const llmApiKeyConfigured = Boolean(process.env.OPENAI_API_KEY || process.env.LLM_API_KEY);
+  const llmBaseUrlConfigured = Boolean(process.env.OPENAI_BASE_URL || process.env.LLM_BASE_URL);
+  const llmModelConfigured = Boolean(process.env.OPENAI_MODEL || process.env.LLM_MODEL);
+  record("llm-api-key", llmApiKeyConfigured);
+  record("llm-base-url", llmBaseUrlConfigured);
+  record("llm-model", llmModelConfigured);
+
+  for (const difficulty of Object.keys(difficulties)) {
+    try {
+      const scenarios = await loadScenarios(difficulty);
+      scenarioSets[difficulty] = scenarios.length;
+      record(`scenarios-${difficulty}`, scenarios.length > 0, { count: scenarios.length });
+    } catch (error) {
+      scenarioSets[difficulty] = 0;
+      record(`scenarios-${difficulty}`, false, { error: error.message });
+    }
+  }
+
+  record("llm-limiter", LLM_MAX_CONCURRENCY >= 1 && LLM_QUEUE_LIMIT >= LLM_MAX_CONCURRENCY, {
+    maxConcurrency: LLM_MAX_CONCURRENCY,
+    queueLimit: LLM_QUEUE_LIMIT
+  });
+  record("rate-limit", RATE_LIMIT_WINDOW_SECONDS >= 1 && RATE_LIMIT_MAX_REQUESTS >= 0, {
+    windowSeconds: RATE_LIMIT_WINDOW_SECONDS,
+    maxRequests: RATE_LIMIT_MAX_REQUESTS
+  });
+
+  const ok = checks.every((check) => check.ok);
+  return {
+    ok,
+    checks,
+    llm: {
+      apiKeyConfigured: llmApiKeyConfigured,
+      baseUrlConfigured: llmBaseUrlConfigured,
+      modelConfigured: llmModelConfigured,
+      requestTimeoutSeconds: LLM_REQUEST_TIMEOUT_SECONDS,
+      ...llmLimiter.stats()
+    },
+    scenarioSets,
+    rateLimit: {
+      windowSeconds: RATE_LIMIT_WINDOW_SECONDS,
+      maxRequests: RATE_LIMIT_MAX_REQUESTS
+    }
+  };
+}
+
 function prometheusMetrics() {
   const snapshot = publicMetrics();
   const lines = [];
@@ -756,6 +810,11 @@ async function handleApi(req, res) {
       },
       difficulties: Object.keys(difficulties)
     });
+  }
+
+  if (req.method === "GET" && req.url === "/api/ready") {
+    const readiness = await readinessPayload();
+    return jsonResponse(res, readiness.ok ? 200 : 503, readiness);
   }
 
   if (req.method === "GET" && req.url === "/api/metrics") {

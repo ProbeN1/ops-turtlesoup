@@ -219,7 +219,25 @@ Notes:
 
 ## Runtime Metrics Snapshot
 
-Capture after smoke checks:
+Capture readiness after smoke checks:
+
+```text
+GET /api/ready
+```
+
+Paste non-sensitive summary:
+
+```text
+ready.ok=
+ready.llm.apiKeyConfigured=
+ready.llm.baseUrlConfigured=
+ready.llm.modelConfigured=
+ready.scenarioSets.easy=
+ready.scenarioSets.medium=
+ready.scenarioSets.hard=
+```
+
+Capture runtime metrics after smoke checks:
 
 ```text
 GET /api/metrics

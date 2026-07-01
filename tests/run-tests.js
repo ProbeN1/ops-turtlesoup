@@ -182,6 +182,9 @@ async function testServerConfiguration() {
     "isLlmQueueFullError",
     "jsonResponse(res, 503",
     "主持繁忙，请稍后再试",
+    "readinessPayload",
+    "GET\" && req.url === \"/api/ready",
+    "apiKeyConfigured",
     "GET\" && req.url === \"/api/health"
   ]) {
     assert(server.includes(token), `server.js missing ${token}`);
@@ -451,6 +454,7 @@ async function testDeploymentConfiguration() {
     "Release Record Template",
     "npm run load:local",
     "GET /api/metrics",
+    "GET /api/ready",
     "GET /metrics",
     "game counter deltas >= 100",
     "prometheusMetrics.gameCountersPresent=true",
@@ -471,6 +475,7 @@ async function testDeploymentConfiguration() {
     "npm run load:local",
     "Coworker Access Check",
     "GET /api/metrics",
+    "GET /api/ready",
     "GET /metrics",
     "metricsDelta.gameStartsTotal=",
     "metricsDelta.gameRevealsTotal=",

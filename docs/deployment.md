@@ -134,6 +134,21 @@ GET /api/health
 
 The endpoint returns process uptime, active session count, and configured difficulty names.
 
+## Readiness Check
+
+```text
+GET /api/ready
+```
+
+The readiness endpoint returns non-sensitive deployment readiness checks for:
+
+- LLM API key, base URL, and model presence;
+- scenario loading for every difficulty;
+- LLM limiter settings;
+- rate-limit settings.
+
+It does not return API keys or the configured LLM base URL. A `503` response means the service is running but should not be treated as ready for release.
+
 ## Runtime Metrics
 
 ```text
@@ -174,6 +189,7 @@ The deployment verifier checks:
 - LLM request timeout and limiter settings.
 - Scenario schema and required operational fields.
 - `/api/health` readiness and exposed limiter status.
+- `/api/ready` deployment readiness without exposing secrets.
 - JSON and Prometheus runtime metrics endpoints.
 
 For offline preflight before starting the service, run:
