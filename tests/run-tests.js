@@ -445,6 +445,7 @@ async function testDeploymentConfiguration() {
   const dockerfile = await readText("Dockerfile");
   const compose = await readText("docker-compose.yml");
   const systemd = await readText("deploy/systemd/ops-turtle-soup.service.example");
+  const windowsScheduledTask = await readText("deploy/windows/install-scheduled-task.ps1");
   const loadLocal = await readText("tests/load-local.js");
   const loadLlm = await readText("tests/load-llm.js");
   const releaseRehearsal = await readText("tests/release-rehearsal.js");
@@ -461,6 +462,18 @@ async function testDeploymentConfiguration() {
   assert(compose.includes("restart: unless-stopped"), "docker-compose.yml must restart the service");
   assert(systemd.includes("Restart=always"), "systemd unit example must restart on failure");
   assert(systemd.includes("EnvironmentFile="), "systemd unit example must load .env");
+
+  for (const token of [
+    "New-ScheduledTaskAction",
+    "New-ScheduledTaskTrigger -AtStartup",
+    "Register-ScheduledTask",
+    "Start-ScheduledTask",
+    "npm",
+    "logs",
+    ".env"
+  ]) {
+    assert(windowsScheduledTask.includes(token), `Windows scheduled task script missing ${token}`);
+  }
 
   for (const token of [
     "const initialMetrics = await getJson(\"/api/metrics\")",
@@ -489,7 +502,8 @@ async function testDeploymentConfiguration() {
     "\"server.js\"",
     "\"public\"",
     "\"data\"",
-    "\"docs\""
+    "\"docs\"",
+    "\"deploy\""
   ]) {
     assert(buildRelease.includes(token), `build-release script missing ${token}`);
   }
@@ -571,6 +585,7 @@ async function testDeploymentConfiguration() {
     "game counter deltas >= 100",
     "prometheusMetrics.gameCountersPresent=true",
     "docker compose ps",
+    "Get-ScheduledTask -TaskName OpsTurtleSoup",
     "systemctl status ops-turtle-soup"
   ]) {
     assert(releaseChecklist.includes(token), `release checklist missing ${token}`);
@@ -579,6 +594,7 @@ async function testDeploymentConfiguration() {
   for (const token of [
     "Git commit:",
     "docker compose ps",
+    "Get-ScheduledTask -TaskName OpsTurtleSoup",
     "npm run verify:deploy",
     "npm run smoke:llm",
     "npm run smoke:app",

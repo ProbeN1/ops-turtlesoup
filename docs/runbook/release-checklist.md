@@ -25,7 +25,7 @@ Create a release record from [Release Record Template](release-record-template.m
 | Release archive | `npm run build:release` | Zip created under `dist/` and excludes `.env` |
 | Local release rehearsal | `npm run rehearse:release` | Archive/evidence/offline/online/app/capacity smoke pass |
 | Offline deployment preflight | `npm run verify:deploy:offline` | No `FAIL` |
-| Long-running process configured | `docker compose ps` or `systemctl status ops-turtle-soup` | Service is running with restart policy |
+| Long-running process configured | `docker compose ps`, `systemctl status ops-turtle-soup`, or `Get-ScheduledTask -TaskName OpsTurtleSoup` | Service is running with restart policy |
 | Online deployment verification | `npm run verify:deploy` | No `FAIL` |
 | Readiness endpoint | `GET /api/ready` | `ok=true`, LLM config present, all scenario sets loaded |
 | Runtime metrics | `GET /api/metrics` and `GET /metrics` | JSON counters and Prometheus text counters are present |

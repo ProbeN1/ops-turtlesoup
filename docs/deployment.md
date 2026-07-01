@@ -125,6 +125,27 @@ sudo systemctl status ops-turtle-soup
 
 Run deployment verification after the service is active.
 
+## Windows Scheduled Task
+
+For a Windows intranet host without Docker, install a startup scheduled task from an elevated PowerShell session:
+
+```powershell
+.\deploy\windows\install-scheduled-task.ps1 -RunNow
+```
+
+The task starts `npm start` from the project directory on boot and writes logs under `logs/`. Keep `.env` in the project directory before registering the task.
+
+Useful commands:
+
+```powershell
+Get-ScheduledTask -TaskName OpsTurtleSoup
+Start-ScheduledTask -TaskName OpsTurtleSoup
+Stop-ScheduledTask -TaskName OpsTurtleSoup
+Unregister-ScheduledTask -TaskName OpsTurtleSoup
+```
+
+Run deployment verification and smoke tests after the task starts.
+
 ## Release Checklist
 
 Before sharing the intranet URL, complete [Intranet Release Checklist](runbook/release-checklist.md). It defines the required gates for configuration, process management, LLM compatibility, application smoke, and 100-session local smoke testing.

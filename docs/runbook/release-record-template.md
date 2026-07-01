@@ -16,7 +16,7 @@ Do not paste API keys or full `.env` secrets into the record.
 - Operator:
 - Release host:
 - Host OS:
-- Deployment mode: Docker Compose | systemd | other
+- Deployment mode: Docker Compose | systemd | Windows Scheduled Task | other
 - Git commit:
 - Expected player count:
 - Shared URL:
@@ -74,6 +74,18 @@ Systemd:
 
 ```text
 systemctl status ops-turtle-soup
+```
+
+Paste summary:
+
+```text
+
+```
+
+Windows Scheduled Task:
+
+```text
+Get-ScheduledTask -TaskName OpsTurtleSoup
 ```
 
 Paste summary:

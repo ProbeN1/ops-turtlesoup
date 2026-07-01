@@ -61,7 +61,16 @@ Systemd sends `SIGTERM` during stop/restart. The app honors `SHUTDOWN_GRACE_SECO
 
 ## Windows Host
 
-For Windows intranet hosts, prefer Docker Compose if Docker is approved. If Docker is not available, use an approved service wrapper such as NSSM or a managed process platform already used by the team.
+For Windows intranet hosts, prefer Docker Compose if Docker is approved. If Docker is not available, use `deploy/windows/install-scheduled-task.ps1`, NSSM, or a managed process platform already used by the team.
+
+Scheduled task install:
+
+```powershell
+.\deploy\windows\install-scheduled-task.ps1 -RunNow
+Get-ScheduledTask -TaskName OpsTurtleSoup
+```
+
+The provided script creates an at-startup task, runs from the project directory, and redirects logs to `logs/ops-turtle-soup.out.log` and `logs/ops-turtle-soup.err.log`.
 
 Minimum requirements:
 
