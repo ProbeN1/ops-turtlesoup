@@ -117,6 +117,22 @@ GET /api/health
 
 The endpoint returns process uptime, active session count, and configured difficulty names.
 
+## Runtime Metrics
+
+```text
+GET /api/metrics
+```
+
+The metrics endpoint returns in-memory counters for:
+
+- HTTP/API/static request volume;
+- response status counts;
+- rate-limited requests;
+- application errors;
+- game starts, questions, reveals, and solved games;
+- active sessions and cached scenario sets;
+- LLM active/queued calls, failures, and average latency.
+
 ## Deployment Verification
 
 After configuring `.env` and starting the service, run:

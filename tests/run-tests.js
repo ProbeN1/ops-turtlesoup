@@ -161,6 +161,9 @@ async function testServerConfiguration() {
     "LLM_QUEUE_LIMIT",
     "RATE_LIMIT_WINDOW_SECONDS",
     "RATE_LIMIT_MAX_REQUESTS",
+    "GET\" && req.url === \"/api/metrics",
+    "publicMetrics",
+    "gameQuestionsTotal",
     "GET\" && req.url === \"/api/health"
   ]) {
     assert(server.includes(token), `server.js missing ${token}`);
@@ -186,6 +189,7 @@ async function testDeploymentConfiguration() {
     "npm run smoke:llm",
     "npm run smoke:app",
     "npm run load:local",
+    "GET /api/metrics",
     "docker compose ps",
     "systemctl status ops-turtle-soup"
   ]) {

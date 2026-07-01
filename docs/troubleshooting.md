@@ -15,6 +15,12 @@ Get-Content .\server.out.log
 Get-Content .\server.err.log
 ```
 
+Check runtime counters:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:5725/api/metrics
+```
+
 ## Deployment Verification Fails
 
 Run:
@@ -98,6 +104,14 @@ Sessions are currently in memory. Restarting the Node process clears active game
 
 The API rate limiter is rejecting too many requests from the same client IP.
 
+Check:
+
+```text
+GET /api/metrics
+```
+
+Look at `rateLimitedTotal`, `rateLimit.trackedClients`, and `responsesByStatus.429`.
+
 If users are behind a shared proxy, raise:
 
 ```env
@@ -113,6 +127,14 @@ RATE_LIMIT_MAX_REQUESTS=0
 ## LLM Queue Is Full
 
 The internal LLM service cannot keep up with current gameplay traffic. Options:
+
+Check:
+
+```text
+GET /api/metrics
+```
+
+Look at `llm.active`, `llm.queued`, `llm.failuresTotal`, and `llm.avgLatencyMs`.
 
 - Increase `LLM_MAX_CONCURRENCY` if the LLM service can handle it.
 - Increase `LLM_QUEUE_LIMIT` for short traffic bursts.

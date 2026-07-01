@@ -11,6 +11,7 @@ Browser
   -> /api/game/start
   -> /api/game/ask
   -> /api/game/reveal
+  -> /api/metrics
 
 Node server.js
   -> data/scenarios/*.json
@@ -28,10 +29,12 @@ Node server.js
 - LLM provider: OpenAI-compatible `/chat/completions` endpoint.
 - LLM protection: in-process concurrency limiter and bounded queue.
 - API protection: per-client sliding-window request limit.
+- Runtime metrics: in-memory counters for requests, game flow, rate limiting, errors, and LLM latency.
 
 ## API Surface
 
 - `GET /api/health`: process health and basic readiness.
+- `GET /api/metrics`: operational counters for intranet hosting.
 - `GET /api/difficulties`: available difficulty options.
 - `POST /api/game/start`: create a game session.
 - `POST /api/game/ask`: answer a player question.

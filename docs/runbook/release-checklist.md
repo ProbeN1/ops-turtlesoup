@@ -23,6 +23,7 @@ Do not share the game URL until every required gate below is complete.
 | Offline deployment preflight | `npm run verify:deploy:offline` | No `FAIL` |
 | Long-running process configured | `docker compose ps` or `systemctl status ops-turtle-soup` | Service is running with restart policy |
 | Online deployment verification | `npm run verify:deploy` | No `FAIL` |
+| Runtime metrics | `GET /api/metrics` | Request, game, rate limit, and LLM counters are present |
 | LLM compatibility | `npm run smoke:llm` | Pass |
 | Game API flow | `npm run smoke:app` | Pass |
 | Local 100-session smoke | `npm run load:local` | Completed 100 sessions |
@@ -98,6 +99,7 @@ Restore production rate limiting after the load smoke test.
 Watch:
 
 - service health: `GET /api/health`;
+- runtime counters: `GET /api/metrics`;
 - active sessions;
 - LLM limiter active and queued counts;
 - process logs: `docker compose logs -f ops-turtle-soup` or `journalctl -u ops-turtle-soup -f`;

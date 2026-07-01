@@ -186,6 +186,19 @@ async function checkHealth() {
 
   if (health.llm?.maxConcurrency > 0) pass("health endpoint exposes LLM limiter status");
   else fail("health endpoint missing LLM limiter status");
+
+  const metricsResponse = await fetch(`${baseUrl}/api/metrics`);
+  if (!metricsResponse.ok) {
+    fail(`metrics endpoint returned HTTP ${metricsResponse.status}`);
+    return;
+  }
+
+  const metrics = await metricsResponse.json();
+  if (typeof metrics.httpRequestsTotal === "number") pass("metrics endpoint exposes request counters");
+  else fail("metrics endpoint missing request counters");
+
+  if (typeof metrics.llm?.requestsTotal === "number") pass("metrics endpoint exposes LLM counters");
+  else fail("metrics endpoint missing LLM counters");
 }
 
 async function main() {

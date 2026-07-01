@@ -23,6 +23,7 @@ const sessions = new Map();
 const scenarioCache = new Map();
 const rateLimitBuckets = new Map();
 const llmLimiter = createLimiter(LLM_MAX_CONCURRENCY, LLM_QUEUE_LIMIT);
+const metrics = createMetrics();
 
 const difficulties = {
   easy: { label: "简单", file: "easy.json" },
@@ -122,12 +123,89 @@ function pickRandom(items) {
 }
 
 function jsonResponse(res, status, payload) {
+  recordResponseStatus(status);
   const body = JSON.stringify(payload);
   res.writeHead(status, {
     "content-type": "application/json; charset=utf-8",
     "cache-control": "no-store"
   });
   res.end(body);
+}
+
+function createMetrics() {
+  return {
+    startedAt: new Date().toISOString(),
+    httpRequestsTotal: 0,
+    apiRequestsTotal: 0,
+    staticRequestsTotal: 0,
+    responsesByStatus: {},
+    rateLimitedTotal: 0,
+    errorsTotal: 0,
+    gameStartsTotal: 0,
+    gameQuestionsTotal: 0,
+    gameRevealsTotal: 0,
+    gamesSolvedTotal: 0,
+    llm: {
+      requestsTotal: 0,
+      failuresTotal: 0,
+      totalLatencyMs: 0,
+      lastLatencyMs: 0
+    }
+  };
+}
+
+function incrementMetric(name) {
+  metrics[name] += 1;
+}
+
+function recordResponseStatus(status) {
+  const key = String(status);
+  metrics.responsesByStatus[key] = (metrics.responsesByStatus[key] || 0) + 1;
+}
+
+function recordLlmResult(startedAt, response, error) {
+  const latencyMs = Date.now() - startedAt;
+  metrics.llm.lastLatencyMs = latencyMs;
+  metrics.llm.totalLatencyMs += latencyMs;
+
+  if (error || !response?.ok) {
+    metrics.llm.failuresTotal += 1;
+  }
+}
+
+function publicMetrics() {
+  const avgLlmLatencyMs = metrics.llm.requestsTotal
+    ? Math.round(metrics.llm.totalLatencyMs / metrics.llm.requestsTotal)
+    : 0;
+
+  return {
+    startedAt: metrics.startedAt,
+    uptimeSeconds: Math.round(process.uptime()),
+    httpRequestsTotal: metrics.httpRequestsTotal,
+    apiRequestsTotal: metrics.apiRequestsTotal,
+    staticRequestsTotal: metrics.staticRequestsTotal,
+    responsesByStatus: metrics.responsesByStatus,
+    rateLimitedTotal: metrics.rateLimitedTotal,
+    errorsTotal: metrics.errorsTotal,
+    activeSessions: sessions.size,
+    cachedScenarioSets: scenarioCache.size,
+    gameStartsTotal: metrics.gameStartsTotal,
+    gameQuestionsTotal: metrics.gameQuestionsTotal,
+    gameRevealsTotal: metrics.gameRevealsTotal,
+    gamesSolvedTotal: metrics.gamesSolvedTotal,
+    llm: {
+      ...llmLimiter.stats(),
+      requestsTotal: metrics.llm.requestsTotal,
+      failuresTotal: metrics.llm.failuresTotal,
+      avgLatencyMs: avgLlmLatencyMs,
+      lastLatencyMs: metrics.llm.lastLatencyMs
+    },
+    rateLimit: {
+      windowSeconds: Math.round(RATE_LIMIT_WINDOW_MS / 1000),
+      maxRequests: RATE_LIMIT_MAX_REQUESTS,
+      trackedClients: rateLimitBuckets.size
+    }
+  };
 }
 
 function clientIp(req) {
@@ -499,7 +577,17 @@ function llmModel() {
 }
 
 function limitedLlmFetch(options) {
-  return llmLimiter.run(() => fetch(`${llmBaseUrl()}/chat/completions`, options));
+  metrics.llm.requestsTotal += 1;
+  const startedAt = Date.now();
+  return llmLimiter.run(() => fetch(`${llmBaseUrl()}/chat/completions`, options))
+    .then((response) => {
+      recordLlmResult(startedAt, response);
+      return response;
+    })
+    .catch((error) => {
+      recordLlmResult(startedAt, null, error);
+      throw error;
+    });
 }
 
 function cleanupSessions() {
@@ -528,6 +616,10 @@ async function handleApi(req, res) {
     });
   }
 
+  if (req.method === "GET" && req.url === "/api/metrics") {
+    return jsonResponse(res, 200, publicMetrics());
+  }
+
   if (req.method === "GET" && req.url === "/api/difficulties") {
     return jsonResponse(res, 200, {
       difficulties: Object.entries(difficulties).map(([id, info]) => ({ id, label: info.label }))
@@ -549,6 +641,7 @@ async function handleApi(req, res) {
       updatedAt: Date.now()
     });
 
+    incrementMetric("gameStartsTotal");
     return jsonResponse(res, 200, { gameId, scenario: publicScenario(scenario) });
   }
 
@@ -560,6 +653,7 @@ async function handleApi(req, res) {
     if (!session) return jsonResponse(res, 404, { error: "游戏不存在或已过期" });
     if (!question) return jsonResponse(res, 400, { error: "请输入问题" });
 
+    incrementMetric("gameQuestionsTotal");
     const localSolved = assessSolvedLocally(session, question);
     const result = localSolved ? { answer: "是", solved: true, nudge: "" } : await askLlm(session, question);
 
@@ -574,6 +668,9 @@ async function handleApi(req, res) {
     }
 
     if (result.solved) {
+      if (!session.solved) {
+        incrementMetric("gamesSolvedTotal");
+      }
       session.solved = true;
       result.reveal = revealPayload(session.scenario);
     }
@@ -587,6 +684,7 @@ async function handleApi(req, res) {
     if (!session) return jsonResponse(res, 404, { error: "游戏不存在或已过期" });
 
     session.updatedAt = Date.now();
+    incrementMetric("gameRevealsTotal");
     return jsonResponse(res, 200, revealPayload(session.scenario));
   }
 
@@ -599,6 +697,7 @@ async function serveStatic(req, res) {
   const filePath = path.normalize(path.join(PUBLIC_DIR, safePath));
 
   if (!filePath.startsWith(PUBLIC_DIR) || !existsSync(filePath)) {
+    recordResponseStatus(404);
     res.writeHead(404);
     res.end("Not found");
     return;
@@ -613,6 +712,7 @@ async function serveStatic(req, res) {
   };
 
   const content = await readFile(filePath);
+  recordResponseStatus(200);
   res.writeHead(200, {
     "content-type": contentTypes[ext] || "application/octet-stream"
   });
@@ -626,10 +726,13 @@ const rateLimitCleanupTimer = setInterval(cleanupRateLimitBuckets, Math.min(RATE
 rateLimitCleanupTimer.unref?.();
 
 const server = createServer(async (req, res) => {
+  metrics.httpRequestsTotal += 1;
   try {
     if (req.url?.startsWith("/api/")) {
+      metrics.apiRequestsTotal += 1;
       const rateLimit = checkRateLimit(req);
       if (!rateLimit.allowed) {
+        metrics.rateLimitedTotal += 1;
         return jsonResponse(res, 429, { error: "请求过于频繁，请稍后再试", resetAt: rateLimit.resetAt });
       }
 
@@ -637,8 +740,10 @@ const server = createServer(async (req, res) => {
       return;
     }
 
+    metrics.staticRequestsTotal += 1;
     await serveStatic(req, res);
   } catch (error) {
+    metrics.errorsTotal += 1;
     console.error(error);
     jsonResponse(res, 500, { error: error.message || "Internal server error" });
   }

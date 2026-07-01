@@ -96,10 +96,17 @@ async function main() {
   assert(Array.isArray(reveal.solvePoints) && reveal.solvePoints.length > 0, "reveal response missing solvePoints");
   assert(typeof reveal.lesson === "string" && reveal.lesson.length > 0, "reveal response missing lesson");
 
+  const metrics = await getJson("/api/metrics");
+  assert(metrics.gameStartsTotal >= 1, "metrics endpoint did not count game starts");
+  assert(metrics.gameQuestionsTotal >= 1, "metrics endpoint did not count game questions");
+  assert(metrics.gameRevealsTotal >= 1, "metrics endpoint did not count game reveals");
+  assert(typeof metrics.llm?.requestsTotal === "number", "metrics endpoint missing LLM request counter");
+
   console.log("PASS application health endpoint is reachable");
   console.log(`PASS started ${difficulty} game ${start.gameId}`);
   console.log(`PASS ask path returned allowed answer: ${ask.answer}`);
   console.log("PASS reveal path returned complete answer payload");
+  console.log("PASS metrics endpoint reported game counters");
 }
 
 try {
