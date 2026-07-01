@@ -15,7 +15,7 @@ Browser
   -> /metrics
 
 Node server.js
-  -> data/scenarios/*.json
+  -> data/scenarios/<difficulty>/<scenario-id>.json
   -> in-memory sessions
   -> OpenAI-compatible LLM API
 ```
@@ -24,7 +24,7 @@ Node server.js
 
 - Frontend: vanilla HTML, CSS, and JavaScript.
 - Backend: Node.js native `node:http`.
-- Scenario data: JSON files under `data/scenarios`.
+- Scenario data: one JSON file per scenario under `data/scenarios/<difficulty>/`.
 - Scenario cache: JSON scenario files are validated and cached in memory after first load.
 - Session state: in-memory `Map`, with periodic cleanup.
 - LLM provider: OpenAI-compatible `/chat/completions` endpoint.

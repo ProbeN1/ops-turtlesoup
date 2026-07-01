@@ -281,7 +281,7 @@ This command calls the configured OpenAI-compatible `/chat/completions` endpoint
 - endpoint reachability;
 - HTTP JSON response;
 - `choices[0].message.content` presence;
-- host JSON fields: `answer`, `solved`, and `nudge`;
+- host JSON fields: `answer`, `solved`, and `nudge`; `nudge` is retained for protocol compatibility but must be an empty string;
 - answer value belongs to the allowed host answer set.
 
 It does not print the API key. Tune `LLM_SMOKE_TIMEOUT_MS` if the internal model is slow to wake up.

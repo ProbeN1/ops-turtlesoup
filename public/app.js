@@ -56,7 +56,7 @@ async function askQuestion(event) {
       gameId: state.gameId,
       question
     });
-    const answer = [data.answer, data.nudge].filter(Boolean).join(" ");
+    const answer = data.answer;
     addMessage("host", "主持", answer);
     if (data.solved) {
       handleSolved(data.reveal);

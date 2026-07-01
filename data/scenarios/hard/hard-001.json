@@ -1,0 +1,79 @@
+{
+  "id": "hard-001",
+  "title": "恢复后更严重的地域故障",
+  "difficulty": "hard",
+  "category": "multi-region",
+  "tags": [
+    "retry-storm",
+    "cache",
+    "connection-pool",
+    "traffic-shift"
+  ],
+  "infra_background": {
+    "architecture": "dual-cloud dual-region",
+    "traffic": "Anycast DNS + global traffic scheduler",
+    "per_region": [
+      "Kubernetes",
+      "Redis Cluster",
+      "MySQL shards"
+    ],
+    "client_retry": "up to 3 retries",
+    "gateway": [
+      "circuit breaker",
+      "rate limit"
+    ]
+  },
+  "story": "11:42 云厂商状态页显示华东网络已恢复，11:47 群里反而开始刷屏：华东错误率从 6.5% 冲到 38.9%，请求量比平时高 2.7 倍。11:55 手动切走华东 80% 流量后，全局错误率在 6 分钟内降回 1% 以下。",
+  "answer": "网络抖动期间客户端重试堆积，恢复后大量重试同时打到该区域；该区域缓存已过期且连接池被半开连接占满，引发数据库雪崩。真正触发链是重试风暴加冷缓存加连接池恢复策略不当。",
+  "must_discover": [
+    "初始网络抖动不是持续故障本体",
+    "恢复后重试流量集中爆发",
+    "缓存或连接池状态放大问题",
+    "切流有效是因为避开局部放大链路",
+    "根因是恢复阶段缺少重试退避、连接池清理和流量渐进恢复"
+  ],
+  "misleading": [
+    "云厂商状态页已经变绿",
+    "团队只盯着网络是否恢复",
+    "恢复后请求量混合了真实流量和重试流量"
+  ],
+  "forbidden": [
+    "不要提前说重试风暴",
+    "不要主动给出缓存预热和连接池重建"
+  ],
+  "question_rules": {
+    "yes": [
+      "网络抖动确实发生过",
+      "恢复后请求量高于正常水平",
+      "客户端或网关有自动重试",
+      "缓存命中率下降",
+      "数据库连接池出现等待或半开连接"
+    ],
+    "no": [
+      "不是云区域一直不可用",
+      "不是数据库数据损坏",
+      "不是新版本发布直接导致",
+      "不是 DNS 解析错误"
+    ],
+    "irrelevant": [
+      "浏览器 localStorage",
+      "备份压缩包",
+      "CDN 静态资源"
+    ]
+  },
+  "thinking_path": [
+    "区分故障期间和恢复后的现象",
+    "拆分真实用户流量和重试流量",
+    "检查缓存命中率和连接池状态",
+    "解释切走流量为什么有效"
+  ],
+  "root_cause": "恢复阶段重试风暴叠加冷缓存和半开连接池，造成局部数据库雪崩。",
+  "temporary_fix": "切走故障地域流量，清理连接池，限制重试流量并预热缓存。",
+  "permanent_fix": "引入指数退避、恢复阶段限流、连接池重建策略和分批回流机制。",
+  "knowledge_points": [
+    "恢复阶段也可能是故障高峰",
+    "重试需要退避和预算",
+    "缓存和连接池状态会放大网络抖动"
+  ],
+  "references": []
+}

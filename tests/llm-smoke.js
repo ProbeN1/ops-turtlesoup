@@ -11,7 +11,7 @@ function loadEnvFile() {
   const envPath = path.join(root, ".env");
   if (!existsSync(envPath)) return;
 
-  const lines = readFileSync(envPath, "utf8").split(/\r?\n/);
+  const lines = readFileSync(envPath, "utf8").replace(/^\uFEFF/, "").split(/\r?\n/);
   for (const line of lines) {
     const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);
     if (!match || process.env[match[1]]) continue;
@@ -121,7 +121,8 @@ async function main() {
             content: [
               "你是运维故障海龟汤主持人连通性测试。",
               "只输出 JSON，不要输出 Markdown。",
-              "JSON 格式必须是：{\"answer\":\"是\",\"solved\":false,\"nudge\":\"\"}"
+              "JSON 格式必须是：{\"answer\":\"是\",\"solved\":false,\"nudge\":\"\"}",
+              "nudge 必须为空字符串，不允许提供提示、方向、追问或解释。"
             ].join("\n")
           },
           {
@@ -159,6 +160,9 @@ async function main() {
 
     if (typeof parsed.nudge !== "string") {
       throw new Error("LLM nudge field must be string");
+    }
+    if (parsed.nudge !== "") {
+      throw new Error("LLM nudge field must be empty");
     }
 
     console.log("PASS LLM endpoint returned valid host JSON");

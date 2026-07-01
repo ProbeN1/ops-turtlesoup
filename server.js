@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -34,9 +34,9 @@ const llmLimiter = createLimiter(LLM_MAX_CONCURRENCY, LLM_QUEUE_LIMIT);
 const metrics = createMetrics();
 
 const difficulties = {
-  easy: { label: "简单", file: "easy.json" },
-  medium: { label: "中等", file: "medium.json" },
-  hard: { label: "困难", file: "hard.json" }
+  easy: { label: "简单", directory: "easy", legacyFile: "easy.json" },
+  medium: { label: "中等", directory: "medium", legacyFile: "medium.json" },
+  hard: { label: "困难", directory: "hard", legacyFile: "hard.json" }
 };
 
 const difficultyAliases = {
@@ -74,7 +74,7 @@ function loadEnvFile() {
   const envPath = path.join(__dirname, ".env");
   if (!existsSync(envPath)) return;
 
-  const lines = readFileSync(envPath, "utf8").split(/\r?\n/);
+  const lines = readFileSync(envPath, "utf8").replace(/^\uFEFF/, "").split(/\r?\n/);
   for (const line of lines) {
     const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);
     if (!match || process.env[match[1]]) continue;
@@ -153,7 +153,7 @@ async function loadScenarios(difficultyInput) {
   const info = difficulties[difficulty];
   if (!info) throw new Error("Unknown difficulty");
 
-  const scenarios = JSON.parse(await readFile(path.join(SCENARIO_DIR, info.file), "utf8"));
+  const scenarios = await readScenarioSet(info);
   if (!Array.isArray(scenarios) || !scenarios.length) {
     throw new Error(`No scenarios found for ${difficulty}`);
   }
@@ -164,6 +164,26 @@ async function loadScenarios(difficultyInput) {
 
   scenarioCache.set(difficulty, scenarios);
   return scenarios;
+}
+
+async function readScenarioSet(info) {
+  const directoryPath = path.join(SCENARIO_DIR, info.directory);
+  if (existsSync(directoryPath)) {
+    const files = (await readdir(directoryPath, { withFileTypes: true }))
+      .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+      .map((entry) => entry.name)
+      .sort();
+
+    return Promise.all(files.map(async (file) => {
+      const scenario = JSON.parse(await readFile(path.join(directoryPath, file), "utf8"));
+      if (Array.isArray(scenario)) {
+        throw new Error(`Scenario file ${path.join(info.directory, file)} must contain one scenario object`);
+      }
+      return scenario;
+    }));
+  }
+
+  return JSON.parse(await readFile(path.join(SCENARIO_DIR, info.legacyFile), "utf8"));
 }
 
 function validateScenario(scenario, expectedDifficulty) {
@@ -621,7 +641,7 @@ function buildMessages(session, question) {
         "只允许输出 JSON，不要输出 Markdown。",
         `本局难度只允许 answer 使用这些值之一：${allowedAnswers.join(" | ")}`,
         `JSON 格式必须是：{"answer":"${allowedAnswers.join("|")}","solved":false,"nudge":""}`,
-        "answer 必须非常短。nudge 只能在玩家明显卡住时给一句很短的方向，否则为空字符串。"
+        "answer 必须非常短。nudge 必须始终为空字符串，不允许给提示、方向、追问或解释。"
       ].join("\n")
     },
     {
@@ -672,7 +692,7 @@ async function askLlm(session, question) {
     return {
       answer: solved ? "是" : fallbackAnswer(question, session.scenario.difficulty),
       solved,
-      nudge: solved ? "" : "当前未配置 LLM Key，这是本地演示回答。"
+      nudge: ""
     };
   }
 
@@ -816,7 +836,7 @@ function normalizeLlmAnswer(parsed, difficulty) {
   return {
     answer,
     solved: Boolean(parsed.solved),
-    nudge: typeof parsed.nudge === "string" ? parsed.nudge.slice(0, 80) : ""
+    nudge: ""
   };
 }
 
@@ -942,7 +962,7 @@ async function handleApi(req, res) {
     const result = localSolved ? { answer: "是", solved: true, nudge: "" } : await askLlm(session, question);
 
     session.messages.push({ role: "user", content: question });
-    session.messages.push({ role: "assistant", content: [result.answer, result.nudge].filter(Boolean).join(" ") });
+    session.messages.push({ role: "assistant", content: result.answer });
     session.updatedAt = Date.now();
 
     if (!result.solved && assessSolvedLocally(session, "")) {

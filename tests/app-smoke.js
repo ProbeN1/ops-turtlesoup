@@ -20,7 +20,7 @@ function loadEnvFile() {
   const envPath = path.join(root, ".env");
   if (!existsSync(envPath)) return;
 
-  const lines = readFileSync(envPath, "utf8").split(/\r?\n/);
+  const lines = readFileSync(envPath, "utf8").replace(/^\uFEFF/, "").split(/\r?\n/);
   for (const line of lines) {
     const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);
     if (!match || process.env[match[1]]) continue;
@@ -111,11 +111,11 @@ async function main() {
   const allowedAnswers = allowedAnswersByDifficulty[difficulty];
   assert(allowedAnswers.has(ask.answer), `ask answer is not allowed for ${difficulty}: ${JSON.stringify(ask.answer)}`);
   assert(typeof ask.solved === "boolean", "ask response solved must be boolean");
-  assert(typeof (ask.nudge || "") === "string", "ask response nudge must be string when present");
+  assert((ask.nudge || "") === "", "ask response must not include host hints");
 
   const reveal = await postJson("/api/game/reveal", { gameId: start.gameId });
   assert(typeof reveal.hiddenTruth === "string" && reveal.hiddenTruth.length > 20, "reveal response missing hiddenTruth");
-  assert(reveal.infraBackground && typeof reveal.infraBackground === "object", "reveal response missing infraBackground object");
+  assert(typeof reveal.infraBackground === "string" && reveal.infraBackground.length > 0, "reveal response missing infraBackground text");
   assert(typeof reveal.infraBackgroundText === "string" && reveal.infraBackgroundText.length > 0, "reveal response missing infraBackgroundText");
   assert(Array.isArray(reveal.solvePoints) && reveal.solvePoints.length > 0, "reveal response missing solvePoints");
   assert(typeof reveal.lesson === "string" && reveal.lesson.length > 0, "reveal response missing lesson");

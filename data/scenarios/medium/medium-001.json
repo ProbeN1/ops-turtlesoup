@@ -1,0 +1,69 @@
+{
+  "id": "medium-001",
+  "title": "只影响老用户的发布",
+  "difficulty": "medium",
+  "category": "frontend",
+  "tags": [
+    "localStorage",
+    "release",
+    "sentry",
+    "compatibility"
+  ],
+  "infra_background": {
+    "frontend": "internal CDN",
+    "backend": "Java services on Kubernetes",
+    "auth": "SSO",
+    "browser_error_tracking": "Sentry",
+    "tracing": "OpenTelemetry"
+  },
+  "story": "14:06 客服转来 18 个工单，描述都是“登录后白屏”，但同一时间登录成功率仍是 99.2%，后端 5xx 只有 0.04%。14:22 回滚前端静态包后，新工单停止增长，但已打开页面的用户还在报白屏。",
+  "answer": "前端新版读取了新的 localStorage 字段格式；老用户浏览器里有旧格式缓存，初始化代码没有兼容迁移，导致前端运行时异常。",
+  "must_discover": [
+    "受影响的是有历史浏览器状态的用户",
+    "后端请求少是因为前端在发请求前崩溃",
+    "回滚前端能阻止新增问题",
+    "根因是客户端本地缓存 schema 不兼容"
+  ],
+  "misleading": [
+    "老用户容易让人误判为账号数据问题",
+    "后端告警安静",
+    "回滚后已打开页面仍异常"
+  ],
+  "forbidden": [
+    "不要提前说 localStorage 字段格式不兼容",
+    "不要主动要求玩家清浏览器缓存"
+  ],
+  "question_rules": {
+    "yes": [
+      "受影响用户多为老用户",
+      "清理站点数据可恢复",
+      "浏览器控制台有 JavaScript 异常",
+      "后端没有收到完整请求链路"
+    ],
+    "no": [
+      "不是数据库迁移失败",
+      "不是灰度路由只命中特定账号",
+      "不是 CDN 没刷新"
+    ],
+    "irrelevant": [
+      "磁盘空间",
+      "支付风控",
+      "数据库执行计划"
+    ]
+  },
+  "thinking_path": [
+    "确认受影响用户特征",
+    "比较前端和后端观测差异",
+    "检查浏览器控制台和 Sentry",
+    "定位客户端持久化状态兼容问题"
+  ],
+  "root_cause": "前端 localStorage schema 变化缺少兼容迁移。",
+  "temporary_fix": "回滚前端并提示受影响用户刷新或清理站点数据。",
+  "permanent_fix": "为本地状态增加版本迁移、容错读取和旧缓存回归用例。",
+  "knowledge_points": [
+    "客户端缓存也是状态",
+    "前端发布需要覆盖旧本地状态",
+    "后端无异常不代表用户体验正常"
+  ],
+  "references": []
+}

@@ -53,12 +53,14 @@ Each scenario must follow this JSON shape:
 Scenarios live in:
 
 ```text
-data/scenarios/easy.json
-data/scenarios/medium.json
-data/scenarios/hard.json
+data/scenarios/easy/easy-001.json
+data/scenarios/medium/medium-001.json
+data/scenarios/hard/hard-001.json
 ```
 
-For story/opening writing rules, difficulty style, and solve standards, see [Scenario Authoring](scenario-authoring.md).
+Each file contains exactly one scenario object. The filename must match the scenario `id`, for example `easy-002.json` contains `"id": "easy-002"`.
+
+For story/opening writing rules, difficulty style, and solve standards, see [Scenario Authoring](scenario-authoring.md). For turning raw incident notes into a new one-file scenario, see [Scenario Intake](scenario-intake.md).
 
 ## Answer Rules
 
@@ -99,6 +101,7 @@ npm test
 Tests validate:
 
 - Scenario schema.
+- One-scenario-per-file layout.
 - Server syntax.
 - Frontend script syntax.
 - Core local solve behavior.

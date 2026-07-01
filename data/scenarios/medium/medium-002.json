@@ -1,0 +1,73 @@
+{
+  "id": "medium-002",
+  "title": "低峰期才变慢的数据库",
+  "difficulty": "medium",
+  "category": "database",
+  "tags": [
+    "postgresql",
+    "query-plan",
+    "statistics",
+    "batch-job"
+  ],
+  "infra_background": {
+    "database": "PostgreSQL 14 primary-replica",
+    "virtualization": "VMware",
+    "storage": "all-flash array",
+    "batch_scheduler": "Airflow",
+    "observability": [
+      "pg_stat_statements",
+      "slow query log",
+      "Prometheus exporter"
+    ]
+  },
+  "story": "早班 08:30 接手时，昨晚 02:10-02:37 的 `order-search` 超时率从 0.2% 升到 31.6%，慢 SQL p95 到 18.4 秒。奇怪的是，09:00 早高峰 QPS 高了 4 倍，接口 p95 却回到 420ms。",
+  "answer": "凌晨统计任务删除并重建了关键表的部分数据，导致统计信息失真或缓存变冷；查询计划选错索引，白天自动分析和热缓存恢复后正常。",
+  "must_discover": [
+    "低峰期慢不是流量压力",
+    "问题与凌晨批处理或维护任务有关",
+    "故障时查询计划发生变化",
+    "根因是统计信息或缓存状态变化导致错误执行计划"
+  ],
+  "misleading": [
+    "数据库慢容易直接归因于资源不足",
+    "白天高峰正常反直觉",
+    "扩容只能缓解一点"
+  ],
+  "forbidden": [
+    "不要提前说执行计划选错索引",
+    "不要主动给出 analyze 解决方案"
+  ],
+  "question_rules": {
+    "yes": [
+      "慢查询集中在固定 SQL",
+      "凌晨有批处理",
+      "执行计划会变化",
+      "手动 analyze 或预热可改善"
+    ],
+    "no": [
+      "不是连接池耗尽",
+      "不是网络抖动",
+      "不是主从复制延迟导致读旧数据"
+    ],
+    "irrelevant": [
+      "浏览器缓存",
+      "Ingress 证书",
+      "支付风控"
+    ]
+  },
+  "thinking_path": [
+    "比较低峰和高峰差异",
+    "保存故障时执行计划",
+    "关联凌晨批处理任务",
+    "确认统计信息和缓存状态变化"
+  ],
+  "root_cause": "批处理后统计信息和缓存状态变化，导致 PostgreSQL 选择错误执行计划。",
+  "temporary_fix": "手动 analyze 关键表并预热热点查询。",
+  "permanent_fix": "批处理后自动更新统计信息，必要时稳定执行计划并优化索引。",
+  "knowledge_points": [
+    "慢查询需要保存故障时执行计划",
+    "低流量不代表数据库压力低",
+    "维护任务可能改变优化器输入"
+  ],
+  "references": []
+}

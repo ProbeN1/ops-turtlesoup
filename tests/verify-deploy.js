@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 
 const root = process.cwd();
@@ -7,9 +7,9 @@ const offline = process.argv.includes("--offline");
 const results = [];
 
 const scenarioFiles = [
-  ["easy", "data/scenarios/easy.json"],
-  ["medium", "data/scenarios/medium.json"],
-  ["hard", "data/scenarios/hard.json"]
+  ["easy", "data/scenarios/easy"],
+  ["medium", "data/scenarios/medium"],
+  ["hard", "data/scenarios/hard"]
 ];
 
 const requiredScenarioFields = [
@@ -57,7 +57,7 @@ function loadEnvFile() {
     return;
   }
 
-  const lines = readFileSync(envPath, "utf8").split(/\r?\n/);
+  const lines = readFileSync(envPath, "utf8").replace(/^\uFEFF/, "").split(/\r?\n/);
   for (const line of lines) {
     const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);
     if (!match || process.env[match[1]]) continue;
@@ -96,6 +96,28 @@ function localBaseUrl() {
   const probeHost = host === "0.0.0.0" ? "127.0.0.1" : host;
   const port = numberEnv("PORT", 5725, { integer: true, min: 1, max: 65535 });
   return process.env.DEPLOY_VERIFY_BASE_URL || `http://${probeHost}:${port}`;
+}
+
+async function readScenarioSet(directory) {
+  const entries = await readdir(path.join(root, directory), { withFileTypes: true });
+  const files = entries
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+    .map((entry) => entry.name)
+    .sort();
+
+  const scenarios = [];
+  for (const file of files) {
+    const scenario = JSON.parse(await readFile(path.join(root, directory, file), "utf8"));
+    if (Array.isArray(scenario)) {
+      fail(`${path.join(directory, file)} must contain one scenario object`);
+      continue;
+    }
+    if (file !== `${scenario.id}.json`) {
+      fail(`${path.join(directory, file)} filename must match scenario id`);
+    }
+    scenarios.push(scenario);
+  }
+  return scenarios;
 }
 
 function checkNodeVersion() {
@@ -153,17 +175,17 @@ async function checkScenarios() {
   const seenIds = new Set();
   let count = 0;
 
-  for (const [difficulty, file] of scenarioFiles) {
-    const scenarios = JSON.parse(await readFile(path.join(root, file), "utf8"));
-    if (!Array.isArray(scenarios) || !scenarios.length) {
-      fail(`${file} must contain at least one scenario`);
+  for (const [difficulty, directory] of scenarioFiles) {
+    const scenarios = await readScenarioSet(directory);
+    if (!scenarios.length) {
+      fail(`${directory} must contain at least one scenario`);
       continue;
     }
 
     for (const scenario of scenarios) {
       count += 1;
       for (const field of requiredScenarioFields) {
-        if (!(field in scenario)) fail(`${scenario.id || file} missing ${field}`);
+        if (!(field in scenario)) fail(`${scenario.id || directory} missing ${field}`);
       }
 
       if (scenario.difficulty !== difficulty) fail(`${scenario.id} difficulty must be ${difficulty}`);
@@ -180,7 +202,7 @@ async function checkScenarios() {
     }
   }
 
-  pass(`validated ${count} scenarios across ${scenarioFiles.length} difficulty files`);
+  pass(`validated ${count} scenarios across ${scenarioFiles.length} difficulty directories`);
 }
 
 async function checkHealth() {

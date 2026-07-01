@@ -234,16 +234,21 @@ input:disabled {
 }
 
 .chat-panel.chat-collapsed {
-  grid-template-rows: auto 0 auto;
-  min-height: 142px;
+  align-self: start;
+  grid-template-rows: auto;
+  min-height: 0;
 }
 
 .chat-panel.chat-collapsed .chat-log {
   min-height: 0;
   height: 0;
-  padding-top: 0;
-  padding-bottom: 0;
+  padding: 0;
   overflow: hidden;
+  border: 0;
+}
+
+.chat-panel.chat-collapsed .ask-form {
+  display: none;
 }
 
 .message {

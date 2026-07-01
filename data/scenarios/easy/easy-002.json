@@ -1,0 +1,76 @@
+{
+  "id": "easy-002",
+  "title": "只在午夜响起的磁盘告警",
+  "difficulty": "easy",
+  "category": "storage",
+  "tags": [
+    "backup",
+    "disk",
+    "cron",
+    "temporary-file"
+  ],
+  "infra_background": {
+    "platform": "Proxmox virtualization",
+    "hosts": 2,
+    "storage": "RAID10 disk array",
+    "monitored_mount": "/data",
+    "backup_scheduler": "host cron",
+    "observability": [
+      "node_exporter",
+      "Prometheus",
+      "Alertmanager"
+    ],
+    "disk_alert_threshold": "95%"
+  },
+  "story": "00:03 被电话叫醒，`billing-vm-02:/data` 使用率从 78.4% 升到 96.8%，00:14 告警自动恢复到 79.1%，期间业务错误率一直低于 0.1%。",
+  "answer": "每日备份任务先在本机 `/data` 生成临时压缩包，再上传对象存储；上传完成后临时文件被删除，所以磁盘短时冲高后自动回落。",
+  "must_discover": [
+    "告警与定时备份任务有关",
+    "磁盘增长来自备份临时压缩文件",
+    "临时压缩文件落在 `/data`",
+    "上传完成后临时文件被删除，因此磁盘自动恢复"
+  ],
+  "misleading": [
+    "业务错误率很低",
+    "告警自动恢复",
+    "容易怀疑监控误报或磁盘坏块"
+  ],
+  "forbidden": [
+    "不要在未成功前直接说备份压缩包上传后删除",
+    "不要主动给出 cron 任务名"
+  ],
+  "question_rules": {
+    "yes": [
+      "告警时间固定",
+      "磁盘空间会自动恢复",
+      "有备份或导出任务",
+      "临时文件和业务数据在同一分区"
+    ],
+    "no": [
+      "不是日志泄漏",
+      "不是磁盘坏块",
+      "不是监控误报",
+      "不是用户流量导致"
+    ],
+    "irrelevant": [
+      "黑客入侵",
+      "Kubernetes Service",
+      "浏览器缓存"
+    ]
+  },
+  "thinking_path": [
+    "先看告警时间是否固定",
+    "再排除业务流量和日志持续增长",
+    "定位到定时备份生成临时压缩文件",
+    "确认上传完成后临时文件被删除"
+  ],
+  "root_cause": "备份任务在被监控的 `/data` 分区生成临时压缩包，短时间占满磁盘。",
+  "temporary_fix": "将临时压缩目录移出 `/data` 或临时提高告警延迟。",
+  "permanent_fix": "改为流式上传或使用独立临时分区，并为备份任务增加容量预检查。",
+  "knowledge_points": [
+    "周期性告警优先关联定时任务",
+    "临时文件也需要容量规划",
+    "自动恢复不等于误报"
+  ],
+  "references": []
+}

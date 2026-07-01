@@ -1,0 +1,76 @@
+{
+  "id": "easy-001",
+  "title": "健康的服务没有后端",
+  "difficulty": "easy",
+  "category": "kubernetes",
+  "tags": [
+    "service",
+    "selector",
+    "endpoint",
+    "helm"
+  ],
+  "infra_background": {
+    "platform": "bare-metal kubernetes",
+    "kubernetes_version": "1.28",
+    "nodes": {
+      "control_plane": 3,
+      "workers": 12
+    },
+    "ingress": "Nginx Ingress + MetalLB",
+    "release": "Helm",
+    "observability": [
+      "Prometheus",
+      "Alertmanager",
+      "Grafana"
+    ]
+  },
+  "story": "09:17 被拉进故障群，Grafana 上 `checkout-api` 入口 5xx 从 0.3% 跳到 47.8%，持续 8 分钟。值班截图里 4 个业务 Pod 都是 `Ready 1/1`，重启其中 1 个后 5xx 没变化。",
+  "answer": "应用进程健康，但 Service selector 在一次 Helm 修改后不再匹配 Pod labels，流量没有后端 endpoint。",
+  "must_discover": [
+    "Pod 本身没有崩溃",
+    "健康检查只证明容器内应用可响应",
+    "Service 没有可用 endpoint",
+    "根因是 Service selector 与 Pod label 不匹配"
+  ],
+  "misleading": [
+    "Pod 全部 Ready",
+    "重启 Pod 看起来像合理处置",
+    "入口 502 容易被误认为应用崩溃"
+  ],
+  "forbidden": [
+    "不要在未成功前直接说 selector 和 label 不匹配",
+    "不要主动给出 kubectl endpoints 结论"
+  ],
+  "question_rules": {
+    "yes": [
+      "Pod 状态是 Running",
+      "readiness probe 是通过的",
+      "Service 没有可用 endpoint",
+      "最近改过 Helm values 或 Kubernetes labels"
+    ],
+    "no": [
+      "不是数据库故障",
+      "不是 CPU 或内存耗尽",
+      "不是 Ingress 证书过期"
+    ],
+    "irrelevant": [
+      "黑客入侵",
+      "用户量暴涨",
+      "磁盘空间"
+    ]
+  },
+  "thinking_path": [
+    "先确认 Pod 是否真的异常",
+    "再确认 Ingress 到 Service 的转发链路",
+    "最后检查 Service selector 与 EndpointSlice"
+  ],
+  "root_cause": "Service selector 与 Pod labels 不匹配，导致 Service 后面没有 endpoint。",
+  "temporary_fix": "临时修正 Service selector 或 Pod label，使 endpoint 重新出现。",
+  "permanent_fix": "为 Helm chart 增加 selector/label 一致性校验和发布前检查。",
+  "knowledge_points": [
+    "Kubernetes Service 依赖 selector 匹配 Pod label",
+    "Pod Ready 不等于 Service 有后端",
+    "排查 502 时应检查 EndpointSlice"
+  ],
+  "references": []
+}

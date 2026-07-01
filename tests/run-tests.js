@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import vm from "node:vm";
@@ -7,9 +7,9 @@ import { createServer as createTcpServer } from "node:net";
 
 const root = process.cwd();
 const scenarioFiles = [
-  ["easy", "data/scenarios/easy.json"],
-  ["medium", "data/scenarios/medium.json"],
-  ["hard", "data/scenarios/hard.json"]
+  ["easy", "data/scenarios/easy"],
+  ["medium", "data/scenarios/medium"],
+  ["hard", "data/scenarios/hard"]
 ];
 
 const requiredScenarioFields = [
@@ -43,17 +43,31 @@ async function readText(file) {
   return readFile(path.join(root, file), "utf8");
 }
 
+async function readScenarioSet(directory) {
+  const entries = await readdir(path.join(root, directory), { withFileTypes: true });
+  const files = entries
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+    .map((entry) => entry.name)
+    .sort();
+
+  return Promise.all(files.map(async (file) => {
+    const scenario = JSON.parse(await readText(path.join(directory, file)));
+    assert(!Array.isArray(scenario), `${path.join(directory, file)} must contain one scenario object`);
+    assert(file === `${scenario.id}.json`, `${path.join(directory, file)} filename must match scenario id`);
+    return scenario;
+  }));
+}
+
 async function testScenarioSchema() {
   const seenIds = new Set();
 
-  for (const [difficulty, file] of scenarioFiles) {
-    const scenarios = JSON.parse(await readText(file));
-    assert(Array.isArray(scenarios), `${file} must contain an array`);
-    assert(scenarios.length >= 1, `${file} must contain at least one scenario`);
+  for (const [difficulty, directory] of scenarioFiles) {
+    const scenarios = await readScenarioSet(directory);
+    assert(scenarios.length >= 1, `${directory} must contain at least one scenario`);
 
     for (const scenario of scenarios) {
       for (const field of requiredScenarioFields) {
-        assert(field in scenario, `${scenario.id || file} missing ${field}`);
+        assert(field in scenario, `${scenario.id || directory} missing ${field}`);
       }
 
       assert(scenario.difficulty === difficulty, `${scenario.id} difficulty must be ${difficulty}`);
@@ -73,6 +87,7 @@ async function testScenarioSchema() {
 async function testFrontendBindings() {
   const html = await readText("public/index.html");
   const app = await readText("public/app.js");
+  const css = await readText("public/styles.css");
 
   const ids = [...html.matchAll(/id="([^"]+)"/g)].map((match) => match[1]);
   const selectors = [...app.matchAll(/querySelector\("([^"]+)"\)/g)]
@@ -88,7 +103,11 @@ async function testFrontendBindings() {
   assert(html.includes('/app.js?v=20260701-infra-format-v3'), "frontend must version app.js after reveal formatting fixes");
   assert(app.includes("function formatRevealInfraBackground"), "frontend must normalize reveal infra fields before rendering");
   assert(app.includes("function formatInfraBackground"), "frontend must format infra background before rendering reveal");
+  assert(app.includes("const answer = data.answer"), "frontend must not append host hints to answer messages");
   assert(!app.includes("基础设施：${data.infraBackground}"), "frontend must not render infra object directly");
+  assert(!app.includes("[data.answer, data.nudge]"), "frontend must ignore nudge text in chat output");
+  assert(css.includes(".chat-panel.chat-collapsed .ask-form"), "collapsed chat must hide the ask form");
+  assert(css.includes("align-self: start"), "collapsed chat must remain compact instead of filling the column");
 }
 
 async function testRevealInfraFormatting() {
@@ -547,6 +566,7 @@ async function testDeploymentConfiguration() {
   const releaseChecklist = await readText("docs/runbook/release-checklist.md");
   const releaseRecordTemplate = await readText("docs/runbook/release-record-template.md");
   const uiSmoke = await readText("docs/runbook/ui-smoke.md");
+  const scenarioIntake = await readText("docs/scenario-intake.md");
 
   assert(dockerfile.includes("HEALTHCHECK"), "Dockerfile must define a container healthcheck");
   assert(dockerfile.includes("/api/health"), "Docker healthcheck must probe /api/health");
@@ -842,6 +862,17 @@ async function testDeploymentConfiguration() {
     "已破案"
   ]) {
     assert(uiSmoke.includes(token), `UI smoke runbook missing ${token}`);
+  }
+
+  for (const token of [
+    "data/scenarios/<difficulty>/<id>.json",
+    "每道题一个文件",
+    "文件名必须等于题目 `id`",
+    "提取步骤",
+    "质量检查",
+    "npm test"
+  ]) {
+    assert(scenarioIntake.includes(token), `scenario intake doc missing ${token}`);
   }
 }
 
