@@ -204,6 +204,7 @@ async function testDeploymentConfiguration() {
   const compose = await readText("docker-compose.yml");
   const systemd = await readText("deploy/systemd/ops-turtle-soup.service.example");
   const releaseChecklist = await readText("docs/runbook/release-checklist.md");
+  const uiSmoke = await readText("docs/runbook/ui-smoke.md");
 
   assert(dockerfile.includes("HEALTHCHECK"), "Dockerfile must define a container healthcheck");
   assert(dockerfile.includes("/api/health"), "Docker healthcheck must probe /api/health");
@@ -217,12 +218,24 @@ async function testDeploymentConfiguration() {
     "npm run verify:deploy",
     "npm run smoke:llm",
     "npm run smoke:app",
+    "UI Smoke Runbook",
     "npm run load:local",
     "GET /api/metrics",
     "docker compose ps",
     "systemctl status ops-turtle-soup"
   ]) {
     assert(releaseChecklist.includes(token), `release checklist missing ${token}`);
+  }
+
+  for (const token of [
+    "选择 `中等`",
+    "收起对话",
+    "基础设施：",
+    "[object Object]",
+    "庆祝",
+    "已破案"
+  ]) {
+    assert(uiSmoke.includes(token), `UI smoke runbook missing ${token}`);
   }
 }
 

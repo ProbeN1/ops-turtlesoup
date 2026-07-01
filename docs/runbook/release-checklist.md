@@ -26,6 +26,7 @@ Do not share the game URL until every required gate below is complete.
 | Runtime metrics | `GET /api/metrics` | Request, game, rate limit, and LLM counters are present |
 | LLM compatibility | `npm run smoke:llm` | Pass |
 | Game API flow | `npm run smoke:app` | Pass |
+| Browser UI flow | [UI Smoke Runbook](ui-smoke.md) | Manual browser flow passes |
 | Local 100-session smoke | `npm run load:local` | Completed 100 sessions |
 | Coworker access path | Browser from another intranet machine | Page loads and can start a game |
 
@@ -136,4 +137,4 @@ Active games are lost on restart because sessions are in memory.
 - Multiple app instances require shared session storage, which is not implemented yet.
 - LLM latency and rate limits are the primary capacity risk.
 - Docker image build still needs verification on a host with Docker installed.
-- Browser UI smoke is not automated; verify one coworker browser manually before the event.
+- Browser UI smoke is manual until Playwright browser binaries are available; verify one coworker browser before the event.

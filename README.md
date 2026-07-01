@@ -60,3 +60,4 @@ docker compose up -d
 - [Changelog](docs/changelog.md)
 - [Process Management](docs/runbook/process-management.md)
 - [Release Checklist](docs/runbook/release-checklist.md)
+- [UI Smoke](docs/runbook/ui-smoke.md)
