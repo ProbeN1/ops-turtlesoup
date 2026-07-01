@@ -19,6 +19,7 @@ function commandEnv(port) {
     RATE_LIMIT_MAX_REQUESTS: process.env.RATE_LIMIT_MAX_REQUESTS || "0",
     DEPLOY_VERIFY_BASE_URL: baseUrl,
     APP_SMOKE_BASE_URL: baseUrl,
+    RELEASE_EVIDENCE_BASE_URL: baseUrl,
     LOAD_TEST_BASE_URL: baseUrl,
     LLM_LOAD_BASE_URL: baseUrl
   };
@@ -97,10 +98,12 @@ async function main() {
   server.stderr.on("data", (chunk) => process.stderr.write(chunk));
 
   try {
+    steps.push(await runCommand("release archive build", "npm", ["run", "build:release"], env));
     await waitForHealth(baseUrl, server);
     steps.push(await runCommand("offline deployment preflight", "npm", ["run", "verify:deploy:offline"], env));
     steps.push(await runCommand("online deployment verification", "npm", ["run", "verify:deploy"], env));
     steps.push(await runCommand("application smoke", "npm", ["run", "smoke:app"], env));
+    steps.push(await runCommand("release evidence snapshot", "npm", ["run", "evidence:release"], env));
     steps.push(await runCommand("100-session local capacity smoke", "npm", ["run", "load:local"], env));
     if (runLlm) {
       steps.push(await runCommand("live LLM ask-path load smoke", "npm", ["run", "load:llm"], env));

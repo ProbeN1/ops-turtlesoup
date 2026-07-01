@@ -109,9 +109,11 @@ Rehearsal summary:
 ```text
 baseUrl=
 runLlm=
+release archive build=pass | fail
 offline deployment preflight=pass | fail
 online deployment verification=pass | fail
 application smoke=pass | fail
+release evidence snapshot=pass | fail
 100-session local capacity smoke=pass | fail
 live LLM ask-path load smoke=pass | skipped | fail
 ```

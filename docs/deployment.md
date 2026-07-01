@@ -135,7 +135,7 @@ For a one-command local rehearsal on the release host, run:
 npm run rehearse:release
 ```
 
-Set `REHEARSAL_RUN_LLM=1` to include the live LLM ask-path load smoke in that rehearsal.
+This builds the release archive, starts a temporary local service, runs offline and online deployment verification, runs the app smoke, captures release evidence, and runs the 100-session local capacity smoke. Set `REHEARSAL_RUN_LLM=1` to include the live LLM ask-path load smoke in that rehearsal.
 
 ## Health Check
 

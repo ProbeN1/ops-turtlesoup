@@ -520,11 +520,15 @@ async function testDeploymentConfiguration() {
   for (const token of [
     "REHEARSAL_RUN_LLM",
     "tests/start-loadtest-server.js",
+    "release archive build",
     "offline deployment preflight",
     "online deployment verification",
     "application smoke",
+    "release evidence snapshot",
     "100-session local capacity smoke",
     "live LLM ask-path load smoke",
+    "build:release",
+    "evidence:release",
     "load:llm",
     "release rehearsal summary"
   ]) {
