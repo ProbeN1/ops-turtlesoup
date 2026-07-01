@@ -278,6 +278,8 @@ async function testDeploymentConfiguration() {
   const compose = await readText("docker-compose.yml");
   const systemd = await readText("deploy/systemd/ops-turtle-soup.service.example");
   const loadLocal = await readText("tests/load-local.js");
+  const loadLlm = await readText("tests/load-llm.js");
+  const packageJson = await readText("package.json");
   const releaseChecklist = await readText("docs/runbook/release-checklist.md");
   const releaseRecordTemplate = await readText("docs/runbook/release-record-template.md");
   const uiSmoke = await readText("docs/runbook/ui-smoke.md");
@@ -299,12 +301,27 @@ async function testDeploymentConfiguration() {
     assert(loadLocal.includes(token), `load-local smoke missing ${token}`);
   }
 
+  assert(packageJson.includes('"load:llm": "node tests/load-llm.js"'), "package.json missing load:llm script");
+
+  for (const token of [
+    "LLM_LOAD_USERS",
+    "LLM_LOAD_CONCURRENCY",
+    "LLM_LOAD_MAX_P95_MS",
+    "llm.requestsTotal increased",
+    "llm.failuresTotal increased",
+    "askLatency",
+    "llmCountersPresent"
+  ]) {
+    assert(loadLlm.includes(token), `load-llm smoke missing ${token}`);
+  }
+
   for (const token of [
     "npm test",
     "npm run verify:deploy:offline",
     "npm run verify:deploy",
     "npm run smoke:llm",
     "npm run smoke:app",
+    "npm run load:llm",
     "UI Smoke Runbook",
     "Release Record Template",
     "npm run load:local",
@@ -324,13 +341,18 @@ async function testDeploymentConfiguration() {
     "npm run verify:deploy",
     "npm run smoke:llm",
     "npm run smoke:app",
+    "npm run load:llm",
     "npm run load:local",
     "Coworker Access Check",
     "GET /api/metrics",
     "GET /metrics",
     "metricsDelta.gameStartsTotal=",
     "metricsDelta.gameRevealsTotal=",
+    "metricsDelta.llmRequestsTotal=",
+    "metricsDelta.llmFailuresTotal=",
+    "askLatency.p95Ms=",
     "prometheusMetrics.gameCountersPresent=",
+    "prometheusMetrics.llmCountersPresent=",
     "prometheus.ops_turtle_soup_http_requests_total",
     "Release approved"
   ]) {

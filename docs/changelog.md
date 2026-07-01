@@ -31,3 +31,4 @@
 - Added Prometheus-format `/metrics` endpoint for intranet monitoring integration.
 - Added clear startup errors for port conflicts and bind permission failures.
 - Strengthened `npm run load:local` to verify runtime metric deltas and Prometheus game counters.
+- Added `npm run load:llm` for configurable live LLM ask-path load smoke testing.

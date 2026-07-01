@@ -120,6 +120,30 @@ Result:
 ```
 
 ```text
+npm run load:llm
+```
+
+Result:
+
+```text
+
+```
+
+LLM load evidence summary:
+
+```text
+completed=
+askLatency.avgMs=
+askLatency.p95Ms=
+askLatency.maxMs=
+metricsDelta.gameQuestionsTotal=
+metricsDelta.llmRequestsTotal=
+metricsDelta.llmFailuresTotal=
+metricsDelta.rateLimitedTotal=
+prometheusMetrics.llmCountersPresent=
+```
+
+```text
 npm run load:local
 ```
 

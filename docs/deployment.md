@@ -211,6 +211,23 @@ This command calls:
 
 It validates that a game can be started, one question can be answered with a difficulty-allowed host answer, and the reveal payload is complete. Use `APP_SMOKE_BASE_URL` when testing through a reverse proxy or a different intranet hostname.
 
+## LLM Load Smoke Test
+
+After the app smoke test passes, run a small live LLM ask-path load smoke:
+
+```powershell
+npm run load:llm
+```
+
+Defaults:
+
+- `LLM_LOAD_USERS=10`
+- `LLM_LOAD_CONCURRENCY=2`
+- `LLM_LOAD_BASE_URL` falls back to `APP_SMOKE_BASE_URL` or `HOST`/`PORT`
+- `LLM_LOAD_TIMEOUT_MS=60000`
+
+For a release rehearsal, tune `LLM_LOAD_USERS`, `LLM_LOAD_CONCURRENCY`, and optionally `LLM_LOAD_MAX_P95_MS` to match the internal LLM capacity target. This command makes real LLM calls and fails if LLM request counters do not increase, LLM failures increase, answer values are outside the selected difficulty, or Prometheus LLM counters are missing.
+
 ## Capacity Notes
 
 For around 100 intranet users:

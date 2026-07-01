@@ -13,6 +13,7 @@ npm run start:loadtest
 npm run dev
 npm test
 npm run load:local
+npm run load:llm
 ```
 
 ## Scenario Schema
@@ -105,3 +106,18 @@ Tests validate:
 `npm run load:local` simulates 100 local game sessions by default. It validates the lightweight session and scenario-read path without spending LLM calls. The script also checks `/api/metrics` and `/metrics` after the run, then prints a JSON summary with completed users, elapsed time, game counter deltas, rate-limit deltas, and Prometheus game-counter presence.
 
 Use `npm run start:loadtest` before running the load smoke test from one machine; it disables API rate limiting for the local test process.
+
+## LLM Load Smoke Test
+
+`npm run load:llm` runs a configurable live ask-path smoke test through `/api/game/start` and `/api/game/ask`. It makes real runtime LLM calls, so keep the default small during development and scale it only for release verification.
+
+Defaults:
+
+- `LLM_LOAD_USERS=10`
+- `LLM_LOAD_CONCURRENCY=2`
+- `LLM_LOAD_DIFFICULTY=easy`
+- `LLM_LOAD_TIMEOUT_MS=60000`
+
+Optional gate:
+
+- `LLM_LOAD_MAX_P95_MS`: fail if measured ask-path p95 exceeds this value.
