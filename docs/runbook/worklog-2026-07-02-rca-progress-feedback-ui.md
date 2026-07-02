@@ -29,6 +29,24 @@
 - Passed: `npm test`
 - Passed: browser geometry check for `/feedback`; copy buttons stay inside the contact panel and there is no horizontal overflow.
 - Passed: browser flow check for progress bar; start shows `0%` and reveal shows `100%`.
+- Passed: `npm run build:release`
+- Passed: `npm run verify:release-archive`
+- Passed: remote `npm run verify:deploy:offline`
+- Passed: remote `npm run verify:deploy`
+- Passed: workstation `npm run smoke:coworker` against `http://10.10.214.4:5725`
+- Passed: workstation `npm run smoke:app` against `http://10.10.214.4:5725`
+- Passed: intranet API progress check; start returns `0%`, reveal returns `100%`.
+
+## Deployment
+
+- Built release `ops-turtle-soup-0.1.0-20260702T072304Z` from commit `48d2997`.
+- Local zip: `dist/ops-turtle-soup-0.1.0-20260702T072304Z.zip`
+- Local tarball: `dist/ops-turtle-soup-0.1.0-20260702T072304Z.tar.gz`
+- SHA256 tarball: `1bffd4d45256cdb6104391a6e4d121916cc63369945ee9a39f654ae8f2514718`
+- Uploaded and extracted the tarball to `/opt/ops-turtle-soup/releases/ops-turtle-soup-0.1.0-20260702T072304Z`.
+- Updated `/opt/ops-turtle-soup/current` and `/opt/ops-turtle-soup/.env` release identity, then restarted `ops-turtle-soup.service`.
+- Release URL: `http://10.10.214.4:5725/`
+- Running build after deployment: `48d2997 / ops-turtle-soup-0.1.0-20260702T072304Z`.
 
 ## Risks
 
@@ -37,4 +55,4 @@
 
 ## Next
 
-- Run automated tests and browser visual checks, then deploy to the intranet host.
+- Watch real-player feedback to tune progress thresholds and keyword coverage.
