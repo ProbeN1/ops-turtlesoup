@@ -125,6 +125,7 @@ async function testFrontendBindings() {
 
   assert(html.includes('value="easy"'), "frontend must use standard easy difficulty value");
   assert(html.includes('/app.js?v=20260701-feedback-v1'), "frontend must version app.js after feedback changes");
+  assert(html.includes('/styles.css?v=20260702-feedback-layout-v1'), "frontend must version styles.css after feedback layout changes");
   assert(html.includes("v0.1"), "frontend must show current version badge");
   assert(html.includes('href="/feedback"'), "frontend must link to feedback page");
   assert(feedbackHtml.includes("0027029145"), "feedback page must expose DingTalk contact id");
@@ -132,6 +133,10 @@ async function testFrontendBindings() {
   assert(feedbackHtml.includes("jiang.yi12@iwhalecloud.com"), "feedback page must expose contact email");
   assert(feedbackHtml.includes("contactEmail"), "feedback page must allow copying contact email");
   assert(feedbackHtml.includes(">复制</button>"), "feedback page copy buttons must use readable text");
+  assert(feedbackHtml.includes('/styles.css?v=20260702-feedback-layout-v1'), "feedback page must version styles.css after feedback layout changes");
+  assert(feedbackHtml.includes("feedback-contact-list"), "feedback page must use the dedicated contact list layout");
+  assert(feedbackHtml.includes("contact-card"), "feedback page must render contact details as cards");
+  assert(!feedbackHtml.includes("⧉"), "feedback page must not use ambiguous copy glyphs");
   assert(feedbackHtml.includes("/feedback.js?v=20260701-dingtalk-v1"), "feedback page must version feedback.js");
   assert(feedbackHtml.includes("v0.1"), "feedback page must show current version badge");
   assert(feedbackJs.includes("navigator.clipboard"), "feedback script must support copying contact details");
@@ -148,7 +153,10 @@ async function testFrontendBindings() {
   assert(css.includes("grid-template-rows: auto 1fr auto"), "chat window must keep header, scrollback, and ask form in fixed rows");
   assert(css.includes(".chat-log") && css.includes("min-height: 0"), "chat log must scroll inside the fixed chat window");
   assert(css.includes(".rca-progress"), "CSS must style the RCA progress UI");
-  assert(css.includes(".contact-item"), "feedback contacts must render as stable contact cards");
+  assert(css.includes(".feedback-contact-list"), "CSS must style the dedicated feedback contact list");
+  assert(css.includes(".contact-card"), "feedback contacts must render as stable contact cards");
+  assert(css.includes("2.15rem"), "feedback contact values must stay compact on PC");
+  assert(!css.includes(".dingtalk-contact"), "feedback contact layout must not depend on legacy DingTalk-only styles");
 }
 
 async function testRevealInfraFormatting() {

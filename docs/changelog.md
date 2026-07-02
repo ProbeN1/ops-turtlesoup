@@ -71,3 +71,4 @@
 - Deployed release `ops-turtle-soup-0.1.0-20260701T085244Z` commit `f7bf65f` to `10.10.214.4`; deployment checks passed, while the live ask-path smoke was blocked by the internal LLM quota.
 - Added a non-spoiling RCA progress bar under the opening story and stabilized the feedback contact layout.
 - Deployed release `ops-turtle-soup-0.1.0-20260702T072304Z` commit `48d2997` to `10.10.214.4` and verified progress, feedback, app, and coworker flows.
+- Tightened the PC feedback contact card layout and cache-busted `styles.css` so DingTalk and email copy controls stay aligned.

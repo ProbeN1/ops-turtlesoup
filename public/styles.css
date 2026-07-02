@@ -456,7 +456,7 @@ input:disabled {
   line-height: 1.7;
 }
 
-.dingtalk-contact {
+.feedback-contact-list {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -467,26 +467,33 @@ input:disabled {
   background: rgba(238, 244, 237, 0.04);
 }
 
-.contact-item {
+.contact-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "label copy"
+    "value copy"
+    "note copy";
+  align-items: center;
   gap: 8px 12px;
   min-width: 0;
-  padding: 14px;
+  min-height: 112px;
+  padding: 16px;
   border: 1px solid rgba(52, 69, 63, 0.72);
   border-radius: 8px;
   background: rgba(16, 24, 22, 0.46);
 }
 
 .contact-label {
-  grid-column: 1 / -1;
+  grid-area: label;
   color: var(--accent);
   font-size: 0.82rem;
   font-weight: 800;
 }
 
-.dingtalk-contact strong {
-  font-size: clamp(1.8rem, 4vw, 3.2rem);
+.contact-value {
+  grid-area: value;
+  font-size: clamp(1.45rem, 2.1vw, 2.15rem);
   line-height: 1;
   min-width: 0;
   overflow-wrap: anywhere;
@@ -498,9 +505,8 @@ input:disabled {
   line-height: 1.35 !important;
 }
 
-.contact-name {
-  grid-column: 1 / -1;
-  grid-row: 3;
+.contact-note {
+  grid-area: note;
   color: var(--muted);
   font-weight: 800;
 }
@@ -516,8 +522,7 @@ input:disabled {
 }
 
 .icon-copy {
-  grid-column: 2;
-  grid-row: 2;
+  grid-area: copy;
   align-self: center;
   min-width: 56px;
   height: 44px;
@@ -679,10 +684,14 @@ input:disabled {
     grid-template-columns: 1fr;
   }
 
-  .dingtalk-contact {
+  .feedback-contact-list {
     min-height: 140px;
     border-left: 0;
     border-top: 3px solid var(--button);
+  }
+
+  .contact-card {
+    min-height: 0;
   }
 
   .guide-row {
