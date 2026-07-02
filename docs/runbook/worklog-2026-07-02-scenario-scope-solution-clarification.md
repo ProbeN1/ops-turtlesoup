@@ -31,6 +31,11 @@
 
 - Passed: `npm test`
 - Passed: browser UI flow on `http://127.0.0.1:5726/`; selecting `中等` + `方案澄清` starts the new high-availability database clarification scenario.
+- Passed: `npm run verify:release-archive` for `ops-turtle-soup-0.1.0-20260702T075508Z.zip`.
+- Passed: target-host `npm run verify:deploy` after switching `/opt/ops-turtle-soup/current`.
+- Passed: remote API check that `medium` + `solution-clarification` starts `medium-004`.
+- Passed: workstation `npm run smoke:coworker` against `http://10.10.214.4:5725`.
+- Passed: workstation `npm run smoke:app` against `http://10.10.214.4:5725` with `APP_SMOKE_DIFFICULTY=medium` and `APP_SMOKE_SCENARIO_SCOPE=solution-clarification`.
 
 ## Risks
 

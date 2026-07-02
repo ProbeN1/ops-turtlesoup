@@ -75,3 +75,4 @@
 - Reworked the feedback contact block into a full-width two-column PC layout so DingTalk, name, email, and copy buttons no longer look staggered in a narrow right rail.
 - Deployed release `ops-turtle-soup-0.1.0-20260702T073658Z` commit `88ef367` to `10.10.214.4` and verified deploy, app, coworker, and feedback asset checks.
 - Added selectable question-bank scopes for `交付故障` and `方案澄清`, plus a medium Oracle RAC/DataGuard/SAN high-availability requirement clarification scenario.
+- Deployed release `ops-turtle-soup-0.1.0-20260702T075508Z` commit `54c0788` to `10.10.214.4` and verified the new solution-clarification scope through API, app, and coworker smokes.
