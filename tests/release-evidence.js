@@ -115,7 +115,8 @@ function buildEvidence(health, readiness, metrics, prometheusText) {
       maxActiveSessions: present(prometheusText.includes("ops_turtle_soup_max_active_sessions")),
       gameStartsTotal: present(prometheusText.includes("ops_turtle_soup_game_starts_total")),
       llmRequestsTotal: present(prometheusText.includes("ops_turtle_soup_llm_requests_total")),
-      llmFailuresTotal: present(prometheusText.includes("ops_turtle_soup_llm_failures_total"))
+      llmFailuresTotal: present(prometheusText.includes("ops_turtle_soup_llm_failures_total")),
+      llmFallbacksTotal: present(prometheusText.includes("ops_turtle_soup_llm_fallbacks_total"))
     },
     releaseProfile: {
       targetPlayers: 100,
@@ -140,6 +141,7 @@ async function main() {
   assert(evidence.releaseProfile.maxActiveSessionsSufficient, "maxActiveSessions must be >= 100");
   assert(evidence.prometheus.httpRequestsTotal === "present", "Prometheus HTTP counter missing");
   assert(evidence.prometheus.llmRequestsTotal === "present", "Prometheus LLM counter missing");
+  assert(evidence.prometheus.llmFallbacksTotal === "present", "Prometheus LLM fallback counter missing");
 
   console.log(JSON.stringify(evidence, null, 2));
 }

@@ -19,12 +19,14 @@ http://127.0.0.1:5725/
 复制 `.env.example` 为 `.env`，并配置内网 LLM：
 
 ```env
-OPENAI_API_KEY=your_api_key_here
-OPENAI_BASE_URL=http://10.10.214.22:30002/v1
-OPENAI_MODEL=b-glm-5.2
+OPENAI_API_KEY=
+OPENAI_BASE_URL=
+OPENAI_MODEL=
 HOST=127.0.0.1
 PORT=5725
 ```
+
+`OPENAI_API_KEY`、`OPENAI_BASE_URL` 和 `OPENAI_MODEL` 只在本地 `.env` 填写，公开文档和提交中不要包含内网模型地址、模型名称或密钥。
 
 内网共享时将 `HOST` 改为 `0.0.0.0`，并放行对应端口。
 

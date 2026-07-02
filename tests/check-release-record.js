@@ -175,17 +175,20 @@ async function main() {
     "gameRevealsTotal",
     "llm.requestsTotal",
     "llm.failuresTotal",
+    "llm.fallbacksTotal",
     "completed",
     "askLatency.p95Ms",
     "metricsDelta.gameQuestionsTotal",
     "metricsDelta.llmRequestsTotal",
     "metricsDelta.llmFailuresTotal",
+    "metricsDelta.llmFallbacksTotal",
     "metricsDelta.gameStartsTotal",
     "metricsDelta.gameRevealsTotal",
     "prometheusMetrics.gameCountersPresent",
     "prometheusMetrics.llmCountersPresent",
     "prometheus.ops_turtle_soup_http_requests_total",
-    "prometheus.ops_turtle_soup_llm_requests_total"
+    "prometheus.ops_turtle_soup_llm_requests_total",
+    "prometheus.ops_turtle_soup_llm_fallbacks_total"
   ]) {
     assertAssignmentFilled(text, key);
   }
@@ -222,13 +225,16 @@ async function main() {
   assertAssignmentNumberAtLeast(text, "ready.sessions.maxActive", 100);
   assertAssignmentNumberAtLeast(text, "metricsDelta.gameQuestionsTotal", 1);
   assertAssignmentNumberAtLeast(text, "metricsDelta.llmRequestsTotal", 1);
+  assertAssignmentEquals(text, "llm.fallbacksTotal", "0");
   assertAssignmentEquals(text, "metricsDelta.llmFailuresTotal", "0");
+  assertAssignmentEquals(text, "metricsDelta.llmFallbacksTotal", "0");
   assertAssignmentNumberAtLeast(text, "metricsDelta.gameStartsTotal", 100);
   assertAssignmentNumberAtLeast(text, "metricsDelta.gameRevealsTotal", 100);
   assertAssignmentEquals(text, "prometheusMetrics.gameCountersPresent", "true");
   assertAssignmentEquals(text, "prometheusMetrics.llmCountersPresent", "true");
   assertAssignmentEquals(text, "prometheus.ops_turtle_soup_http_requests_total", "present");
   assertAssignmentEquals(text, "prometheus.ops_turtle_soup_llm_requests_total", "present");
+  assertAssignmentEquals(text, "prometheus.ops_turtle_soup_llm_fallbacks_total", "present");
 
   for (const prefix of [
     "- Difficulty selection passed:",

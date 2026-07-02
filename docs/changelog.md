@@ -80,3 +80,5 @@
 - Deployed release `ops-turtle-soup-0.1.0-20260702T081904Z` commit `3340673` to `10.10.214.4`; deploy, app, coworker, update-log, process, and 100-session start/reveal smokes passed, while direct LLM smoke was blocked by the internal LLM quota.
 - Added local host fallback for LLM HTTP failures, quota errors, timeouts, invalid JSON, and queue-full cases, with JSON and Prometheus fallback counters for degraded-mode monitoring.
 - Deployed release `ops-turtle-soup-0.1.0-20260702T083651Z` commit `857e2ae` to `10.10.214.4`; fallback, app, coworker, process, solution-clarification, and 100-session start/reveal smokes passed, while direct LLM smoke remained blocked by internal LLM quota through `2026-07-06 15:46:41`.
+- Strengthened release evidence and `npm run load:llm` gates so final LLM capacity checks must show zero fallback growth as well as zero LLM failures.
+- Sanitized public LLM configuration examples and worklogs so commits do not expose internal model endpoints, model names, or API keys.

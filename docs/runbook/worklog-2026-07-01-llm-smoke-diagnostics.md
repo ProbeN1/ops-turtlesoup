@@ -20,7 +20,7 @@ Date: 2026-07-01
 
 - Passed: `npm test`
 - Diagnostic failure captured: `npm run smoke:llm`
-  - Current result: `TCP connect to 10.10.214.22:30002 timed out after 5000ms`.
+  - Current result: TCP connect to the internal LLM gateway timed out after 5000ms.
   - Interpretation: the configured LLM gateway port is not reachable from this machine during this run.
 
 ## Risk

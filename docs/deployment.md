@@ -20,9 +20,9 @@ Set `.env`:
 HOST=0.0.0.0
 PORT=5725
 MAX_ACTIVE_SESSIONS=300
-OPENAI_API_KEY=your_api_key_here
-OPENAI_BASE_URL=http://10.10.214.22:30002/v1
-OPENAI_MODEL=b-glm-5.2
+OPENAI_API_KEY=
+OPENAI_BASE_URL=
+OPENAI_MODEL=
 RELEASE_GIT_COMMIT=<git-short-sha>
 RELEASE_NAME=<release-name>
 LLM_MAX_CONCURRENCY=8
@@ -40,6 +40,8 @@ RATE_LIMIT_MAX_REQUESTS=120
 ```
 
 Numeric runtime settings are validated at startup. Invalid values, such as an out-of-range `PORT` or `LLM_QUEUE_LIMIT` lower than `LLM_MAX_CONCURRENCY`, cause the service to exit before listening.
+
+Keep internal LLM endpoint URLs, model names, and API keys only in the target host `.env`. Do not paste those values into README, runbooks, release records, or commits.
 
 The feedback page is a static intranet contact page. Players send feedback through DingTalk to `0027029145` 姜毅 or email `jiang.yi12@iwhalecloud.com`, using the copyable template on `/feedback`.
 

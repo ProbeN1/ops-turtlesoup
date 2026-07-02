@@ -252,6 +252,7 @@ askLatency.maxMs=
 metricsDelta.gameQuestionsTotal=
 metricsDelta.llmRequestsTotal=
 metricsDelta.llmFailuresTotal=
+metricsDelta.llmFallbacksTotal=
 metricsDelta.rateLimitedTotal=
 prometheusMetrics.llmCountersPresent=
 ```
@@ -354,9 +355,11 @@ llm.active=
 llm.queued=
 llm.requestsTotal=
 llm.failuresTotal=
+llm.fallbacksTotal=
 llm.avgLatencyMs=
 prometheus.ops_turtle_soup_http_requests_total=present | missing
 prometheus.ops_turtle_soup_llm_requests_total=present | missing
+prometheus.ops_turtle_soup_llm_fallbacks_total=present | missing
 ```
 
 ## Risks And Decisions

@@ -38,7 +38,7 @@ PASS LLM_REQUEST_TIMEOUT_SECONDS is valid
 ```text
 npm run smoke:llm
 PASS LLM endpoint returned valid host JSON
-PASS model b-glm-5.2 is reachable through http://10.10.214.22:30002/v1
+PASS configured internal model is reachable through the internal LLM gateway
 ```
 
 ## Risks

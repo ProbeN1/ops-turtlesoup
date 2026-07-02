@@ -864,6 +864,7 @@ async function testDeploymentConfiguration() {
     "MAX_ACTIVE_SESSIONS",
     "processEvidence.longRunningEvidencePresent",
     "metricsDelta.llmFailuresTotal",
+    "metricsDelta.llmFallbacksTotal",
     "live LLM ask-path load smoke",
     "LLM capacity confirmed for event",
     "Docker build verified on target host",
@@ -887,6 +888,7 @@ async function testDeploymentConfiguration() {
     "readyForCoworkerAccess",
     "maxActiveSessionsSufficient",
     "fallbacksTotal",
+    "llmFallbacksTotal",
     "ops_turtle_soup_llm_requests_total"
   ]) {
     assert(releaseEvidence.includes(token), `release evidence script missing ${token}`);
@@ -949,6 +951,8 @@ async function testDeploymentConfiguration() {
     "LLM_LOAD_MAX_P95_MS",
     "llm.requestsTotal increased",
     "llm.failuresTotal increased",
+    "llm.fallbacksTotal increased",
+    "llmFallbacksTotal",
     "askLatency",
     "llmCountersPresent"
   ]) {
@@ -1050,10 +1054,12 @@ async function testDeploymentConfiguration() {
     "metricsDelta.gameRevealsTotal=",
     "metricsDelta.llmRequestsTotal=",
     "metricsDelta.llmFailuresTotal=",
+    "metricsDelta.llmFallbacksTotal=",
     "askLatency.p95Ms=",
     "prometheusMetrics.gameCountersPresent=",
     "prometheusMetrics.llmCountersPresent=",
     "prometheus.ops_turtle_soup_http_requests_total",
+    "prometheus.ops_turtle_soup_llm_fallbacks_total",
     "coworker smoke build.gitCommit",
     "Release approved"
   ]) {
@@ -1097,7 +1103,7 @@ function validReleaseRecord() {
     "- Expected player count: 100",
     "- Shared URL: http://10.0.0.10:5725/",
     "- LLM endpoint host, without key: internal-llm.example/v1",
-    "- LLM model: b-glm-5.2",
+    "- LLM model: internal-model-name",
     "",
     "HOST=0.0.0.0",
     "PORT=5725",
@@ -1157,18 +1163,21 @@ function validReleaseRecord() {
     "gameRevealsTotal=101",
     "llm.requestsTotal=20",
     "llm.failuresTotal=0",
+    "llm.fallbacksTotal=0",
     "",
     "completed=100",
     "askLatency.p95Ms=5518",
     "metricsDelta.gameQuestionsTotal=10",
     "metricsDelta.llmRequestsTotal=20",
     "metricsDelta.llmFailuresTotal=0",
+    "metricsDelta.llmFallbacksTotal=0",
     "metricsDelta.gameStartsTotal=100",
     "metricsDelta.gameRevealsTotal=100",
     "prometheusMetrics.gameCountersPresent=true",
     "prometheusMetrics.llmCountersPresent=true",
     "prometheus.ops_turtle_soup_http_requests_total=present",
     "prometheus.ops_turtle_soup_llm_requests_total=present",
+    "prometheus.ops_turtle_soup_llm_fallbacks_total=present",
     "",
     "## Browser UI Smoke",
     "- Browser machine: coworker-laptop",
@@ -1241,6 +1250,11 @@ async function testReleaseRecordGateFailures() {
       name: "llm failures",
       text: valid.replace("metricsDelta.llmFailuresTotal=0", "metricsDelta.llmFailuresTotal=1"),
       expected: "metricsDelta.llmFailuresTotal= must be 0"
+    },
+    {
+      name: "llm fallbacks",
+      text: valid.replace("metricsDelta.llmFallbacksTotal=0", "metricsDelta.llmFallbacksTotal=1"),
+      expected: "metricsDelta.llmFallbacksTotal= must be 0"
     },
     {
       name: "coworker access not passed",

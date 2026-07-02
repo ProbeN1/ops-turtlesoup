@@ -35,7 +35,7 @@ Date: 2026-07-01
 - Passed: `npm run verify:release-archive`
 - Partial: `npm run rehearse:release`
   - Passed before failure: release archive build, release archive verification, offline deployment preflight, online deployment verification.
-  - Failed at application smoke because the configured LLM endpoint timed out while connecting to `10.10.214.22:30002`.
+  - Failed at application smoke because the configured LLM endpoint timed out while connecting to the internal LLM gateway.
 - Failed due external dependency: `npm run smoke:llm`
   - Result: configured LLM endpoint was unreachable from this machine during this run.
 

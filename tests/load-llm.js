@@ -147,6 +147,7 @@ async function runPool() {
   const initialMetrics = await getJson("/api/metrics");
   assert(typeof initialMetrics.llm?.requestsTotal === "number", "metrics endpoint missing LLM request counter");
   assert(typeof initialMetrics.llm?.failuresTotal === "number", "metrics endpoint missing LLM failure counter");
+  assert(typeof initialMetrics.llm?.fallbacksTotal === "number", "metrics endpoint missing LLM fallback counter");
 
   const startedAt = Date.now();
   let next = 0;
@@ -168,14 +169,17 @@ async function runPool() {
   const prometheusMetrics = await getText("/metrics");
   const llmRequestsDelta = finalMetrics.llm.requestsTotal - initialMetrics.llm.requestsTotal;
   const llmFailuresDelta = finalMetrics.llm.failuresTotal - initialMetrics.llm.failuresTotal;
+  const llmFallbacksDelta = finalMetrics.llm.fallbacksTotal - initialMetrics.llm.fallbacksTotal;
   const gameQuestionsDelta = finalMetrics.gameQuestionsTotal - initialMetrics.gameQuestionsTotal;
   const prometheusOk = prometheusMetrics.includes("ops_turtle_soup_llm_requests_total") &&
-    prometheusMetrics.includes("ops_turtle_soup_llm_failures_total");
+    prometheusMetrics.includes("ops_turtle_soup_llm_failures_total") &&
+    prometheusMetrics.includes("ops_turtle_soup_llm_fallbacks_total");
   const stats = latencyStats(askLatencies);
 
   assert(completed === totalUsers, `completed ${completed} of ${totalUsers} users`);
   assert(llmRequestsDelta >= totalUsers, `llm.requestsTotal increased by ${llmRequestsDelta}, expected at least ${totalUsers}`);
   assert(llmFailuresDelta === 0, `llm.failuresTotal increased by ${llmFailuresDelta}`);
+  assert(llmFallbacksDelta === 0, `llm.fallbacksTotal increased by ${llmFallbacksDelta}`);
   assert(gameQuestionsDelta >= totalUsers, `gameQuestionsTotal increased by ${gameQuestionsDelta}, expected at least ${totalUsers}`);
   assert(prometheusOk, "Prometheus metrics missing LLM counters");
   if (maxP95Ms !== null) {
@@ -196,6 +200,7 @@ async function runPool() {
       gameQuestionsTotal: gameQuestionsDelta,
       llmRequestsTotal: llmRequestsDelta,
       llmFailuresTotal: llmFailuresDelta,
+      llmFallbacksTotal: llmFallbacksDelta,
       rateLimitedTotal: finalMetrics.rateLimitedTotal - initialMetrics.rateLimitedTotal
     },
     finalLlmLimiter: {

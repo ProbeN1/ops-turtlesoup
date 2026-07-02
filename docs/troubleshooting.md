@@ -87,7 +87,7 @@ Verify `OPENAI_BASE_URL` ends with the OpenAI-compatible API prefix, usually `/v
 Example:
 
 ```env
-OPENAI_BASE_URL=http://10.10.214.22:30002/v1
+OPENAI_BASE_URL=http://<internal-llm-gateway>/v1
 ```
 
 ## LLM Smoke Test Fails
