@@ -577,6 +577,148 @@ function revealPayload(scenario) {
   };
 }
 
+const progressTerms = [
+  "/data",
+  "backup",
+  "keepalived",
+  "track_script",
+  "vrrp_script",
+  "VRID",
+  "FAULT",
+  "VIP",
+  "K8S",
+  "Kubernetes",
+  "Pod",
+  "Service",
+  "备份",
+  "压缩",
+  "临时",
+  "上传",
+  "删除",
+  "回落",
+  "恢复",
+  "磁盘",
+  "分区",
+  "对象存储",
+  "浮动IP",
+  "二层",
+  "网络",
+  "健康检查",
+  "容器",
+  "超时",
+  "定时",
+  "发布",
+  "缓存",
+  "数据库",
+  "低峰",
+  "老用户",
+  "地域",
+  "金丝雀",
+  "支付",
+  "重试",
+  "配置"
+];
+
+function progressPayload(session, options = {}) {
+  if (options.solved || session.solved) {
+    return {
+      percent: 100,
+      label: "已破案",
+      hint: "谜底已经揭晓。"
+    };
+  }
+
+  const playerText = playerConversationText(session);
+  const questionCount = session.messages.filter((message) => message.role === "user").length;
+  const progress = estimateScenarioProgress(session.scenario, playerText);
+  const base = questionCount > 0 ? 8 : 0;
+  const percent = Math.max(base, Math.min(95, Math.round(base + progress * 84)));
+
+  return {
+    percent,
+    label: progressLabel(percent),
+    hint: progressHint(percent)
+  };
+}
+
+function playerConversationText(session) {
+  return session.messages
+    .filter((message) => message.role === "user")
+    .map((message) => message.content)
+    .join(" ");
+}
+
+function estimateScenarioProgress(scenario, playerText) {
+  const required = Array.isArray(scenario.must_discover) ? scenario.must_discover : [];
+  if (!required.length || !playerText.trim()) return 0;
+
+  const normalizedPlayerText = normalizeProgressText(playerText);
+  const weights = required.map((point) => pointProgress(point, normalizedPlayerText));
+  const total = weights.reduce((sum, value) => sum + value, 0);
+  return Math.max(0, Math.min(1, total / required.length));
+}
+
+function pointProgress(point, normalizedPlayerText) {
+  const tokens = progressTokens(point);
+  if (!tokens.length) return 0;
+
+  let hits = 0;
+  for (const token of tokens) {
+    if (normalizedPlayerText.includes(token)) {
+      hits += progressTokenWeight(token);
+    }
+  }
+
+  return Math.max(0, Math.min(1, hits / 3));
+}
+
+function progressTokens(text) {
+  const normalized = normalizeProgressText(text);
+  const tokens = new Set();
+
+  for (const term of progressTerms) {
+    const normalizedTerm = normalizeProgressText(term);
+    if (normalized.includes(normalizedTerm)) tokens.add(normalizedTerm);
+  }
+
+  const asciiTokens = normalized.match(/\/[a-z0-9_.-]+|[a-z][a-z0-9_/-]{2,}|\d+[a-z%]*/gi) || [];
+  for (const token of asciiTokens) {
+    if (token.length >= 2) tokens.add(token.toLowerCase());
+  }
+
+  return [...tokens];
+}
+
+function progressTokenWeight(token) {
+  if (token.startsWith("/") || token.includes("_") || /^[a-z0-9/-]{4,}$/i.test(token)) return 1.5;
+  if (token.length >= 4) return 1.2;
+  return 1;
+}
+
+function normalizeProgressText(text) {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/\s+/g, "");
+}
+
+function progressLabel(percent) {
+  if (percent >= 100) return "已破案";
+  if (percent >= 80) return "接近 RCA";
+  if (percent >= 60) return "关键链路浮出来了";
+  if (percent >= 40) return "方向比较清楚了";
+  if (percent >= 20) return "有一点线索";
+  return "刚接手";
+}
+
+function progressHint(percent) {
+  if (percent >= 100) return "谜底已经揭晓。";
+  if (percent >= 80) return "已经很接近了，试着把触发条件和恢复原因串起来。";
+  if (percent >= 60) return "关键链路正在成形，继续确认触发点和影响范围。";
+  if (percent >= 40) return "方向开始聚焦了，继续用是/否问题排除误导项。";
+  if (percent >= 20) return "已经摸到一些边，继续确认系统、时间和变化点。";
+  return "继续用是/否问题缩小范围。";
+}
+
 function formatInfraBackground(value) {
   if (value === null || value === undefined || value === "") return "none";
   if (typeof value !== "object") return String(value);
@@ -935,17 +1077,18 @@ async function handleApi(req, res) {
     const scenarios = await loadScenarios(difficulty);
     const scenario = pickRandom(scenarios);
     const gameId = crypto.randomUUID();
-
-    sessions.set(gameId, {
+    const session = {
       scenario,
       messages: [],
       solved: false,
       createdAt: Date.now(),
       updatedAt: Date.now()
-    });
+    };
+
+    sessions.set(gameId, session);
 
     incrementMetric("gameStartsTotal");
-    return jsonResponse(res, 200, { gameId, scenario: publicScenario(scenario) });
+    return jsonResponse(res, 200, { gameId, scenario: publicScenario(scenario), progress: progressPayload(session) });
   }
 
   if (req.method === "POST" && req.url === "/api/game/ask") {
@@ -975,9 +1118,13 @@ async function handleApi(req, res) {
         incrementMetric("gamesSolvedTotal");
       }
       session.solved = true;
-      result.reveal = revealPayload(session.scenario);
+      result.reveal = {
+        ...revealPayload(session.scenario),
+        progress: progressPayload(session, { solved: true })
+      };
     }
 
+    result.progress = progressPayload(session, { solved: result.solved });
     return jsonResponse(res, 200, result);
   }
 
@@ -988,7 +1135,10 @@ async function handleApi(req, res) {
 
     session.updatedAt = Date.now();
     incrementMetric("gameRevealsTotal");
-    return jsonResponse(res, 200, revealPayload(session.scenario));
+    return jsonResponse(res, 200, {
+      ...revealPayload(session.scenario),
+      progress: progressPayload(session, { solved: true })
+    });
   }
 
   return jsonResponse(res, 404, { error: "API not found" });

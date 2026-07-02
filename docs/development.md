@@ -90,6 +90,8 @@ Set `RATE_LIMIT_MAX_REQUESTS=0` to disable API rate limiting for a trusted test 
 
 Feedback is handled through the static `/feedback` page. Players contact `0027029145` 姜毅 on DingTalk or email `jiang.yi12@iwhalecloud.com` and can copy the provided feedback template.
 
+The game page shows an RCA progress bar under the opening story. The backend estimates closeness from cumulative player wording and the scenario's required discovery points, but responses must not expose which hidden points were matched.
+
 Invalid numeric runtime configuration fails fast during startup.
 
 ## Testing

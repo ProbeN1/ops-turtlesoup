@@ -13,6 +13,11 @@ const questionInput = document.querySelector("#questionInput");
 const openingText = document.querySelector("#openingText");
 const chatLog = document.querySelector("#chatLog");
 const llmStatus = document.querySelector("#llmStatus");
+const progressPanel = document.querySelector("#progressPanel");
+const progressLabel = document.querySelector("#progressLabel");
+const progressPercent = document.querySelector("#progressPercent");
+const progressFill = document.querySelector("#progressFill");
+const progressHint = document.querySelector("#progressHint");
 
 startBtn.addEventListener("click", startGame);
 revealBtn.addEventListener("click", revealAnswer);
@@ -25,6 +30,7 @@ async function startGame() {
     state.gameId = data.gameId;
     state.solved = false;
     openingText.textContent = data.scenario.opening;
+    updateProgress(data.progress);
     chatLog.innerHTML = "";
     addMessage("host", "值班主持", "你可以开始提问。请尽量问能用“是/否”回答的问题。");
     questionInput.disabled = false;
@@ -55,6 +61,7 @@ async function askQuestion(event) {
     });
     const answer = data.answer;
     addMessage("host", "主持", answer);
+    updateProgress(data.progress);
     if (data.solved) {
       handleSolved(data.reveal);
     }
@@ -72,6 +79,7 @@ async function revealAnswer() {
 
   try {
     const data = await postJson("/api/game/reveal", { gameId: state.gameId });
+    updateProgress(data.progress);
     renderReveal(data);
     llmStatus.textContent = "已揭晓";
     questionInput.disabled = true;
@@ -94,8 +102,20 @@ function handleSolved(reveal) {
   playCelebration();
 
   if (reveal) {
+    updateProgress(reveal.progress || { percent: 100, label: "已破案", hint: "谜底已经揭晓。" });
     renderReveal(reveal, "破案");
   }
+}
+
+function updateProgress(progress) {
+  if (!progressPanel || !progress) return;
+
+  const percent = Math.max(0, Math.min(100, Number(progress.percent) || 0));
+  progressPanel.hidden = false;
+  progressLabel.textContent = progress.label || "排查中";
+  progressPercent.textContent = `${percent}%`;
+  progressFill.style.width = `${percent}%`;
+  progressHint.textContent = progress.hint || "继续用是/否问题缩小范围。";
 }
 
 function renderReveal(data, title = "揭晓") {

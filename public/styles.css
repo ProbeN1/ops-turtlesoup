@@ -207,6 +207,51 @@ input:disabled {
   line-height: 1.65;
 }
 
+.rca-progress {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 176, 32, 0.28);
+}
+
+.progress-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.progress-head strong {
+  color: var(--button);
+  font-size: 1rem;
+}
+
+.progress-track {
+  height: 12px;
+  margin-top: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(215, 255, 112, 0.22);
+  border-radius: 999px;
+  background: rgba(16, 24, 22, 0.82);
+}
+
+.progress-fill {
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--warn), var(--button));
+  transition: width 260ms ease;
+}
+
+.rca-progress p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
 .chat-panel {
   display: grid;
   grid-template-rows: auto 1fr auto;
@@ -412,14 +457,25 @@ input:disabled {
 }
 
 .dingtalk-contact {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-content: center;
-  gap: 8px 12px;
-  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  min-height: 220px;
   padding: 18px;
   border-left: 3px solid var(--button);
   background: rgba(238, 244, 237, 0.04);
+}
+
+.contact-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 12px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid rgba(52, 69, 63, 0.72);
+  border-radius: 8px;
+  background: rgba(16, 24, 22, 0.46);
 }
 
 .contact-label {
@@ -429,13 +485,11 @@ input:disabled {
   font-weight: 800;
 }
 
-.email-label {
-  margin-top: 14px;
-}
-
 .dingtalk-contact strong {
   font-size: clamp(1.8rem, 4vw, 3.2rem);
   line-height: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .contact-email {
@@ -444,8 +498,9 @@ input:disabled {
   line-height: 1.35 !important;
 }
 
-.dingtalk-contact span:last-of-type {
+.contact-name {
   grid-column: 1 / -1;
+  grid-row: 3;
   color: var(--muted);
   font-weight: 800;
 }
@@ -461,10 +516,13 @@ input:disabled {
 }
 
 .icon-copy {
-  width: 44px;
+  grid-column: 2;
+  grid-row: 2;
+  align-self: center;
+  min-width: 56px;
   height: 44px;
-  padding: 0;
-  font-size: 1.25rem;
+  padding: 0 10px;
+  font-size: 0.9rem;
 }
 
 .feedback-guide {

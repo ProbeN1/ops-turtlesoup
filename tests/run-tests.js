@@ -131,6 +131,7 @@ async function testFrontendBindings() {
   assert(feedbackHtml.includes("姜毅"), "feedback page must expose DingTalk contact name");
   assert(feedbackHtml.includes("jiang.yi12@iwhalecloud.com"), "feedback page must expose contact email");
   assert(feedbackHtml.includes("contactEmail"), "feedback page must allow copying contact email");
+  assert(feedbackHtml.includes(">复制</button>"), "feedback page copy buttons must use readable text");
   assert(feedbackHtml.includes("/feedback.js?v=20260701-dingtalk-v1"), "feedback page must version feedback.js");
   assert(feedbackHtml.includes("v0.1"), "feedback page must show current version badge");
   assert(feedbackJs.includes("navigator.clipboard"), "feedback script must support copying contact details");
@@ -142,8 +143,12 @@ async function testFrontendBindings() {
   assert(!app.includes("[data.answer, data.nudge]"), "frontend must ignore nudge text in chat output");
   assert(!html.includes("toggleChatBtn"), "chat window must not expose a layout-changing collapse button");
   assert(html.includes("chat-window-label"), "chat header must label the embedded conversation window");
+  assert(html.includes("progressPanel"), "opening panel must include RCA progress UI");
+  assert(app.includes("function updateProgress"), "frontend must update RCA progress from API responses");
   assert(css.includes("grid-template-rows: auto 1fr auto"), "chat window must keep header, scrollback, and ask form in fixed rows");
   assert(css.includes(".chat-log") && css.includes("min-height: 0"), "chat log must scroll inside the fixed chat window");
+  assert(css.includes(".rca-progress"), "CSS must style the RCA progress UI");
+  assert(css.includes(".contact-item"), "feedback contacts must render as stable contact cards");
 }
 
 async function testRevealInfraFormatting() {
@@ -311,7 +316,9 @@ async function testServerConfiguration() {
     "BUILD_INFO",
     "buildInfo",
     "RELEASE_INFO.json",
-    "crypto.randomInt(items.length)"
+    "crypto.randomInt(items.length)",
+    "progressPayload",
+    "result.progress"
   ]) {
     assert(server.includes(token), `server.js missing ${token}`);
   }
@@ -462,6 +469,7 @@ async function testRevealApiInfraPayload() {
     assert(revealed.infraBackgroundText === revealed.infraBackground, "reveal infraBackgroundText must match display text");
     assert(revealed.infraBackgroundRaw && typeof revealed.infraBackgroundRaw === "object", "reveal must include raw camelCase infra object");
     assert(revealed.infra_background && typeof revealed.infra_background === "object", "reveal must include raw snake_case infra object");
+    assert(revealed.progress?.percent === 100, "reveal must return complete RCA progress");
   } finally {
     child.kill("SIGKILL");
     await new Promise((resolve) => child.once("close", resolve));

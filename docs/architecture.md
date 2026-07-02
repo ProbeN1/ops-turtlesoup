@@ -45,6 +45,8 @@ Node server.js
 - `POST /api/game/ask`: answer a player question.
 - `POST /api/game/reveal`: reveal answer for a session.
 
+Game start, ask, and reveal responses include a non-spoiling `progress` object for the frontend RCA progress bar. It contains only a percentage and short status text, not the matched hidden clues.
+
 ## Scenario Model
 
 Each scenario follows the standard schema documented in [development.md](development.md).

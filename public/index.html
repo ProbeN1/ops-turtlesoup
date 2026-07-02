@@ -57,6 +57,16 @@
         <section class="opening" aria-live="polite">
           <span class="label">汤面</span>
           <p id="openingText">选择难度后开始一局。你只能问能用“是/否”判断的问题。</p>
+          <div class="rca-progress" id="progressPanel" hidden>
+            <div class="progress-head">
+              <span id="progressLabel">刚接手</span>
+              <strong id="progressPercent">0%</strong>
+            </div>
+            <div class="progress-track" aria-hidden="true">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p id="progressHint">继续用是/否问题缩小范围。</p>
+          </div>
         </section>
       </section>
 
