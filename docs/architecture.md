@@ -8,6 +8,7 @@ Ops Turtle Soup is a single-process Node.js web application for an operations in
 Browser
   -> public/index.html, public/app.js, public/styles.css
   -> /api/difficulties
+  -> /api/scenario-scopes
   -> /api/game/start
   -> /api/game/ask
   -> /api/game/reveal
@@ -41,7 +42,8 @@ Node server.js
 - `GET /api/metrics`: build identity and JSON operational counters for intranet hosting.
 - `GET /metrics`: Prometheus-format runtime counters for monitoring scrape jobs.
 - `GET /api/difficulties`: available difficulty options.
-- `POST /api/game/start`: create a game session.
+- `GET /api/scenario-scopes`: available question-bank ranges.
+- `POST /api/game/start`: create a game session from the selected difficulty and question-bank range.
 - `POST /api/game/ask`: answer a player question.
 - `POST /api/game/reveal`: reveal answer for a session.
 
@@ -58,6 +60,11 @@ Difficulty values are:
 - `hard`
 
 The API also accepts legacy `simple` as an alias for `easy`.
+
+Scenario scope values are:
+
+- `delivery-fault`: delivery/operations incident mysteries.
+- `solution-clarification`: requirement and architecture clarification mysteries.
 
 ## Scaling Target
 

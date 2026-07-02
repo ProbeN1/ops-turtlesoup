@@ -2,6 +2,7 @@
   "id": "hard-003",
   "title": "一打开健康检查就集体 FAULT",
   "difficulty": "hard",
+  "scenario_scope": "delivery-fault",
   "category": "ha",
   "tags": [
     "keepalived",

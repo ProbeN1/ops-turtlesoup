@@ -43,7 +43,7 @@ async function getText(path) {
 
 async function runVirtualUser(index) {
   const difficulty = difficulties[index % difficulties.length];
-  const start = await postJson("/api/game/start", { difficulty });
+  const start = await postJson("/api/game/start", { difficulty, scenarioScope: "delivery-fault" });
   assert(start.gameId, "missing gameId");
   assert(start.scenario?.opening, "missing opening");
 

@@ -16,6 +16,7 @@ const requiredScenarioFields = [
   "id",
   "title",
   "difficulty",
+  "scenario_scope",
   "category",
   "tags",
   "infra_background",
@@ -220,6 +221,9 @@ async function checkScenarios() {
       if (!scenario.infra_background || typeof scenario.infra_background !== "object") {
         fail(`${scenario.id} infra_background must be an object`);
       }
+      if (!["delivery-fault", "solution-clarification"].includes(scenario.scenario_scope)) {
+        fail(`${scenario.id} scenario_scope must be a known scope`);
+      }
       if (!Array.isArray(scenario.must_discover) || !scenario.must_discover.length) {
         fail(`${scenario.id} must_discover must be a non-empty array`);
       }
@@ -258,6 +262,12 @@ async function checkHealth() {
   if (health.llm?.maxConcurrency > 0) pass("health endpoint exposes LLM limiter status");
   else fail("health endpoint missing LLM limiter status");
 
+  if (health.scenarioScopes?.includes("delivery-fault") && health.scenarioScopes?.includes("solution-clarification")) {
+    pass("health endpoint exposes scenario scopes");
+  } else {
+    fail("health endpoint missing scenario scopes");
+  }
+
   const readyResponse = await fetch(`${baseUrl}/api/ready`);
   if (!readyResponse.ok) {
     fail(`readiness endpoint returned HTTP ${readyResponse.status}`);
@@ -284,6 +294,12 @@ async function checkHealth() {
 
   if (readiness.sessions?.maxActive > 0) pass("readiness endpoint exposes session capacity");
   else fail("readiness endpoint missing session capacity");
+
+  if (readiness.scenarioScopeSets?.["delivery-fault"] > 0 && readiness.scenarioScopeSets?.["solution-clarification"] > 0) {
+    pass("readiness endpoint confirms scenario scope inventory");
+  } else {
+    fail("readiness endpoint missing scenario scope inventory");
+  }
 
   const metricsResponse = await fetch(`${baseUrl}/api/metrics`);
   if (!metricsResponse.ok) {

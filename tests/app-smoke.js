@@ -12,6 +12,7 @@ loadEnvFile();
 
 const baseUrl = appSmokeBaseUrl();
 const difficulty = process.env.APP_SMOKE_DIFFICULTY || "easy";
+const scenarioScope = process.env.APP_SMOKE_SCENARIO_SCOPE || "delivery-fault";
 const question = process.env.APP_SMOKE_QUESTION || "这个问题和业务流量暴涨有关吗？";
 const timeoutMs = Number(process.env.APP_SMOKE_TIMEOUT_MS || 30000);
 const expectedGitCommit = process.env.APP_SMOKE_EXPECTED_GIT_COMMIT || process.env.EXPECTED_RELEASE_GIT_COMMIT || "";
@@ -99,9 +100,10 @@ async function main() {
   assert(readiness.llm?.apiKeyConfigured === true, "readiness endpoint missing LLM key configuration");
   assert(readiness.scenarioSets?.[difficulty] > 0, `readiness endpoint missing ${difficulty} scenarios`);
 
-  const start = await postJson("/api/game/start", { difficulty });
+  const start = await postJson("/api/game/start", { difficulty, scenarioScope });
   assert(typeof start.gameId === "string" && start.gameId.length > 0, "start response missing gameId");
   assert(start.scenario?.difficulty === difficulty, "start response difficulty mismatch");
+  assert(start.scenario?.scenarioScope === scenarioScope, "start response scenario scope mismatch");
   assert(typeof start.scenario?.opening === "string" && start.scenario.opening.length > 20, "start response missing opening");
 
   const ask = await postJson("/api/game/ask", {
@@ -135,7 +137,7 @@ async function main() {
   console.log("PASS application health endpoint is reachable");
   console.log(`PASS build identity ${health.build.version} ${health.build.gitCommit}`);
   console.log("PASS application readiness endpoint reports deployable configuration");
-  console.log(`PASS started ${difficulty} game ${start.gameId}`);
+  console.log(`PASS started ${difficulty}/${scenarioScope} game ${start.gameId}`);
   console.log(`PASS ask path returned allowed answer: ${ask.answer}`);
   console.log("PASS reveal path returned complete answer payload");
   console.log("PASS metrics endpoint reported game counters");

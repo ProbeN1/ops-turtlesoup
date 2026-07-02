@@ -16,6 +16,7 @@ const requiredScenarioFields = [
   "id",
   "title",
   "difficulty",
+  "scenario_scope",
   "category",
   "tags",
   "infra_background",
@@ -93,6 +94,7 @@ async function testScenarioSchema() {
       }
 
       assert(scenario.difficulty === difficulty, `${scenario.id} difficulty must be ${difficulty}`);
+      assert(["delivery-fault", "solution-clarification"].includes(scenario.scenario_scope), `${scenario.id} scenario_scope is invalid`);
       assert(!seenIds.has(scenario.id), `duplicate scenario id ${scenario.id}`);
       seenIds.add(scenario.id);
       assert(Array.isArray(scenario.tags), `${scenario.id} tags must be array`);
@@ -124,7 +126,10 @@ async function testFrontendBindings() {
   }
 
   assert(html.includes('value="easy"'), "frontend must use standard easy difficulty value");
-  assert(html.includes('/app.js?v=20260701-feedback-v1'), "frontend must version app.js after feedback changes");
+  assert(html.includes('id="scenarioScope"'), "frontend must expose scenario scope selector");
+  assert(html.includes('value="delivery-fault"'), "frontend must offer delivery fault scenario scope");
+  assert(html.includes('value="solution-clarification"'), "frontend must offer solution clarification scenario scope");
+  assert(html.includes('/app.js?v=20260702-scope-v1'), "frontend must version app.js after scenario scope changes");
   assert(html.includes('/styles.css?v=20260702-feedback-layout-v2'), "frontend must version styles.css after feedback layout changes");
   assert(html.includes("v0.1"), "frontend must show current version badge");
   assert(html.includes('href="/feedback"'), "frontend must link to feedback page");
@@ -150,6 +155,7 @@ async function testFrontendBindings() {
   assert(html.includes("chat-window-label"), "chat header must label the embedded conversation window");
   assert(html.includes("progressPanel"), "opening panel must include RCA progress UI");
   assert(app.includes("function updateProgress"), "frontend must update RCA progress from API responses");
+  assert(app.includes("scenarioScope: scenarioScope.value"), "frontend must send selected scenario scope when starting a game");
   assert(css.includes("grid-template-rows: auto 1fr auto"), "chat window must keep header, scrollback, and ask form in fixed rows");
   assert(css.includes(".chat-log") && css.includes("min-height: 0"), "chat log must scroll inside the fixed chat window");
   assert(css.includes(".rca-progress"), "CSS must style the RCA progress UI");
@@ -322,6 +328,9 @@ async function testServerConfiguration() {
     "maxActiveSessions",
     "房间已满，请稍后再试",
     "GET\" && req.url === \"/api/health",
+    "scenarioScopes",
+    "GET\" && req.url === \"/api/scenario-scopes",
+    "filterScenariosByScope",
     "BUILD_INFO",
     "buildInfo",
     "RELEASE_INFO.json",
@@ -479,6 +488,51 @@ async function testRevealApiInfraPayload() {
     assert(revealed.infraBackgroundRaw && typeof revealed.infraBackgroundRaw === "object", "reveal must include raw camelCase infra object");
     assert(revealed.infra_background && typeof revealed.infra_background === "object", "reveal must include raw snake_case infra object");
     assert(revealed.progress?.percent === 100, "reveal must return complete RCA progress");
+  } finally {
+    child.kill("SIGKILL");
+    await new Promise((resolve) => child.once("close", resolve));
+  }
+
+  assert(!stderr.includes("Startup failed"), `server startup failed unexpectedly; stdout=${stdout}; stderr=${stderr}`);
+}
+
+async function testScenarioScopeStartApi() {
+  const appPort = await reserveLocalPort();
+  const child = spawn(process.execPath, ["server.js"], {
+    cwd: root,
+    env: {
+      ...process.env,
+      HOST: "127.0.0.1",
+      PORT: String(appPort),
+      RATE_LIMIT_MAX_REQUESTS: "0"
+    },
+    stdio: ["ignore", "pipe", "pipe"]
+  });
+  let stdout = "";
+  let stderr = "";
+  child.stdout.on("data", (chunk) => { stdout += chunk; });
+  child.stderr.on("data", (chunk) => { stderr += chunk; });
+
+  try {
+    await waitForHttp(`http://127.0.0.1:${appPort}/api/health`, 5000);
+    const scopesResponse = await fetch(`http://127.0.0.1:${appPort}/api/scenario-scopes`);
+    const scopes = await scopesResponse.json();
+    assert(scopesResponse.ok, `scenario scopes endpoint failed: HTTP ${scopesResponse.status}`);
+    assert(scopes.scenarioScopes.some((scope) => scope.id === "solution-clarification" && scope.label === "方案澄清"), "scenario scopes API must expose solution clarification");
+
+    const started = await postJson(`http://127.0.0.1:${appPort}/api/game/start`, {
+      difficulty: "medium",
+      scenarioScope: "solution-clarification"
+    });
+    assert(started.scenario?.id === "medium-004", "medium solution-clarification scope must start the HA database clarification scenario");
+    assert(started.scenario?.scenarioScope === "solution-clarification", "start response must include selected scenario scope");
+
+    const missing = await postJsonAllowError(`http://127.0.0.1:${appPort}/api/game/start`, {
+      difficulty: "easy",
+      scenarioScope: "solution-clarification"
+    });
+    assert(missing.status === 404, `missing scope combination must return 404, got ${missing.status}`);
+    assert(missing.body.error === "当前难度没有这个题库范围的题目", "missing scope response must explain no matching scenarios");
   } finally {
     child.kill("SIGKILL");
     await new Promise((resolve) => child.once("close", resolve));
@@ -1148,6 +1202,7 @@ await testStartupPortConflict();
 await testLlmQueueFullReturns503();
 await testSessionCapacityReturns503();
 await testRevealApiInfraPayload();
+await testScenarioScopeStartApi();
 await testDeploymentConfiguration();
 await testReleaseRecordGateFailures();
 

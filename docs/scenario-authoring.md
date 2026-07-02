@@ -45,6 +45,7 @@
   "id": "easy-001",
   "title": "",
   "difficulty": "easy | medium | hard",
+  "scenario_scope": "delivery-fault | solution-clarification",
   "category": "",
   "tags": [],
   "infra_background": {},
@@ -66,6 +67,15 @@
   "references": []
 }
 ```
+
+## 题库范围
+
+`scenario_scope` 决定玩家在前台“题库”下拉框中选到哪类题：
+
+- `delivery-fault`：交付故障。围绕告警、发布、网络、数据库、Kubernetes、存储等故障排查。
+- `solution-clarification`：方案澄清。围绕客户一句话需求，训练玩家用是/否问题拆出架构目标、约束、边界和风险。
+
+方案澄清题也使用同一套海龟汤机制：汤面只给含混需求，谜底是完整需求结构；`must_discover` 应覆盖架构形态、指标目标、关键组件和风险边界。
 
 ## 基础设施背景
 

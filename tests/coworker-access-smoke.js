@@ -1,6 +1,7 @@
 const baseUrl = requiredBaseUrl();
 const timeoutMs = Number(process.env.COWORKER_SMOKE_TIMEOUT_MS || 15000);
 const difficulty = process.env.COWORKER_SMOKE_DIFFICULTY || "easy";
+const scenarioScope = process.env.COWORKER_SMOKE_SCENARIO_SCOPE || "delivery-fault";
 const expectedGitCommit = process.env.COWORKER_SMOKE_EXPECTED_GIT_COMMIT || process.env.EXPECTED_RELEASE_GIT_COMMIT || "";
 
 function requiredBaseUrl() {
@@ -80,9 +81,10 @@ async function main() {
   assert(app.text.includes("startGame"), "app.js missing startGame handler");
   assert(app.response.headers.get("cache-control") === "no-store", "app.js should be served with no-store cache-control");
 
-  const start = await postJson("/api/game/start", { difficulty });
+  const start = await postJson("/api/game/start", { difficulty, scenarioScope });
   assert(typeof start.gameId === "string" && start.gameId.length > 0, "start response missing gameId");
   assert(start.scenario?.difficulty === difficulty, "start response difficulty mismatch");
+  assert(start.scenario?.scenarioScope === scenarioScope, "start response scenario scope mismatch");
   assert(typeof start.scenario?.opening === "string" && start.scenario.opening.length > 20, "start response missing opening");
 
   const reveal = await postJson("/api/game/reveal", { gameId: start.gameId });
@@ -93,6 +95,7 @@ async function main() {
     ok: true,
     baseUrl,
     difficulty,
+    scenarioScope,
     healthOk: health.ok === true,
     build: health.build,
     readinessOk: readiness.ok === true,

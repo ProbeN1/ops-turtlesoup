@@ -2,6 +2,7 @@
   "id": "easy-003",
   "title": "一直飘不起来的 VIP",
   "difficulty": "easy",
+  "scenario_scope": "delivery-fault",
   "category": "network",
   "tags": [
     "keepalived",

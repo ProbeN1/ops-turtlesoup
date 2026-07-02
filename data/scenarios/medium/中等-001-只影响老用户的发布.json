@@ -2,6 +2,7 @@
   "id": "medium-001",
   "title": "只影响老用户的发布",
   "difficulty": "medium",
+  "scenario_scope": "delivery-fault",
   "category": "frontend",
   "tags": [
     "localStorage",

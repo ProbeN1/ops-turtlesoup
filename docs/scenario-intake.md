@@ -30,7 +30,8 @@ data/scenarios/easy/简单-003-一直飘不起来的 VIP.json
 ```json
 {
   "id": "easy-003",
-  "difficulty": "easy"
+  "difficulty": "easy",
+  "scenario_scope": "delivery-fault"
 }
 ```
 
@@ -50,45 +51,49 @@ data/scenarios/easy/简单-003-一直飘不起来的 VIP.json
 
 ## 提取步骤
 
-1. 判断难度。
+1. 判断题库范围。
+   - `delivery-fault`：真实故障、告警、发布异常、网络/数据库/中间件问题。
+   - `solution-clarification`：客户需求、方案设计、架构边界、SLA/RPO/RTO 等澄清训练。
+
+2. 判断难度。
    - `easy`：一个主要故障机制，常见运维域，玩家发现根因加一个定位点即可成功。
    - `medium`：两个因素互相作用，至少一个误导表象，需要说明两个关键关联点。
    - `hard`：多层因果链，包含触发、放大、依赖或恢复滞后。
 
-2. 提取基础设施背景。
+3. 提取基础设施背景。
    - 写入 `infra_background`。
    - 只写理解故障所需背景，不直接泄露根因。
    - 推荐字段：`platform`、`architecture`、`storage`、`database`、`scheduler`、`observability`、`traffic`、`dependency`。
 
-3. 编写汤面。
+4. 编写汤面。
    - 写入 `story`。
    - 控制在 1-2 句。
    - 必须包含可观测精确细节：时间点、指标名、变化前后数值、持续时间。
    - 模拟值班人员刚接手时的一脸懵，只写第一眼看见的信息。
    - 不要把根因、完整时间线、处置细节提前塞进汤面。
 
-4. 写出谜底。
+5. 写出谜底。
    - `answer`：完整真相，用一段话讲清楚根因和为什么现象会这样。
    - `root_cause`：一句话根因。
    - `temporary_fix`：临时止血。
    - `permanent_fix`：长期修复。
 
-5. 定义成功标准。
+6. 定义成功标准。
    - `must_discover` 写玩家必须拼出的关键事实。
    - easy 至少 2-4 条，medium 3-5 条，hard 4-6 条。
    - 不要把“猜到组件名”当成功，必须覆盖因果或定位点。
 
-6. 提取误导项和禁泄项。
+7. 提取误导项和禁泄项。
    - `misleading`：玩家容易误判的表象。
    - `forbidden`：主持人在未成功前不能主动透露的答案级信息。
 
-7. 编写问答规则。
+8. 编写问答规则。
    - `question_rules.yes`：问到这些事实时应答“是”。
    - `question_rules.no`：问到这些反事实时应答“否”。
    - `question_rules.irrelevant`：与根因无关或会带偏的方向。
    - 规则应覆盖常见玩家问法，而不是只写内部术语。
 
-8. 补充推理路径和知识点。
+9. 补充推理路径和知识点。
    - `thinking_path`：推荐排查顺序。
    - `knowledge_points`：这题希望玩家学到的运维知识。
    - `references`：可公开链接或内部文档编号；没有就留空数组。
@@ -100,6 +105,7 @@ data/scenarios/easy/简单-003-一直飘不起来的 VIP.json
   "id": "easy-003",
   "title": "",
   "difficulty": "easy",
+  "scenario_scope": "delivery-fault",
   "category": "",
   "tags": [],
   "infra_background": {},
@@ -150,6 +156,7 @@ docs/changelog.md
 
 - 文件名符合 `难度-编号-题目.json`，且编号与 `id` 的数字部分一致。
 - `difficulty` 与目录一致。
+- `scenario_scope` 是 `delivery-fault` 或 `solution-clarification`。
 - `story` 不提前泄露根因。
 - `infra_background` 是对象。
 - `must_discover` 非空，且能支撑成功判定。

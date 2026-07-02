@@ -5,6 +5,7 @@ const state = {
 };
 
 const difficulty = document.querySelector("#difficulty");
+const scenarioScope = document.querySelector("#scenarioScope");
 const startBtn = document.querySelector("#startBtn");
 const revealBtn = document.querySelector("#revealBtn");
 const askForm = document.querySelector("#askForm");
@@ -26,7 +27,10 @@ askForm.addEventListener("submit", askQuestion);
 async function startGame() {
   setBusy(true);
   try {
-    const data = await postJson("/api/game/start", { difficulty: difficulty.value });
+    const data = await postJson("/api/game/start", {
+      difficulty: difficulty.value,
+      scenarioScope: scenarioScope.value
+    });
     state.gameId = data.gameId;
     state.solved = false;
     openingText.textContent = data.scenario.opening;

@@ -2,6 +2,7 @@
   "id": "easy-002",
   "title": "只在午夜响起的磁盘告警",
   "difficulty": "easy",
+  "scenario_scope": "delivery-fault",
   "category": "storage",
   "tags": [
     "backup",

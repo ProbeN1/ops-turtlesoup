@@ -26,6 +26,7 @@ Each scenario must follow this JSON shape:
   "id": "easy-001",
   "title": "",
   "difficulty": "easy | medium | hard",
+  "scenario_scope": "delivery-fault | solution-clarification",
   "category": "",
   "tags": [],
   "infra_background": {},
@@ -61,6 +62,11 @@ data/scenarios/hard/困难-001-恢复后更严重的地域故障.json
 Each file contains exactly one scenario object. The filename uses `难度-编号-题目.json`; the JSON `id` remains stable, for example `简单-002-只在午夜响起的磁盘告警.json` contains `"id": "easy-002"`.
 
 For story/opening writing rules, difficulty style, and solve standards, see [Scenario Authoring](scenario-authoring.md). For turning raw incident notes into a new one-file scenario, see [Scenario Intake](scenario-intake.md).
+
+`scenario_scope` controls the selectable question-bank range on the game page:
+
+- `delivery-fault`: delivery/operations failure mysteries.
+- `solution-clarification`: requirement and architecture clarification mysteries.
 
 ## Answer Rules
 
@@ -125,6 +131,7 @@ Defaults:
 - `LLM_LOAD_USERS=10`
 - `LLM_LOAD_CONCURRENCY=2`
 - `LLM_LOAD_DIFFICULTY=easy`
+- `LLM_LOAD_SCENARIO_SCOPE=delivery-fault`
 - `LLM_LOAD_TIMEOUT_MS=60000`
 
 Optional gate:

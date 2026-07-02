@@ -14,6 +14,7 @@ const baseUrl = loadBaseUrl();
 const totalUsers = numberEnv("LLM_LOAD_USERS", 10, { min: 1 });
 const concurrency = numberEnv("LLM_LOAD_CONCURRENCY", 2, { min: 1 });
 const difficulty = process.env.LLM_LOAD_DIFFICULTY || "easy";
+const scenarioScope = process.env.LLM_LOAD_SCENARIO_SCOPE || "delivery-fault";
 const question = process.env.LLM_LOAD_QUESTION || "\u8fd9\u548c\u4e1a\u52a1\u6d41\u91cf\u66b4\u6da8\u6709\u5173\u5417\uff1f";
 const timeoutMs = numberEnv("LLM_LOAD_TIMEOUT_MS", 60000, { min: 1000 });
 const maxP95Ms = optionalNumberEnv("LLM_LOAD_MAX_P95_MS", { min: 1 });
@@ -106,9 +107,10 @@ async function postJson(apiPath, payload) {
 }
 
 async function runVirtualUser(index) {
-  const start = await postJson("/api/game/start", { difficulty });
+  const start = await postJson("/api/game/start", { difficulty, scenarioScope });
   assert(typeof start.gameId === "string" && start.gameId, "missing gameId");
   assert(start.scenario?.difficulty === difficulty, "start response difficulty mismatch");
+  assert(start.scenario?.scenarioScope === scenarioScope, "start response scenario scope mismatch");
 
   const startedAt = Date.now();
   const ask = await postJson("/api/game/ask", {
@@ -186,6 +188,7 @@ async function runPool() {
     totalUsers,
     concurrency,
     difficulty,
+    scenarioScope,
     completed,
     elapsedMs,
     askLatency: stats,

@@ -2,6 +2,7 @@
   "id": "hard-002",
   "title": "金丝雀通过后的支付超时",
   "difficulty": "hard",
+  "scenario_scope": "delivery-fault",
   "category": "release",
   "tags": [
     "canary",

@@ -2,6 +2,7 @@
   "id": "medium-002",
   "title": "低峰期才变慢的数据库",
   "difficulty": "medium",
+  "scenario_scope": "delivery-fault",
   "category": "database",
   "tags": [
     "postgresql",

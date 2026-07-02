@@ -39,6 +39,21 @@ const difficulties = {
   hard: { label: "困难", directory: "hard", legacyFile: "hard.json" }
 };
 
+const scenarioScopes = {
+  "delivery-fault": { label: "交付故障" },
+  "solution-clarification": { label: "方案澄清" }
+};
+
+const scenarioScopeAliases = {
+  delivery: "delivery-fault",
+  fault: "delivery-fault",
+  incident: "delivery-fault",
+  "交付故障": "delivery-fault",
+  clarification: "solution-clarification",
+  solution: "solution-clarification",
+  "方案澄清": "solution-clarification"
+};
+
 const difficultyAliases = {
   simple: "easy"
 };
@@ -53,6 +68,7 @@ const requiredScenarioFields = [
   "id",
   "title",
   "difficulty",
+  "scenario_scope",
   "category",
   "tags",
   "infra_background",
@@ -144,6 +160,11 @@ function normalizeDifficulty(difficulty) {
   return difficultyAliases[value] || value;
 }
 
+function normalizeScenarioScope(scope) {
+  const value = String(scope || "delivery-fault").trim();
+  return scenarioScopeAliases[value] || value;
+}
+
 async function loadScenarios(difficultyInput) {
   const difficulty = normalizeDifficulty(difficultyInput);
   if (scenarioCache.has(difficulty)) {
@@ -196,9 +217,19 @@ function validateScenario(scenario, expectedDifficulty) {
     throw new Error(`Scenario ${scenario.id} has difficulty ${scenario.difficulty}, expected ${expectedDifficulty}`);
   }
 
+  if (!scenarioScopes[normalizeScenarioScope(scenario.scenario_scope)]) {
+    throw new Error(`Scenario ${scenario.id} has unknown scenario_scope ${scenario.scenario_scope}`);
+  }
+
   if (!scenario.question_rules || !Array.isArray(scenario.question_rules.yes) || !Array.isArray(scenario.question_rules.no) || !Array.isArray(scenario.question_rules.irrelevant)) {
     throw new Error(`Scenario ${scenario.id} has invalid question_rules`);
   }
+}
+
+function filterScenariosByScope(scenarios, scopeInput) {
+  const scope = normalizeScenarioScope(scopeInput);
+  if (!scenarioScopes[scope]) throw new Error("Unknown scenario scope");
+  return scenarios.filter((scenario) => normalizeScenarioScope(scenario.scenario_scope) === scope);
 }
 
 function pickRandom(items) {
@@ -302,13 +333,15 @@ function publicMetrics() {
       windowSeconds: Math.round(RATE_LIMIT_WINDOW_MS / 1000),
       maxRequests: RATE_LIMIT_MAX_REQUESTS,
       trackedClients: rateLimitBuckets.size
-    }
+    },
+    scenarioScopes: Object.keys(scenarioScopes)
   };
 }
 
 async function readinessPayload() {
   const checks = [];
   const scenarioSets = {};
+  const scenarioScopeSets = Object.fromEntries(Object.keys(scenarioScopes).map((scope) => [scope, 0]));
 
   const record = (name, ok, detail = {}) => {
     checks.push({ name, ok, ...detail });
@@ -325,6 +358,10 @@ async function readinessPayload() {
     try {
       const scenarios = await loadScenarios(difficulty);
       scenarioSets[difficulty] = scenarios.length;
+      for (const scenario of scenarios) {
+        const scope = normalizeScenarioScope(scenario.scenario_scope);
+        scenarioScopeSets[scope] = (scenarioScopeSets[scope] || 0) + 1;
+      }
       record(`scenarios-${difficulty}`, scenarios.length > 0, { count: scenarios.length });
     } catch (error) {
       scenarioSets[difficulty] = 0;
@@ -358,6 +395,7 @@ async function readinessPayload() {
       ...llmLimiter.stats()
     },
     scenarioSets,
+    scenarioScopeSets,
     sessions: {
       active: sessions.size,
       maxActive: MAX_ACTIVE_SESSIONS
@@ -556,6 +594,7 @@ function publicScenario(scenario) {
   return {
     id: scenario.id,
     difficulty: scenario.difficulty,
+    scenarioScope: normalizeScenarioScope(scenario.scenario_scope),
     opening: scenario.story
   };
 }
@@ -610,6 +649,22 @@ const progressTerms = [
   "发布",
   "缓存",
   "数据库",
+  "高可用",
+  "两地三中心",
+  "RPO",
+  "Oracle",
+  "RAC",
+  "DataGuard",
+  "SAN",
+  "存储",
+  "集中式",
+  "容灾",
+  "切换",
+  "主备",
+  "同城",
+  "异地",
+  "需求",
+  "方案",
   "低峰",
   "老用户",
   "地域",
@@ -789,6 +844,7 @@ function buildMessages(session, question) {
       role: "user",
       content: [
         `难度: ${scenario.difficulty}`,
+        `题库范围: ${scenarioScopes[normalizeScenarioScope(scenario.scenario_scope)]?.label || scenario.scenario_scope}`,
         `分类: ${scenario.category}`,
         `标签: ${scenario.tags.join(", ")}`,
         `基础设施背景: ${JSON.stringify(scenario.infra_background)}`,
@@ -950,6 +1006,14 @@ function assessSolvedLocally(session, question) {
     return hasUploadCleanup && (hasBackupCompression || hasLocation);
   }
 
+  if (scenario.id === "medium-004") {
+    const hasTwoSitesThreeCenters = /(两地三中心|两地.*三中心|三中心|同城.*异地|异地.*同城)/i.test(playerText);
+    const hasRpo = /(RPO|零丢失|不丢数据|约等于0|≈0|接近0)/i.test(playerText);
+    const hasOracleHa = /(Oracle|RAC|DataGuard|DG)/i.test(playerText);
+    const hasSanRisk = /(SAN|集中式存储|共享存储|存储.*集中|存储.*单点|阵列)/i.test(playerText);
+    return hasTwoSitesThreeCenters && hasRpo && hasOracleHa && hasSanRisk;
+  }
+
   return false;
 }
 
@@ -1043,7 +1107,8 @@ async function handleApi(req, res) {
         maxRequests: RATE_LIMIT_MAX_REQUESTS,
         trackedClients: rateLimitBuckets.size
       },
-      difficulties: Object.keys(difficulties)
+      difficulties: Object.keys(difficulties),
+      scenarioScopes: Object.keys(scenarioScopes)
     });
   }
 
@@ -1062,6 +1127,12 @@ async function handleApi(req, res) {
     });
   }
 
+  if (req.method === "GET" && req.url === "/api/scenario-scopes") {
+    return jsonResponse(res, 200, {
+      scenarioScopes: Object.entries(scenarioScopes).map(([id, info]) => ({ id, label: info.label }))
+    });
+  }
+
   if (req.method === "POST" && req.url === "/api/game/start") {
     if (sessions.size >= MAX_ACTIVE_SESSIONS) {
       return jsonResponse(res, 503, {
@@ -1074,7 +1145,15 @@ async function handleApi(req, res) {
 
     const body = await readJson(req);
     const difficulty = normalizeDifficulty(body.difficulty);
-    const scenarios = await loadScenarios(difficulty);
+    const scenarioScope = normalizeScenarioScope(body.scenarioScope || body.scenario_scope);
+    const scenarios = filterScenariosByScope(await loadScenarios(difficulty), scenarioScope);
+    if (!scenarios.length) {
+      return jsonResponse(res, 404, {
+        error: "当前难度没有这个题库范围的题目",
+        difficulty,
+        scenarioScope
+      });
+    }
     const scenario = pickRandom(scenarios);
     const gameId = crypto.randomUUID();
     const session = {

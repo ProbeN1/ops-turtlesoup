@@ -1,0 +1,93 @@
+{
+  "id": "medium-004",
+  "title": "一句话里的高可用数据库",
+  "difficulty": "medium",
+  "scenario_scope": "solution-clarification",
+  "category": "database-ha-design",
+  "tags": [
+    "requirement-clarification",
+    "oracle",
+    "rac",
+    "dataguard",
+    "rpo",
+    "san",
+    "two-site-three-dc"
+  ],
+  "infra_background": {
+    "request_context": "售前/交付方案澄清会",
+    "customer_sentence": "我要一个高可用数据库方案",
+    "database": "Oracle",
+    "target_architecture": "两地三中心",
+    "ha_components": [
+      "Oracle RAC",
+      "DataGuard"
+    ],
+    "storage": "集中式 SAN",
+    "recovery_objective": "RPO≈0"
+  },
+  "story": "14:20 方案群里只转来客户一句话：`我要一个高可用数据库方案`。没有拓扑、没有 SLA，只说 16:00 前要回一个技术路线。",
+  "answer": "这不是一句简单的“做高可用数据库”需求，而是要被拆成完整方案约束：目标形态是两地三中心，数据目标接近零丢失 RPO≈0，数据库技术栈是 Oracle RAC + DataGuard，同时存储是集中式 SAN。真正要澄清的是同城/异地容灾边界、RPO/RTO、RAC 与 DataGuard 的角色分工，以及集中式 SAN 在跨中心方案里的依赖和风险。",
+  "must_discover": [
+    "需求不是单点 HA，而是两地三中心架构",
+    "客户要求 RPO≈0 或近似零数据丢失",
+    "数据库技术栈是 Oracle RAC + DataGuard",
+    "存储是集中式 SAN，需要澄清它在跨中心容灾中的边界和风险"
+  ],
+  "misleading": [
+    "客户只说了高可用，容易直接给主备或双机方案",
+    "只讨论 Oracle RAC 会忽略异地容灾",
+    "只追求 RPO≈0 会忽略集中式 SAN 的故障域",
+    "把 DataGuard 当成可选增强会漏掉跨中心复制要求"
+  ],
+  "forbidden": [
+    "不要提前说两地三中心",
+    "不要提前说 RPO≈0",
+    "不要提前说 Oracle RAC + DataGuard",
+    "不要提前说集中式 SAN"
+  ],
+  "question_rules": {
+    "yes": [
+      "这是一道需求澄清题",
+      "需要确认两地三中心",
+      "需要确认 RPO 接近 0",
+      "数据库是 Oracle",
+      "方案涉及 RAC",
+      "方案涉及 DataGuard",
+      "存储是集中式 SAN",
+      "需要关注存储故障域"
+    ],
+    "no": [
+      "不是 MySQL 主从方案",
+      "不是单机热备就能满足",
+      "不是只靠负载均衡解决",
+      "不是只讨论性能容量",
+      "不是公有云 RDS 方案",
+      "不是客户已经给了完整拓扑"
+    ],
+    "irrelevant": [
+      "Kubernetes Ingress",
+      "前端发布",
+      "DNS 解析",
+      "磁盘告警",
+      "备份压缩"
+    ]
+  },
+  "thinking_path": [
+    "先确认这不是故障排查，而是方案需求澄清",
+    "把高可用拆成地域形态、数据目标、数据库组件、存储形态",
+    "追问是否两地三中心",
+    "追问 RPO/RTO，特别是是否近似零丢失",
+    "追问 Oracle RAC 和 DataGuard 的角色分工",
+    "追问集中式 SAN 是否跨中心共享以及故障域边界"
+  ],
+  "root_cause": "客户用一句“高可用数据库方案”压缩了多个关键需求维度，团队如果不澄清架构形态、RPO、数据库组件和存储故障域，就会给出错误粒度的方案。",
+  "temporary_fix": "会议前按问题清单补问：地域架构、RPO/RTO、数据库版本与许可、RAC/DataGuard 角色、SAN 边界、切换流程和演练要求。",
+  "permanent_fix": "沉淀数据库高可用方案澄清模板，把一句话需求强制拆成业务目标、容灾等级、数据一致性、组件架构、存储网络、切换演练和运维职责。",
+  "knowledge_points": [
+    "高可用不是单一技术名词，需要拆成 SLA/RTO/RPO/故障域",
+    "Oracle RAC 解决同城或集群内高可用，DataGuard 解决灾备复制和切换",
+    "RPO≈0 会显著影响复制方式、距离、网络和存储设计",
+    "集中式 SAN 可能成为跨中心方案的关键依赖或故障域"
+  ],
+  "references": []
+}

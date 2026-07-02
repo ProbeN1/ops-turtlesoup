@@ -2,6 +2,7 @@
   "id": "medium-003",
   "title": "被别人抢话的 VRID",
   "difficulty": "medium",
+  "scenario_scope": "delivery-fault",
   "category": "network",
   "tags": [
     "keepalived",

@@ -2,6 +2,7 @@
   "id": "hard-001",
   "title": "恢复后更严重的地域故障",
   "difficulty": "hard",
+  "scenario_scope": "delivery-fault",
   "category": "multi-region",
   "tags": [
     "retry-storm",

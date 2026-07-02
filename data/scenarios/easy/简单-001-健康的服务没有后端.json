@@ -2,6 +2,7 @@
   "id": "easy-001",
   "title": "健康的服务没有后端",
   "difficulty": "easy",
+  "scenario_scope": "delivery-fault",
   "category": "kubernetes",
   "tags": [
     "service",

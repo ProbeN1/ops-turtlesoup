@@ -22,6 +22,7 @@ http://<server-intranet-ip>:5725/
 - title: `运维海龟汤`;
 - status: `待开始`;
 - difficulty selector with `简单`, `中等`, `困难`;
+- question-bank selector with `交付故障`, `方案澄清`;
 - disabled question input before a game starts.
 
 3. 选择 `中等`, then click `开始`.
