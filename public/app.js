@@ -677,7 +677,6 @@ function toggleNuisanceSound() {
   state.soundEnabled = !state.soundEnabled;
   updateSoundToggle();
   saveGameState();
-  if (state.soundEnabled) playNuisanceAudio("干扰音效已开启。", "zh-CN");
 }
 
 function updateSoundToggle() {

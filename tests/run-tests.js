@@ -134,7 +134,7 @@ async function testFrontendBindings() {
   assert(html.includes('value="solution-clarification"'), "frontend must offer solution clarification scenario scope");
   assert(html.includes('/app.js?v=20260702-nuisance-v1'), "frontend must version app.js after nuisance character changes");
   assert(html.includes('/styles.css?v=20260702-nuisance-v1'), "frontend must version styles.css after nuisance character changes");
-  assert(html.includes("v0.11"), "frontend must show current version badge");
+  assert(html.includes("v0.12"), "frontend must show current version badge");
   assert(html.includes('href="/feedback"'), "frontend must link to feedback page");
   assert(html.includes('href="/updates.html"'), "frontend must link to update log page");
   assert(html.includes('class="game-page"'), "game page must opt into fixed viewport scrolling");
@@ -151,12 +151,13 @@ async function testFrontendBindings() {
   assert(feedbackHtml.includes("contact-card"), "feedback page must render contact details as cards");
   assert(!feedbackHtml.includes("⧉"), "feedback page must not use ambiguous copy glyphs");
   assert(feedbackHtml.includes("/feedback.js?v=20260701-dingtalk-v1"), "feedback page must version feedback.js");
-  assert(feedbackHtml.includes("v0.11"), "feedback page must show current version badge");
+  assert(feedbackHtml.includes("v0.12"), "feedback page must show current version badge");
   assert(updatesHtml.includes("更新记录"), "updates page must render an update log");
   assert(updatesHtml.includes("首页布局优化"), "updates page must mention the home layout update");
   assert(updatesHtml.includes('href="/"'), "updates page must link back to the game");
   assert(updatesHtml.includes('/styles.css?v=20260702-nuisance-v1'), "updates page must use the current styles.css version");
-  assert(updatesHtml.includes("v0.11"), "updates page must include the current minor version");
+  assert(updatesHtml.includes("v0.12"), "updates page must include the current minor version");
+  assert(updatesHtml.includes("音效开关更安静"), "updates page must document the silent sound toggle update");
   assert(updatesHtml.includes("干扰角色与局面恢复"), "updates page must document the nuisance character and restore update");
   assert(feedbackJs.includes("navigator.clipboard"), "feedback script must support copying contact details");
   assert(!feedbackJs.includes("/api/feedback"), "feedback script must not submit to removed feedback API");
