@@ -85,3 +85,4 @@
 - Removed maintainer-only script inventory from README so operational checks stay in runbooks instead of the public quick-start page.
 - Added `v0.11` update-log entry, local game-state restore across feedback/update navigation, an idle-close warning flow, and a left-bottom nuisance character with hidden personality, fixed per-round customer language, completion feedback, and optional sound.
 - Added `v0.12` update-log entry and made the nuisance sound toggle silent until the next character line.
+- Deployed release `ops-turtle-soup-0.1.0-20260702T095729Z` commit `83cf275` to `10.10.214.4`; deploy, coworker, delivery-fault, solution-clarification, process, and release evidence checks passed, with LLM fallback still triggered by internal quota limits.
