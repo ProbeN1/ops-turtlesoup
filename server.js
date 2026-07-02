@@ -1308,6 +1308,13 @@ async function handleApi(req, res) {
     });
   }
 
+  if (req.method === "POST" && req.url === "/api/game/close") {
+    const body = await readJson(req);
+    const gameId = String(body.gameId || "");
+    const closed = sessions.delete(gameId);
+    return jsonResponse(res, 200, { ok: true, closed });
+  }
+
   return jsonResponse(res, 404, { error: "API not found" });
 }
 

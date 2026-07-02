@@ -83,3 +83,4 @@
 - Strengthened release evidence and `npm run load:llm` gates so final LLM capacity checks must show zero fallback growth as well as zero LLM failures.
 - Sanitized public LLM configuration examples and worklogs so commits do not expose internal model endpoints, model names, or API keys.
 - Removed maintainer-only script inventory from README so operational checks stay in runbooks instead of the public quick-start page.
+- Added `v0.11` update-log entry, local game-state restore across feedback/update navigation, an idle-close warning flow, and a left-bottom nuisance character with hidden personality, fixed per-round customer language, completion feedback, and optional sound.

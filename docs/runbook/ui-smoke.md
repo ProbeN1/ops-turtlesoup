@@ -25,7 +25,7 @@ http://<server-intranet-ip>:5725/
 - difficulty selector with `简单`, `中等`, `困难`;
 - `题库` appears to the left of `难度` on the same row;
 - `开始` and `揭晓` appear on a second row, with horizontal text;
-- right-bottom badge shows `更新记录`, `反馈`, and compact `v0.1`;
+- right-bottom badge shows `更新记录`, `反馈`, and compact `v0.11`;
 - disabled question input before a game starts.
 
 3. Select `中等`, then click `开始`.
@@ -36,6 +36,8 @@ Expected:
 - the incident opening is replaced with a concrete story;
 - question input and `提问` button are enabled;
 - `揭晓` button is enabled.
+- the left-bottom nuisance character and elapsed timer are visible;
+- the nuisance sound toggle defaults to muted and can be enabled manually.
 
 4. Ask:
 
@@ -62,6 +64,7 @@ Expected:
 Expected:
 
 - the update log page loads;
+- the current game progress is still present after returning to `/`;
 - the page mentions `首页布局优化`;
 - `返回游戏` goes back to `/`.
 
@@ -74,6 +77,8 @@ Expected:
 - `基础设施：` is readable text, not `[object Object]`;
 - `真相：`, `关键点：`, and `经验：` are visible;
 - question input and `提问` button are disabled.
+- the elapsed timer stops increasing after reveal;
+- the nuisance character switches to a completion or review-style follow-up.
 
 8. Start an easy round until the `/data` backup scenario appears, then submit:
 

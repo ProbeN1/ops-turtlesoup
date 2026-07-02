@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>运维海龟汤</title>
-    <link rel="stylesheet" href="/styles.css?v=20260702-home-layout-v1" />
+    <link rel="stylesheet" href="/styles.css?v=20260702-nuisance-v1" />
   </head>
   <body class="game-page">
     <div class="celebration" id="celebration" aria-hidden="true"></div>
@@ -77,6 +77,28 @@
             <p id="progressHint">继续用是/否问题缩小范围。</p>
           </div>
         </section>
+
+        <div class="incident-footer">
+          <aside class="nuisance-widget" id="nuisanceWidget" hidden aria-live="polite">
+            <div class="nuisance-avatar" id="nuisanceAvatar" aria-hidden="true">
+              <span class="avatar-head"></span>
+              <span class="avatar-body"></span>
+            </div>
+            <div class="nuisance-copy">
+              <div class="nuisance-head">
+                <strong id="nuisanceRole">项目经理</strong>
+                <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="false" title="开启干扰音效">静音</button>
+              </div>
+              <p id="nuisanceText">客户说先别管原因，先给承诺。</p>
+              <span id="nuisanceTranslation" class="nuisance-translation"></span>
+            </div>
+          </aside>
+
+          <div class="game-timer" id="gameTimer" hidden>
+            <span>已接手</span>
+            <strong id="elapsedTime">00:00</strong>
+          </div>
+        </div>
       </section>
 
       <section class="chat-panel">
@@ -100,9 +122,9 @@
     <div class="version-badge">
       <a href="/updates.html">更新记录</a>
       <a href="/feedback">反馈</a>
-      <span class="version-number">v0.1</span>
+      <span class="version-number">v0.11</span>
     </div>
 
-    <script src="/app.js?v=20260702-scope-v1" type="module"></script>
+    <script src="/app.js?v=20260702-nuisance-v1" type="module"></script>
   </body>
 </html>

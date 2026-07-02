@@ -132,9 +132,9 @@ async function testFrontendBindings() {
   assert(html.includes('id="scenarioScope"'), "frontend must expose scenario scope selector");
   assert(html.includes('value="delivery-fault"'), "frontend must offer delivery fault scenario scope");
   assert(html.includes('value="solution-clarification"'), "frontend must offer solution clarification scenario scope");
-  assert(html.includes('/app.js?v=20260702-scope-v1'), "frontend must version app.js after scenario scope changes");
-  assert(html.includes('/styles.css?v=20260702-home-layout-v1'), "frontend must version styles.css after home layout changes");
-  assert(html.includes("v0.1"), "frontend must show current version badge");
+  assert(html.includes('/app.js?v=20260702-nuisance-v1'), "frontend must version app.js after nuisance character changes");
+  assert(html.includes('/styles.css?v=20260702-nuisance-v1'), "frontend must version styles.css after nuisance character changes");
+  assert(html.includes("v0.11"), "frontend must show current version badge");
   assert(html.includes('href="/feedback"'), "frontend must link to feedback page");
   assert(html.includes('href="/updates.html"'), "frontend must link to update log page");
   assert(html.includes('class="game-page"'), "game page must opt into fixed viewport scrolling");
@@ -146,16 +146,18 @@ async function testFrontendBindings() {
   assert(feedbackHtml.includes("jiang.yi12@iwhalecloud.com"), "feedback page must expose contact email");
   assert(feedbackHtml.includes("contactEmail"), "feedback page must allow copying contact email");
   assert(feedbackHtml.includes(">复制</button>"), "feedback page copy buttons must use readable text");
-  assert(feedbackHtml.includes('/styles.css?v=20260702-home-layout-v1'), "feedback page must version styles.css after home layout changes");
+  assert(feedbackHtml.includes('/styles.css?v=20260702-nuisance-v1'), "feedback page must version styles.css after nuisance character changes");
   assert(feedbackHtml.includes("feedback-contact-list"), "feedback page must use the dedicated contact list layout");
   assert(feedbackHtml.includes("contact-card"), "feedback page must render contact details as cards");
   assert(!feedbackHtml.includes("⧉"), "feedback page must not use ambiguous copy glyphs");
   assert(feedbackHtml.includes("/feedback.js?v=20260701-dingtalk-v1"), "feedback page must version feedback.js");
-  assert(feedbackHtml.includes("v0.1"), "feedback page must show current version badge");
+  assert(feedbackHtml.includes("v0.11"), "feedback page must show current version badge");
   assert(updatesHtml.includes("更新记录"), "updates page must render an update log");
   assert(updatesHtml.includes("首页布局优化"), "updates page must mention the home layout update");
   assert(updatesHtml.includes('href="/"'), "updates page must link back to the game");
-  assert(updatesHtml.includes('/styles.css?v=20260702-home-layout-v1'), "updates page must use the current styles.css version");
+  assert(updatesHtml.includes('/styles.css?v=20260702-nuisance-v1'), "updates page must use the current styles.css version");
+  assert(updatesHtml.includes("v0.11"), "updates page must include the current minor version");
+  assert(updatesHtml.includes("干扰角色与局面恢复"), "updates page must document the nuisance character and restore update");
   assert(feedbackJs.includes("navigator.clipboard"), "feedback script must support copying contact details");
   assert(!feedbackJs.includes("/api/feedback"), "feedback script must not submit to removed feedback API");
   assert(app.includes("function formatRevealInfraBackground"), "frontend must normalize reveal infra fields before rendering");
@@ -166,17 +168,42 @@ async function testFrontendBindings() {
   assert(!html.includes("toggleChatBtn"), "chat window must not expose a layout-changing collapse button");
   assert(html.includes("chat-window-label"), "chat header must label the embedded conversation window");
   assert(html.includes("progressPanel"), "opening panel must include RCA progress UI");
+  assert(html.includes("nuisanceWidget"), "game page must include the nuisance character widget");
+  assert(html.includes("gameTimer"), "game page must include elapsed game timer");
+  assert(html.includes("soundToggle"), "nuisance widget must include a sound toggle");
+  assert(html.includes("version-badge"), "game page must include horizontal version links");
+  assert(feedbackHtml.includes('href="/updates.html"'), "feedback page version badge must link to update log");
+  assert(updatesHtml.includes('href="/"'), "updates page version badge must link back to the game");
   assert(app.includes("function updateProgress"), "frontend must update RCA progress from API responses");
+  assert(app.includes("STORAGE_KEY"), "frontend must persist current game state");
+  assert(app.includes("restoreSavedGame"), "frontend must restore game state after navigation");
+  assert(app.includes("endedAt"), "frontend must freeze elapsed timer after reveal or solve");
+  assert(app.includes("/api/game/close"), "frontend must close stale games on idle timeout");
+  assert(app.includes("warningMs: 10 * 60 * 1000"), "frontend must warn after ten idle minutes by default");
+  assert(app.includes("closeMs: 15 * 60 * 1000"), "frontend must close after fifteen idle minutes by default");
+  assert(app.includes("nuisanceMs: 30 * 1000"), "frontend nuisance character must speak every thirty seconds by default");
+  assert(app.includes("customerLanguage"), "solution clarification scope must keep one customer language per game");
+  assert(app.includes("pickCustomerLanguage"), "solution clarification scope must randomly choose a customer language once");
+  assert(app.includes("客户"), "solution clarification nuisance role must display as customer");
+  assert(!app.includes("苛责客户"), "solution clarification nuisance role must not display as harsh customer");
+  assert(app.includes("项目经理"), "delivery fault scope must use the project manager nuisance role");
+  assert(app.includes("nuisancePersonality"), "nuisance characters must keep hidden personalities in state");
+  assert(app.includes("speechSynthesis"), "nuisance speech must support optional spoken audio");
+  assert(app.includes("function speakCompletionFeedback"), "nuisance character must comment after reveal or solve");
   assert(app.includes("scenarioScope: scenarioScope.value"), "frontend must send selected scenario scope when starting a game");
   assert(css.includes("grid-template-rows: auto 1fr auto"), "chat window must keep header, scrollback, and ask form in fixed rows");
   assert(css.includes(".chat-log") && css.includes("min-height: 0"), "chat log must scroll inside the fixed chat window");
   assert(css.includes(".rca-progress"), "CSS must style the RCA progress UI");
+  assert(css.includes(".nuisance-widget"), "CSS must style the nuisance character widget");
+  assert(css.includes(".sound-toggle"), "CSS must style the nuisance sound toggle");
+  assert(css.includes(".game-timer"), "CSS must style the elapsed game timer");
   assert(css.includes(".feedback-contact-list"), "CSS must style the dedicated feedback contact list");
   assert(css.includes(".select-row"), "CSS must style the selector row");
   assert(css.includes(".game-page") && css.includes("overflow: hidden"), "game page must prevent document-level scrolling");
   assert(css.includes(".game-page") && css.includes("overflow: auto"), "mobile game page must allow document scrolling");
   assert(css.includes(".action-row"), "CSS must style the action button row");
   assert(css.includes(".version-number"), "CSS must style the compact version number");
+  assert(css.includes("flex-direction: row"), "version badge must lay out links horizontally");
   assert(css.includes(".updates-list"), "CSS must style the update log page");
   assert(css.includes(".contact-card"), "feedback contacts must render as stable contact cards");
   assert(css.includes("repeat(2, minmax(0, 1fr))"), "feedback contacts must use a two-column PC layout");
@@ -357,7 +384,8 @@ async function testServerConfiguration() {
     "result.progress",
     "fallbackHostAnswer",
     "fallbacksTotal",
-    "ops_turtle_soup_llm_fallbacks_total"
+    "ops_turtle_soup_llm_fallbacks_total",
+    "POST\" && req.url === \"/api/game/close"
   ]) {
     assert(server.includes(token), `server.js missing ${token}`);
   }
@@ -644,12 +672,17 @@ async function testSessionCapacityReturns503() {
 
   try {
     await waitForHttp(`http://127.0.0.1:${appPort}/api/health`, 5000);
-    await postJson(`http://127.0.0.1:${appPort}/api/game/start`, { difficulty: "easy" });
+    const firstStart = await postJson(`http://127.0.0.1:${appPort}/api/game/start`, { difficulty: "easy" });
     const secondStart = await postJsonAllowError(`http://127.0.0.1:${appPort}/api/game/start`, { difficulty: "easy" });
     assert(secondStart.status === 503, `session capacity overflow must return 503, got ${secondStart.status}`);
     assert(secondStart.body.error === "房间已满，请稍后再试", "503 response must explain session capacity limit");
     assert(secondStart.body.activeSessions === 1, "503 response must include activeSessions");
     assert(secondStart.body.maxActiveSessions === 1, "503 response must include maxActiveSessions");
+
+    const closed = await postJson(`http://127.0.0.1:${appPort}/api/game/close`, { gameId: firstStart.gameId });
+    assert(closed.ok === true && closed.closed === true, "close endpoint must confirm an active game was closed");
+    const thirdStart = await postJson(`http://127.0.0.1:${appPort}/api/game/start`, { difficulty: "easy" });
+    assert(thirdStart.gameId, "close endpoint must release session capacity for a new game");
   } finally {
     child.kill("SIGKILL");
     await new Promise((resolve) => child.once("close", resolve));
