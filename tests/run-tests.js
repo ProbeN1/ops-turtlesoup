@@ -111,6 +111,7 @@ async function testScenarioSchema() {
 async function testFrontendBindings() {
   const html = await readText("public/index.html");
   const feedbackHtml = await readText("public/feedback.html");
+  const updatesHtml = await readText("public/updates.html");
   const feedbackJs = await readText("public/feedback.js");
   const app = await readText("public/app.js");
   const css = await readText("public/styles.css");
@@ -130,20 +131,29 @@ async function testFrontendBindings() {
   assert(html.includes('value="delivery-fault"'), "frontend must offer delivery fault scenario scope");
   assert(html.includes('value="solution-clarification"'), "frontend must offer solution clarification scenario scope");
   assert(html.includes('/app.js?v=20260702-scope-v1'), "frontend must version app.js after scenario scope changes");
-  assert(html.includes('/styles.css?v=20260702-feedback-layout-v2'), "frontend must version styles.css after feedback layout changes");
+  assert(html.includes('/styles.css?v=20260702-home-layout-v1'), "frontend must version styles.css after home layout changes");
   assert(html.includes("v0.1"), "frontend must show current version badge");
   assert(html.includes('href="/feedback"'), "frontend must link to feedback page");
+  assert(html.includes('href="/updates.html"'), "frontend must link to update log page");
+  assert(html.includes('class="game-page"'), "game page must opt into fixed viewport scrolling");
+  assert(html.indexOf('for="scenarioScope"') < html.indexOf('for="difficulty"'), "scenario scope selector must appear before difficulty");
+  assert(html.includes("select-row"), "home controls must group selectors on one row");
+  assert(html.includes("action-row"), "home controls must group start and reveal on a separate row");
   assert(feedbackHtml.includes("0027029145"), "feedback page must expose DingTalk contact id");
   assert(feedbackHtml.includes("姜毅"), "feedback page must expose DingTalk contact name");
   assert(feedbackHtml.includes("jiang.yi12@iwhalecloud.com"), "feedback page must expose contact email");
   assert(feedbackHtml.includes("contactEmail"), "feedback page must allow copying contact email");
   assert(feedbackHtml.includes(">复制</button>"), "feedback page copy buttons must use readable text");
-  assert(feedbackHtml.includes('/styles.css?v=20260702-feedback-layout-v2'), "feedback page must version styles.css after feedback layout changes");
+  assert(feedbackHtml.includes('/styles.css?v=20260702-home-layout-v1'), "feedback page must version styles.css after home layout changes");
   assert(feedbackHtml.includes("feedback-contact-list"), "feedback page must use the dedicated contact list layout");
   assert(feedbackHtml.includes("contact-card"), "feedback page must render contact details as cards");
   assert(!feedbackHtml.includes("⧉"), "feedback page must not use ambiguous copy glyphs");
   assert(feedbackHtml.includes("/feedback.js?v=20260701-dingtalk-v1"), "feedback page must version feedback.js");
   assert(feedbackHtml.includes("v0.1"), "feedback page must show current version badge");
+  assert(updatesHtml.includes("更新记录"), "updates page must render an update log");
+  assert(updatesHtml.includes("首页布局优化"), "updates page must mention the home layout update");
+  assert(updatesHtml.includes('href="/"'), "updates page must link back to the game");
+  assert(updatesHtml.includes('/styles.css?v=20260702-home-layout-v1'), "updates page must use the current styles.css version");
   assert(feedbackJs.includes("navigator.clipboard"), "feedback script must support copying contact details");
   assert(!feedbackJs.includes("/api/feedback"), "feedback script must not submit to removed feedback API");
   assert(app.includes("function formatRevealInfraBackground"), "frontend must normalize reveal infra fields before rendering");
@@ -160,6 +170,12 @@ async function testFrontendBindings() {
   assert(css.includes(".chat-log") && css.includes("min-height: 0"), "chat log must scroll inside the fixed chat window");
   assert(css.includes(".rca-progress"), "CSS must style the RCA progress UI");
   assert(css.includes(".feedback-contact-list"), "CSS must style the dedicated feedback contact list");
+  assert(css.includes(".select-row"), "CSS must style the selector row");
+  assert(css.includes(".game-page") && css.includes("overflow: hidden"), "game page must prevent document-level scrolling");
+  assert(css.includes(".game-page") && css.includes("overflow: auto"), "mobile game page must allow document scrolling");
+  assert(css.includes(".action-row"), "CSS must style the action button row");
+  assert(css.includes(".version-number"), "CSS must style the compact version number");
+  assert(css.includes(".updates-list"), "CSS must style the update log page");
   assert(css.includes(".contact-card"), "feedback contacts must render as stable contact cards");
   assert(css.includes("repeat(2, minmax(0, 1fr))"), "feedback contacts must use a two-column PC layout");
   assert(css.includes("4rem minmax(0, 1fr) auto"), "feedback contact cards must align label, value, and copy button on PC");
@@ -966,8 +982,9 @@ async function testDeploymentConfiguration() {
   }
 
   for (const token of [
-    "选择 `中等`",
-    "收起对话",
+    "question-bank selector",
+    "`题库` appears to the left of `难度`",
+    "Open `更新记录`",
     "基础设施：",
     "[object Object]",
     "庆祝",
