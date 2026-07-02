@@ -416,7 +416,7 @@ input:disabled {
 
 .feedback-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.48fr);
+  grid-template-columns: 1fr;
   gap: 18px;
   align-items: stretch;
   padding: 22px;
@@ -457,27 +457,24 @@ input:disabled {
 }
 
 .feedback-contact-list {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-  min-height: 220px;
   padding: 18px;
-  border-left: 3px solid var(--button);
+  border-top: 3px solid var(--button);
   background: rgba(238, 244, 237, 0.04);
 }
 
 .contact-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: 4rem minmax(0, 1fr) auto;
   grid-template-areas:
-    "label copy"
-    "value copy"
-    "note copy";
+    "label value copy"
+    "note value copy";
   align-items: center;
   gap: 8px 12px;
   min-width: 0;
-  min-height: 112px;
+  min-height: 86px;
   padding: 16px;
   border: 1px solid rgba(52, 69, 63, 0.72);
   border-radius: 8px;
@@ -493,7 +490,7 @@ input:disabled {
 
 .contact-value {
   grid-area: value;
-  font-size: clamp(1.45rem, 2.1vw, 2.15rem);
+  font-size: clamp(1.35rem, 1.9vw, 2rem);
   line-height: 1;
   min-width: 0;
   overflow-wrap: anywhere;
@@ -501,8 +498,8 @@ input:disabled {
 
 .contact-email {
   overflow-wrap: anywhere;
-  font-size: 1rem !important;
-  line-height: 1.35 !important;
+  font-size: clamp(0.98rem, 1.25vw, 1.1rem) !important;
+  line-height: 1.25 !important;
 }
 
 .contact-note {
@@ -685,12 +682,16 @@ input:disabled {
   }
 
   .feedback-contact-list {
-    min-height: 140px;
-    border-left: 0;
+    grid-template-columns: 1fr;
     border-top: 3px solid var(--button);
   }
 
   .contact-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "label copy"
+      "value copy"
+      "note copy";
     min-height: 0;
   }
 
