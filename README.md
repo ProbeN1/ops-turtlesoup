@@ -30,22 +30,6 @@ PORT=5725
 
 内网共享时将 `HOST` 改为 `0.0.0.0`，并放行对应端口。
 
-## Scripts
-
-```powershell
-npm start
-npm run dev
-npm test
-npm run init:release-record
-npm run check:release-record
-npm run build:release
-npm run verify:release-archive
-npm run evidence:release
-npm run smoke:llm
-npm run smoke:app
-npm run smoke:coworker
-```
-
 ## Health Check
 
 ```text

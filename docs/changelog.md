@@ -82,3 +82,4 @@
 - Deployed release `ops-turtle-soup-0.1.0-20260702T083651Z` commit `857e2ae` to `10.10.214.4`; fallback, app, coworker, process, solution-clarification, and 100-session start/reveal smokes passed, while direct LLM smoke remained blocked by internal LLM quota through `2026-07-06 15:46:41`.
 - Strengthened release evidence and `npm run load:llm` gates so final LLM capacity checks must show zero fallback growth as well as zero LLM failures.
 - Sanitized public LLM configuration examples and worklogs so commits do not expose internal model endpoints, model names, or API keys.
+- Removed maintainer-only script inventory from README so operational checks stay in runbooks instead of the public quick-start page.
