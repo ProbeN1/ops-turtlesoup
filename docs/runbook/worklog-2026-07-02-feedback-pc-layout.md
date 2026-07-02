@@ -28,11 +28,17 @@
 - Passed: browser PC geometry check at 1280x720; contact cards render as two 446px columns, no overlap, no horizontal overflow.
 - Passed: browser mobile geometry check at 390x844; contact cards collapse to one column, no horizontal overflow.
 - Passed: `npm test`
+- Passed: `npm run verify:release-archive` for `ops-turtle-soup-0.1.0-20260702T073658Z.zip`.
+- Passed: target-host `npm run verify:deploy` after switching `/opt/ops-turtle-soup/current`.
+- Passed: workstation `npm run smoke:coworker` against `http://10.10.214.4:5725`.
+- Passed: workstation `npm run smoke:app` against `http://10.10.214.4:5725`.
+- Passed: remote feedback HTML/CSS asset checks for `styles.css?v=20260702-feedback-layout-v2`, `feedback-contact-list`, `contact-card`, and the PC two-column CSS rules.
 
 ## Risks
 
 - Users with an old open tab may need one refresh, but the stylesheet URL is cache-busted for new loads.
+- The in-app browser timed out while repeating the final remote geometry check; the same CSS was geometrically verified locally and the deployed assets were verified by HTTP checks.
 
 ## Next
 
-- Build and deploy the cache-busted release to the intranet host.
+- Watch for feedback from PC users after the cache-busted v2 stylesheet is loaded.
