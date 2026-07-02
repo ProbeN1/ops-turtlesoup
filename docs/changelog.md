@@ -77,3 +77,4 @@
 - Added selectable question-bank scopes for `交付故障` and `方案澄清`, plus a medium Oracle RAC/DataGuard/SAN high-availability requirement clarification scenario.
 - Deployed release `ops-turtle-soup-0.1.0-20260702T075508Z` commit `54c0788` to `10.10.214.4` and verified the new solution-clarification scope through API, app, and coworker smokes.
 - Refined the home UI controls so question-bank and difficulty selection share one row, start/reveal actions stay on a stable second row, and the version badge links to a new update log page.
+- Deployed release `ops-turtle-soup-0.1.0-20260702T081904Z` commit `3340673` to `10.10.214.4`; deploy, app, coworker, update-log, process, and 100-session start/reveal smokes passed, while direct LLM smoke was blocked by the internal LLM quota.
