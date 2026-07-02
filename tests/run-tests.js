@@ -4,8 +4,10 @@ import path from "node:path";
 import vm from "node:vm";
 import { spawn } from "node:child_process";
 import { createServer as createTcpServer } from "node:net";
+import { createServer as createHttpServer } from "node:http";
 
 const root = process.cwd();
+const allowedHostAnswers = new Set(["是", "否", "无关"]);
 const scenarioFiles = [
   ["easy", "data/scenarios/easy"],
   ["medium", "data/scenarios/medium"],
@@ -352,7 +354,10 @@ async function testServerConfiguration() {
     "RELEASE_INFO.json",
     "crypto.randomInt(items.length)",
     "progressPayload",
-    "result.progress"
+    "result.progress",
+    "fallbackHostAnswer",
+    "fallbacksTotal",
+    "ops_turtle_soup_llm_fallbacks_total"
   ]) {
     assert(server.includes(token), `server.js missing ${token}`);
   }
@@ -414,7 +419,7 @@ async function testStartupPortConflict() {
   }
 }
 
-async function testLlmQueueFullReturns503() {
+async function testLlmQueueFullFallsBack() {
   const blocker = createTcpServer((socket) => {
     socket.on("error", () => {});
   });
@@ -464,13 +469,72 @@ async function testLlmQueueFullReturns503() {
     const firstSettled = await Promise.race(asks.map((promise) => promise.then((result) => result)));
     controller.abort();
     await Promise.allSettled(asks);
-    assert(firstSettled.status === 503, `queue overflow must return 503, got ${firstSettled.status}`);
-    assert(firstSettled.body.error === "主持繁忙，请稍后再试", "503 response must explain host backpressure");
-    assert(firstSettled.body.detail === "LLM queue is full", "503 response must include queue-full detail");
+    assert(firstSettled.status === 200, `queue overflow must fall back to local host answer, got ${firstSettled.status}`);
+    assert(allowedHostAnswers.has(firstSettled.body.answer), `fallback answer must be allowed, got ${JSON.stringify(firstSettled.body.answer)}`);
+    assert(firstSettled.body.nudge === "", "fallback answer must not include host hints");
   } finally {
     child.kill("SIGKILL");
     await new Promise((resolve) => child.once("close", resolve));
     await new Promise((resolve) => blocker.close(resolve));
+  }
+
+  assert(!stderr.includes("Startup failed"), `server startup failed unexpectedly; stdout=${stdout}; stderr=${stderr}`);
+}
+
+async function testLlmHttpFailureFallsBack() {
+  const llm = createHttpServer((req, res) => {
+    res.writeHead(429, { "content-type": "application/json" });
+    res.end(JSON.stringify({ error: { message: "quota exceeded" } }));
+  });
+  await new Promise((resolve, reject) => {
+    llm.once("error", reject);
+    llm.listen(0, "127.0.0.1", resolve);
+  });
+  const llmAddress = llm.address();
+  const llmPort = typeof llmAddress === "object" && llmAddress ? llmAddress.port : 0;
+
+  const appPort = await reserveLocalPort();
+  const child = spawn(process.execPath, ["server.js"], {
+    cwd: root,
+    env: {
+      ...process.env,
+      HOST: "127.0.0.1",
+      PORT: String(appPort),
+      OPENAI_API_KEY: "test-key",
+      OPENAI_BASE_URL: `http://127.0.0.1:${llmPort}/v1`,
+      OPENAI_MODEL: "test-model",
+      RATE_LIMIT_MAX_REQUESTS: "0"
+    },
+    stdio: ["ignore", "pipe", "pipe"]
+  });
+  let stdout = "";
+  let stderr = "";
+  child.stdout.on("data", (chunk) => { stdout += chunk; });
+  child.stderr.on("data", (chunk) => { stderr += chunk; });
+
+  try {
+    await waitForHttp(`http://127.0.0.1:${appPort}/api/health`, 5000);
+    const start = await postJson(`http://127.0.0.1:${appPort}/api/game/start`, { difficulty: "easy" });
+    const ask = await postJson(`http://127.0.0.1:${appPort}/api/game/ask`, {
+      gameId: start.gameId,
+      question: "这是备份问题吗？"
+    });
+
+    assert(allowedHostAnswers.has(ask.answer), `LLM HTTP failure fallback answer must be allowed, got ${JSON.stringify(ask.answer)}`);
+    assert(typeof ask.solved === "boolean", "fallback ask response solved must be boolean");
+    assert(ask.nudge === "", "fallback ask response must not include host hints");
+    assert(ask.progress?.percent >= 0, "fallback ask response must include progress");
+
+    const metrics = await getJson(`http://127.0.0.1:${appPort}/api/metrics`);
+    assert(metrics.llm.failuresTotal >= 1, "LLM HTTP failure must increment llm failure counter");
+    assert(metrics.llm.fallbacksTotal >= 1, "LLM HTTP failure must increment local fallback counter");
+
+    const prometheus = await getText(`http://127.0.0.1:${appPort}/metrics`);
+    assert(prometheus.includes("ops_turtle_soup_llm_fallbacks_total"), "Prometheus metrics must expose LLM fallback counter");
+  } finally {
+    child.kill("SIGKILL");
+    await new Promise((resolve) => child.once("close", resolve));
+    await new Promise((resolve) => llm.close(resolve));
   }
 
   assert(!stderr.includes("Startup failed"), `server startup failed unexpectedly; stdout=${stdout}; stderr=${stderr}`);
@@ -624,6 +688,20 @@ async function postJson(url, payload) {
   const result = await postJsonAllowError(url, payload);
   assert(result.response.ok, `${url} failed: HTTP ${result.status} ${JSON.stringify(result.body)}`);
   return result.body;
+}
+
+async function getJson(url) {
+  const response = await fetch(url);
+  const body = await response.json();
+  assert(response.ok, `${url} failed: HTTP ${response.status} ${JSON.stringify(body)}`);
+  return body;
+}
+
+async function getText(url) {
+  const response = await fetch(url);
+  const body = await response.text();
+  assert(response.ok, `${url} failed: HTTP ${response.status} ${body}`);
+  return body;
 }
 
 async function postJsonAllowError(url, payload, signal) {
@@ -808,6 +886,7 @@ async function testDeploymentConfiguration() {
     "/metrics",
     "readyForCoworkerAccess",
     "maxActiveSessionsSufficient",
+    "fallbacksTotal",
     "ops_turtle_soup_llm_requests_total"
   ]) {
     assert(releaseEvidence.includes(token), `release evidence script missing ${token}`);
@@ -1216,7 +1295,8 @@ await testServerConfiguration();
 await testInvalidRuntimeConfiguration();
 await testGracefulShutdown();
 await testStartupPortConflict();
-await testLlmQueueFullReturns503();
+await testLlmQueueFullFallsBack();
+await testLlmHttpFailureFallsBack();
 await testSessionCapacityReturns503();
 await testRevealApiInfraPayload();
 await testScenarioScopeStartApi();

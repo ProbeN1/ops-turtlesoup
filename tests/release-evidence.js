@@ -104,6 +104,7 @@ function buildEvidence(health, readiness, metrics, prometheusText) {
         queued: metrics.llm?.queued,
         requestsTotal: metrics.llm?.requestsTotal,
         failuresTotal: metrics.llm?.failuresTotal,
+        fallbacksTotal: metrics.llm?.fallbacksTotal,
         avgLatencyMs: metrics.llm?.avgLatencyMs,
         lastLatencyMs: metrics.llm?.lastLatencyMs
       }

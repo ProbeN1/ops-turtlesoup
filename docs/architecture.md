@@ -30,6 +30,7 @@ Node server.js
 - Session state: in-memory `Map`, with periodic cleanup.
 - LLM provider: OpenAI-compatible `/chat/completions` endpoint.
 - LLM protection: in-process concurrency limiter and bounded queue.
+- LLM fallback: when the LLM returns an error, times out, hits quota, or the in-process queue is full, `/api/game/ask` falls back to local scenario `question_rules` and local solve checks so players receive one of the allowed short answers instead of a 500 error.
 - Feedback page: static DingTalk contact and copyable feedback template.
 - API protection: per-client sliding-window request limit.
 - Runtime metrics: in-memory counters exposed as JSON at `/api/metrics` and Prometheus text at `/metrics`.
@@ -78,6 +79,7 @@ Current approach:
 - Session TTL cleanup to avoid unbounded memory growth.
 - Scenario data is cached after first use to avoid repeated disk reads.
 - LLM calls are limited by `LLM_MAX_CONCURRENCY` and `LLM_QUEUE_LIMIT`.
+- Local host fallback protects the game from temporary LLM quota or gateway failures, but final release verification still requires live LLM smoke and load tests with zero LLM failures.
 - Basic per-client API rate limiting protects the single Node process.
 
 Known limits:

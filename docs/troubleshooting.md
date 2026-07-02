@@ -129,7 +129,7 @@ Common causes:
 - The service is not running, or `APP_SMOKE_BASE_URL` points to the wrong host.
 - `HOST` is still `127.0.0.1` while testing from another machine.
 - Rate limiting is too low for repeated checks from the same source IP.
-- LLM request failures surface through `/api/game/ask`; run `npm run smoke:llm` to isolate the LLM layer.
+- LLM request failures trigger local host fallback through `/api/game/ask`; run `npm run smoke:llm` to isolate the LLM layer and inspect `llm.fallbacksTotal`.
 - Scenario files are invalid or missing required reveal fields; run `npm test` and `npm run verify:deploy:offline`.
 
 ## Coworkers Cannot Access The Game
@@ -189,9 +189,29 @@ For trusted load testing only, disable:
 RATE_LIMIT_MAX_REQUESTS=0
 ```
 
+## LLM Fallbacks Increase
+
+The app answers through the LLM first, then falls back to local scenario rules when the LLM returns an error, times out, returns invalid JSON, hits quota, or the local queue is full. Players should still receive `是`, `否`, or `无关`, but answer quality is more conservative.
+
+Check:
+
+```text
+GET /api/metrics
+GET /metrics
+```
+
+Look at `llm.failuresTotal`, `llm.fallbacksTotal`, `llm.active`, `llm.queued`, and `ops_turtle_soup_llm_fallbacks_total`.
+
+Options:
+
+- Run `npm run smoke:llm` from the app host to confirm gateway compatibility and quota.
+- If the gateway returns 429, wait for quota reset or ask the administrator to raise the quota.
+- If `llm.queued` is high, tune `LLM_MAX_CONCURRENCY` and `LLM_QUEUE_LIMIT`.
+- Treat sustained fallback growth during an event as degraded mode, even if players are not seeing 500 errors.
+
 ## LLM Queue Is Full
 
-Players may receive HTTP `503` with `主持繁忙，请稍后再试` when the in-process LLM queue is full. This means the app is applying backpressure instead of hiding overload as a generic server error.
+When the in-process LLM queue is full, the app now uses local host fallback for `/api/game/ask` instead of returning a player-facing `503`. This keeps the game playable during short LLM bursts.
 
 Check:
 
@@ -199,11 +219,11 @@ Check:
 GET /api/metrics
 ```
 
-Look at `llm.active`, `llm.queued`, `llm.failuresTotal`, `llm.avgLatencyMs`, and `responsesByStatus.503`.
+Look at `llm.active`, `llm.queued`, `llm.failuresTotal`, `llm.fallbacksTotal`, and `llm.avgLatencyMs`.
 
 - Increase `LLM_MAX_CONCURRENCY` if the LLM service can handle it.
 - Increase `LLM_QUEUE_LIMIT` for short traffic bursts.
-- Lower game concurrency or ask players to retry after a few seconds.
+- Lower game concurrency if sustained fallbacks make answers too conservative.
 - Add a reverse proxy or shared queue before scaling to multiple Node processes.
 
 ## LLM Requests Time Out

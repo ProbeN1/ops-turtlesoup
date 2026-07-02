@@ -136,7 +136,7 @@ Paste `npm run evidence:release` output into the release record after app smoke 
 Confirm `build.gitCommit` in the evidence matches the intended release commit.
 Also confirm the `build.gitCommit` printed by `npm run smoke:coworker` matches the intended release commit from the coworker network path.
 
-For the LLM ask-path load smoke, start with the default `LLM_LOAD_USERS=10` and `LLM_LOAD_CONCURRENCY=2`. Before the event, run a release rehearsal with values agreed with the internal LLM owner, and confirm `metricsDelta.llmFailuresTotal=0`, `metricsDelta.llmRequestsTotal >= LLM_LOAD_USERS`, and acceptable `askLatency.p95Ms`.
+For the LLM ask-path load smoke, start with the default `LLM_LOAD_USERS=10` and `LLM_LOAD_CONCURRENCY=2`. Before the event, run a release rehearsal with values agreed with the internal LLM owner, and confirm `metricsDelta.llmFailuresTotal=0`, `metricsDelta.llmRequestsTotal >= LLM_LOAD_USERS`, no unexpected fallback growth, and acceptable `askLatency.p95Ms`.
 
 To include live LLM load in the one-command rehearsal, run:
 
@@ -157,10 +157,10 @@ Watch:
 - Prometheus scrape counters: `GET /metrics`;
 - active sessions;
 - LLM limiter active and queued counts;
+- LLM fallback count: `llm.fallbacksTotal` and `ops_turtle_soup_llm_fallbacks_total`;
 - process logs: `docker compose logs -f ops-turtle-soup` or `journalctl -u ops-turtle-soup -f`;
 - 429 responses from shared IP rate limiting;
-- 503 responses from LLM queue backpressure;
-- LLM queue full errors.
+- LLM quota, timeout, invalid JSON, and queue-full fallback warnings.
 
 ## Rollback
 

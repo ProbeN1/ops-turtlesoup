@@ -98,6 +98,8 @@ Feedback is handled through the static `/feedback` page. Players contact `002702
 
 The game page shows an RCA progress bar under the opening story. The backend estimates closeness from cumulative player wording and the scenario's required discovery points, but responses must not expose which hidden points were matched.
 
+Runtime asks use the LLM first. If the LLM is unavailable, returns HTTP errors such as 429, times out, returns non-JSON, or the local LLM queue is full, the backend falls back to local scenario `question_rules` and returns only `是`, `否`, or `无关`. The fallback is intentionally conservative and increments `llm.fallbacksTotal`; release `load:llm` still expects zero LLM failures for event readiness.
+
 Invalid numeric runtime configuration fails fast during startup.
 
 ## Testing
@@ -137,6 +139,8 @@ Defaults:
 Optional gate:
 
 - `LLM_LOAD_MAX_P95_MS`: fail if measured ask-path p95 exceeds this value.
+
+`npm run load:llm` should show `metricsDelta.llmFailuresTotal=0` for final release evidence. If fallbacks appear during gameplay, inspect `llm.failuresTotal`, `llm.fallbacksTotal`, and the LLM gateway quota or logs.
 
 ## Release Rehearsal
 

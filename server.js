@@ -271,6 +271,7 @@ function createMetrics() {
     llm: {
       requestsTotal: 0,
       failuresTotal: 0,
+      fallbacksTotal: 0,
       totalLatencyMs: 0,
       lastLatencyMs: 0
     }
@@ -326,6 +327,7 @@ function publicMetrics() {
       ...llmLimiter.stats(),
       requestsTotal: metrics.llm.requestsTotal,
       failuresTotal: metrics.llm.failuresTotal,
+      fallbacksTotal: metrics.llm.fallbacksTotal,
       avgLatencyMs: avgLlmLatencyMs,
       lastLatencyMs: metrics.llm.lastLatencyMs
     },
@@ -465,6 +467,9 @@ function prometheusMetrics() {
   ]);
   metric("ops_turtle_soup_llm_failures_total", "counter", "Total failed LLM requests.", [
     `ops_turtle_soup_llm_failures_total ${snapshot.llm.failuresTotal}`
+  ]);
+  metric("ops_turtle_soup_llm_fallbacks_total", "counter", "Total local host fallbacks after LLM unavailability.", [
+    `ops_turtle_soup_llm_fallbacks_total ${snapshot.llm.fallbacksTotal}`
   ]);
   metric("ops_turtle_soup_llm_active", "gauge", "Current active LLM requests.", [
     `ops_turtle_soup_llm_active ${snapshot.llm.active}`
@@ -801,18 +806,101 @@ function defaultAnswerFor(difficulty) {
   return "无关";
 }
 
-function fallbackAnswer(question, difficulty) {
-  const text = question.trim();
-  if (!/[吗么?？]$/.test(text) && !/(是不是|是否|有没有|能否|会不会|是.*吗|和.*有关吗)/.test(text)) {
-    return defaultAnswerFor(difficulty);
+function fallbackHostAnswer(session, question) {
+  metrics.llm.fallbacksTotal += 1;
+  const solved = assessSolvedLocally(session, question);
+  return {
+    answer: solved ? "是" : fallbackAnswer(session.scenario, question),
+    solved,
+    nudge: ""
+  };
+}
+
+function fallbackAnswer(scenario, question) {
+  const text = String(question || "").trim();
+  if (!isLikelyYesNoQuestion(text)) {
+    return defaultAnswerFor(scenario.difficulty);
   }
 
-  if (/(提示|线索|hint)/i.test(text)) return "无关";
-  if (/(数据库|CPU|内存|证书|DNS|监控误报)/i.test(text)) return "否";
-  if (/(发布|流量|缓存|连接|重试|配置|Kubernetes|Pod|Service|告警|备份|压缩|磁盘)/i.test(text)) {
-    return "是";
+  const rules = scenario.question_rules || {};
+  const scores = {
+    yes: ruleScore(text, rules.yes),
+    no: ruleScore(text, rules.no),
+    irrelevant: ruleScore(text, rules.irrelevant)
+  };
+  const ranked = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+
+  if (ranked[0][1] <= 0 || ranked[0][1] === ranked[1][1]) {
+    return defaultAnswerFor(scenario.difficulty);
   }
-  return defaultAnswerFor(difficulty);
+
+  if (ranked[0][0] === "yes") return "是";
+  if (ranked[0][0] === "no") return "否";
+  return "无关";
+}
+
+function isLikelyYesNoQuestion(text) {
+  return /[吗么?？]$/.test(text) ||
+    /(是否|是不是|有没有|能否|会不会|和.+有关|相关|存在|导致|因为)/i.test(text);
+}
+
+function ruleScore(question, rules = []) {
+  if (!Array.isArray(rules)) return 0;
+  const questionFeatures = textFeatures(question);
+  let score = 0;
+
+  for (const rule of rules) {
+    const ruleFeatures = textFeatures(rule);
+    for (const feature of ruleFeatures) {
+      if (questionFeatures.has(feature)) {
+        score += feature.length >= 4 ? 3 : 1;
+      }
+    }
+  }
+
+  return score;
+}
+
+function textFeatures(value) {
+  const text = String(value || "").toLowerCase();
+  const features = new Set();
+  const asciiTokens = text.match(/[a-z0-9_./-]{2,}/g) || [];
+  for (const token of asciiTokens) {
+    features.add(token);
+  }
+
+  const chineseRuns = text.match(/[\u4e00-\u9fff]{2,}/g) || [];
+  for (const run of chineseRuns) {
+    for (let size = 2; size <= Math.min(5, run.length); size += 1) {
+      for (let index = 0; index <= run.length - size; index += 1) {
+        const feature = run.slice(index, index + size);
+        if (!isStopFeature(feature)) {
+          features.add(feature);
+        }
+      }
+    }
+  }
+
+  return features;
+}
+
+function isStopFeature(feature) {
+  return new Set([
+    "是否",
+    "是不",
+    "不是",
+    "有没有",
+    "没有",
+    "有关",
+    "相关",
+    "问题",
+    "导致",
+    "因为",
+    "这个",
+    "那个",
+    "可以",
+    "不会"
+  ]).has(feature);
 }
 
 function buildMessages(session, question) {
@@ -885,49 +973,49 @@ function formatList(value) {
 async function askLlm(session, question) {
   const apiKey = process.env.OPENAI_API_KEY || process.env.LLM_API_KEY;
   if (!apiKey) {
-    const solved = assessSolvedLocally(session, question);
-    return {
-      answer: solved ? "是" : fallbackAnswer(question, session.scenario.difficulty),
-      solved,
-      nudge: ""
-    };
+    return fallbackHostAnswer(session, question);
   }
 
-  const response = await limitedLlmFetch({
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: llmModel(),
-      temperature: 0.2,
-      response_format: { type: "json_object" },
-      messages: buildMessages(session, question)
-    })
-  });
+  try {
+    const response = await limitedLlmFetch({
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: llmModel(),
+        temperature: 0.2,
+        response_format: { type: "json_object" },
+        messages: buildMessages(session, question)
+      })
+    });
 
-  const responseText = await response.text();
-  if (!response.ok) {
-    throw new Error(`LLM request failed: ${response.status} ${responseText.slice(0, 240)}`);
-  }
+    const responseText = await response.text();
+    if (!response.ok) {
+      throw new Error(`LLM request failed: ${response.status} ${responseText.slice(0, 240)}`);
+    }
 
-  if (!response.headers.get("content-type")?.includes("application/json")) {
-    throw new Error(`LLM did not return JSON. Check OPENAI_BASE_URL; got ${response.headers.get("content-type") || "unknown content type"}`);
-  }
+    if (!response.headers.get("content-type")?.includes("application/json")) {
+      throw new Error(`LLM did not return JSON. Check OPENAI_BASE_URL; got ${response.headers.get("content-type") || "unknown content type"}`);
+    }
 
-  const data = JSON.parse(responseText);
-  const content = data.choices?.[0]?.message?.content || "{}";
-  const parsed = parseModelJson(content);
-  const result = normalizeLlmAnswer(parsed, session.scenario.difficulty);
-  if (!result.solved) {
-    result.solved = await assessSolvedWithLlm(session, question);
+    const data = JSON.parse(responseText);
+    const content = data.choices?.[0]?.message?.content || "{}";
+    const parsed = parseModelJson(content);
+    const result = normalizeLlmAnswer(parsed, session.scenario.difficulty);
+    if (!result.solved) {
+      result.solved = await assessSolvedWithLlm(session, question);
+    }
+    if (result.solved) {
+      result.answer = "是";
+      result.nudge = "";
+    }
+    return result;
+  } catch (error) {
+    console.warn(`LLM unavailable, using local host fallback: ${error.message}`);
+    return fallbackHostAnswer(session, question);
   }
-  if (result.solved) {
-    result.answer = "是";
-    result.nudge = "";
-  }
-  return result;
 }
 
 async function assessSolvedWithLlm(session, question) {
